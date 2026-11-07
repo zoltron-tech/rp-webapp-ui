@@ -3,8 +3,10 @@ import { wsrvImage } from "@nw/utils";
 import { StyleSheet, View } from "react-native";
 import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
+import { AvatarBadge, PrivacyMark } from "@/components/muse/header-tools";
 import { PANEL, Shimmer } from "@/components/muse/panel";
 import { PennedBy } from "@/components/muse/penned-by";
+import { SectionSwitcherSlot } from "@/components/muse/section-switcher";
 import type { MuseLook } from "@/lib/muse-appearance";
 import { museName } from "@/lib/muse-appearance";
 import { fontSize, space } from "@/theme";
@@ -47,7 +49,13 @@ export const MuseFace = ({ muse, size }: { muse: Muse; size: number }) => (
 
 /**
  * Web's `SectionMiniHeader`: the face beside the name and the author, at the
- * top of every section but INFO — which lays the same things out in a column.
+ * top of every section — and, inside a grouped tab (About, Social), the
+ * switcher between its sections just under them (`SectionSwitcherSlot`).
+ *
+ * Every section's header is this one, so it also carries the privacy mark at
+ * the row's end and, on your own character, the camera on the face
+ * (`header-tools.tsx`). Neither changes the row's height: switching sections
+ * never moves the top of the card.
  */
 export const MiniHeader = ({
   look,
@@ -55,9 +63,9 @@ export const MiniHeader = ({
 }: {
   look: MuseLook;
   muse: Muse | null;
-}) => {
-  if (!muse) {
-    return (
+}) => (
+  <View style={styles.column}>
+    {!muse ? (
       <View style={styles.row}>
         <Shimmer height={56} radius={28} width={56} />
         <View style={styles.text}>
@@ -65,30 +73,34 @@ export const MiniHeader = ({
           <Shimmer height={10} width={80} />
         </View>
       </View>
-    );
-  }
-
-  return (
-    <View style={styles.row}>
-      <MuseFace muse={muse} size={56} />
-      <View style={styles.text}>
-        <Text
-          numberOfLines={1}
-          style={[styles.name, { color: look.nameColor ?? PANEL.primary }]}
-        >
-          {museName(muse)}
-        </Text>
-        <PennedBy
-          accent={look.accent}
-          novelist={muse.pennedBy}
-          textColor={look.pennedByColor}
-        />
+    ) : (
+      <View style={styles.row}>
+        <View>
+          <MuseFace muse={muse} size={56} />
+          <AvatarBadge accent={look.accent} muse={muse} />
+        </View>
+        <View style={styles.text}>
+          <Text
+            numberOfLines={1}
+            style={[styles.name, { color: look.nameColor ?? PANEL.primary }]}
+          >
+            {museName(muse)}
+          </Text>
+          <PennedBy
+            accent={look.accent}
+            novelist={muse.pennedBy}
+            textColor={look.pennedByColor}
+          />
+        </View>
+        <PrivacyMark muse={muse} />
       </View>
-    </View>
-  );
-};
+    )}
+    <SectionSwitcherSlot />
+  </View>
+);
 
 const styles = StyleSheet.create({
+  column: { width: "100%" },
   name: { fontSize: fontSize.body + 1, fontWeight: "600" },
   ring: {
     alignItems: "center",
@@ -107,6 +119,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.xs,
     paddingVertical: space.sm,
     width: "100%",
+    // Above the switcher and divider, so the visitor's privacy note floats
+    // over them rather than under.
+    zIndex: 2,
   },
   text: { alignItems: "flex-start", flex: 1, gap: 5 },
 });

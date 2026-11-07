@@ -1,6 +1,7 @@
 import { LinearGradient } from "expo-linear-gradient";
-import { useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Animated, Pressable, StyleSheet, View } from "react-native";
+import { useFoldReveal } from "@/animation/effects";
 import { Text } from "@/components/text";
 import { RichText, richTextBlockCount } from "@/components/rich-text";
 import { fontSize, space, useAppTheme } from "@/theme";
@@ -25,6 +26,20 @@ import { fontSize, space, useAppTheme } from "@/theme";
  * two-thousand-word prompt behind a fold costs six lines of text shaping
  * rather than a screen of it. A document cut this way is overflowing by
  * definition, whatever its measured height.
+ *
+ * ## The text is the toggle too
+ *
+ * As on web (`handleContentClick`), a tap anywhere on a long document folds or
+ * unfolds it, not only on "Read more...". Links, mentions, images and embedded
+ * cards are touchables of their own inside `RichText`, so they take their
+ * taps first and never fold anything. The button stays, and is what a screen
+ * reader is offered: the text itself is not made one big button.
+ *
+ * ## It travels
+ *
+ * Opening and shutting animate the fold's height, as web transitions its
+ * `max-height` — see `useFoldReveal`, which also keeps a recycled feed cell
+ * from playing someone else's post as a fold.
  *
  * ## Owned or lent state
  *
@@ -67,44 +82,68 @@ export const CollapsibleRichText = ({
   const theme = useAppTheme();
   const [own, setOwn] = useState(false);
   const [natural, setNatural] = useState<number | null>(null);
+  /**
+   * The height measured while the whole of a cut document is drawn. Cleared
+   * whenever it is cut again, so an opening always waits for this document's
+   * own measurement and never grows to the last post a recycled cell held.
+   */
+  const [whole, setWhole] = useState<number | null>(null);
 
   const open = expanded ?? own;
-  const toggle = onToggle ?? (() => setOwn((value) => !value));
 
   const truncated =
     maxBlocks !== undefined && richTextBlockCount(html) > maxBlocks;
   const overflowing =
     truncated || (natural !== null && natural > collapsedHeight + SLACK);
-  const folded = !open;
+
+  const fold = useFoldReveal({
+    collapsedHeight,
+    natural: truncated ? whole : natural,
+    open,
+    resetKey: html,
+  });
+  // Drawn in part only while resting shut.
+  const cut = !fold.full && truncated;
+
+  useEffect(() => {
+    if (cut) setWhole(null);
+  }, [cut]);
+
+  const toggle = () => {
+    fold.arm();
+    if (onToggle) onToggle();
+    else setOwn((value) => !value);
+  };
 
   return (
     <View>
-      <View
-        style={
-          folded ? { maxHeight: collapsedHeight, overflow: "hidden" } : null
-        }
-      >
-        <View
-          onLayout={(event) => {
-            const height = event.nativeEvent.layout.height;
-            // Only the whole document says how tall the document is.
-            if (!(folded && truncated)) setNatural(height);
-          }}
-        >
-          <RichText
-            html={html}
-            maxBlocks={folded && truncated ? maxBlocks : undefined}
-          />
-        </View>
+      <Pressable accessible={false} disabled={!overflowing} onPress={toggle}>
+        <Animated.View style={fold.clipStyle}>
+          <View
+            onLayout={(event) => {
+              const height = event.nativeEvent.layout.height;
+              // Only the whole document says how tall the document is.
+              if (cut) return;
+              setNatural(height);
+              if (truncated) setWhole(height);
+            }}
+          >
+            <RichText html={html} maxBlocks={cut ? maxBlocks : undefined} />
+          </View>
 
-        {folded && overflowing ? (
-          <LinearGradient
-            colors={[alpha0(fadeColor), fadeColor]}
-            pointerEvents="none"
-            style={styles.fade}
-          />
-        ) : null}
-      </View>
+          {overflowing && fold.showFade ? (
+            <Animated.View
+              pointerEvents="none"
+              style={[styles.fade, { opacity: fold.fadeOpacity }]}
+            >
+              <LinearGradient
+                colors={[alpha0(fadeColor), fadeColor]}
+                style={StyleSheet.absoluteFill}
+              />
+            </Animated.View>
+          ) : null}
+        </Animated.View>
+      </Pressable>
 
       {overflowing ? (
         <Pressable

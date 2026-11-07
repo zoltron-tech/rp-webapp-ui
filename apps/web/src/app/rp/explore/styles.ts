@@ -1,5 +1,6 @@
 import styled, { keyframes } from "styled-components";
 import { SegmentedTabs } from "@/components/common/segmented-tabs";
+import { FilterSearch } from "@/components/filter-search";
 import { DEV_MODE_BORDER } from "@/theme";
 
 const spin = keyframes`
@@ -105,5 +106,58 @@ export const ComposeSheet = styled.div<{ $open: boolean }>`
 
   @media screen and (min-width: 801px) {
     display: none;
+  }
+`;
+
+/**
+ * The prompt search: the character directory's field and chips, in the
+ * feed's 800px column. Even air either side — 16px from the composer above
+ * and to the first card below (the list adds 6px and a card its own 10px
+ * margin, so this keeps none of its own at the foot); 12px of each on phones,
+ * where the list's and cards' margins are 6px each.
+ */
+export const PromptSearch = styled(FilterSearch)`
+  width: 100%;
+  max-width: 800px;
+  margin: 16px auto 0;
+
+  @media screen and (max-width: 800px) {
+    width: calc(100% - 16px);
+    margin-top: 12px;
+  }
+`;
+
+export const SearchEmpty = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin: 2rem auto;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: var(--font-size);
+`;
+
+export const RetryButton = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  padding: 8px 18px;
+  min-height: 36px;
+  border-radius: 999px;
+  border: 1px solid var(--material-edge);
+  background: var(--material-fill);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semi-bold);
+
+  &:hover {
+    background: var(--fill-hover);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent-11, var(--accent));
+    outline-offset: 2px;
   }
 `;

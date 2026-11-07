@@ -13,10 +13,9 @@ import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 /**
  * One outgoing thread, as web's `components/outgoing-reply` draws it.
  *
- * The shape is web's card, part for part: the two overlapping faces, the name
- * with its "Your reply" tag, the date and who it is with, the unread count or
- * the concluded pill, a rule, the reply itself in a sunken block, and the
- * footer counting replies.
+ * The shape is web's card: the two overlapping faces, the name with its "Your
+ * reply" tag, the date and who it is with, the reply itself as a quote, and the
+ * footer saying where the thread stands.
  *
  * ## Where it deliberately differs
  *
@@ -25,19 +24,22 @@ import { border, fontSize, radius, space, useAppTheme } from "@/theme";
  * the indent is dropped and the block runs the full width of the card — the
  * same decision web itself makes at its 430px breakpoint for the footer.
  *
- * The "Your reply" tag and the concluded label are hidden below 430px on web.
- * They are kept here: a phone is the *only* place this card is read, so hiding
- * the one word that says whether you commented or replied would mean nobody
- * ever sees it.
+ * The "Your reply" tag is hidden below 430px on web. It is kept here: a phone
+ * is the *only* place this card is read, so hiding the one word that says
+ * whether you commented or replied would mean nobody ever sees it.
  *
- * ## One way in, not three
+ * ## One way in, and one status
  *
  * Web's card routes to the thread from three places — the unread badge, the
- * reply count and an "Open thread" button. Now that `/threads/:id` exists, this
- * carries the button and only the button. The badge is a count and the reply
- * line is a status; making either of them a target as well would put three
- * hit areas for one destination on a card the width of a thumb, and the badge
- * in particular sits where a thumb rests while scrolling.
+ * reply count and an "Open thread" button. Here the card is the way in, with a
+ * chevron to say so: it has one destination, and a button on top of that was a
+ * pill saying what tapping the card already does. Links inside the quote still
+ * win their own taps.
+ *
+ * The status is said once, in the footer. The count badge said "1" beside a
+ * line saying "1 new reply", and the concluded pill sat above "Thread
+ * concluded". The accent rail is what finds a waiting thread in a column of
+ * cards.
  */
 
 /** Web's `AvatarGroup`: 52px, dropping to 40 under 430px. This is a phone. */
@@ -57,6 +59,12 @@ const OutgoingThreadCardView = ({
   const theme = useAppTheme();
 
   const hasReplies = thread.replyCount > 0;
+  const waiting = hasReplies && !thread.concluded;
+  const statusColor = thread.concluded
+    ? theme.success
+    : waiting
+      ? theme.accent.text
+      : theme.textGray;
   const typeLabel = thread.type === "REPLY" ? "Your reply" : "Your comment";
 
   const replyText = thread.concluded
@@ -79,9 +87,18 @@ const OutgoingThreadCardView = ({
     [thread.media],
   );
 
+  /*
+   * `parentId`, not `id`. The card is a comment *or* a reply; either way the
+   * thread it belongs to is identified by the comment at its root, which is what
+   * `parentId` holds and what web's `ROUTES.Thread.View` is given.
+   */
   return (
-    <View
-      style={[
+    <Pressable
+      accessibilityHint="Opens the thread"
+      accessibilityLabel={`${typeLabel} with ${firstName(thread.target.name)}. ${replyText}.`}
+      accessibilityRole="button"
+      onPress={() => onOpen(thread.parentId)}
+      style={({ pressed }) => [
         styles.card,
         {
           backgroundColor: theme.material.card.backgroundColor,
@@ -96,7 +113,7 @@ const OutgoingThreadCardView = ({
             ? theme.accent.solid
             : theme.material.edge,
           borderLeftWidth: hasReplies ? 4 : StyleSheet.hairlineWidth,
-          opacity: thread.concluded ? 0.72 : 1,
+          opacity: (thread.concluded ? 0.72 : 1) * (pressed ? 0.8 : 1),
         },
       ]}
     >
@@ -157,7 +174,7 @@ const OutgoingThreadCardView = ({
             <Text style={[styles.meta, { color: theme.textGray }]}>
               {toFormattedDateFromUnix(thread.createdOn)}
             </Text>
-            <Text style={[styles.meta, { color: theme.textGray }]}>➺</Text>
+            <Text style={[styles.meta, { color: theme.textGray }]}>·</Text>
             <Text
               numberOfLines={1}
               style={[
@@ -170,38 +187,7 @@ const OutgoingThreadCardView = ({
             </Text>
           </View>
         </View>
-
-        {thread.concluded ? (
-          <View
-            style={[
-              styles.concluded,
-              {
-                backgroundColor: theme.material.fillPressed,
-                borderColor: theme.success,
-              },
-            ]}
-          >
-            <Ionicons
-              color={theme.success}
-              name="checkmark-circle-outline"
-              size={13}
-            />
-            <Text style={[styles.concludedLabel, { color: theme.success }]}>
-              Concluded
-            </Text>
-          </View>
-        ) : hasReplies ? (
-          <View
-            style={[styles.unread, { backgroundColor: theme.accent.solid }]}
-          >
-            <Text style={styles.unreadLabel}>
-              {thread.replyCount > 9 ? "9+" : String(thread.replyCount)}
-            </Text>
-          </View>
-        ) : null}
       </View>
-
-      <View style={[styles.rule, { backgroundColor: theme.material.edge }]} />
 
       <Excerpt key={thread.id}>
         <RichText html={thread.text} maxBlocks={EXCERPT_BLOCKS} />
@@ -232,43 +218,27 @@ const OutgoingThreadCardView = ({
       </Excerpt>
 
       <View style={styles.footer}>
-        <Ionicons color={theme.textGray} name="chatbubbles-outline" size={14} />
-        <Text style={[styles.footerLabel, { color: theme.textGray }]}>
-          {replyText}
-        </Text>
-
-        {/*
-          `parentId`, not `id`. The card is a comment *or* a reply; either way
-          the thread it belongs to is identified by the comment at its root,
-          which is what `parentId` holds and what web's `ROUTES.Thread.View`
-          is given.
-        */}
-        <Pressable
-          accessibilityLabel="View thread"
-          accessibilityRole="button"
-          hitSlop={space.xs}
-          onPress={() => onOpen(thread.parentId)}
-          style={({ pressed }) => [
-            styles.open,
-            {
-              backgroundColor: pressed
-                ? theme.accent.surfaceHover
-                : theme.accent.surface,
-              borderColor: theme.accent.surfaceHover,
-            },
+        <Ionicons
+          color={statusColor}
+          name={
+            thread.concluded
+              ? "checkmark-circle-outline"
+              : "chatbubbles-outline"
+          }
+          size={14}
+        />
+        <Text
+          style={[
+            styles.footerLabel,
+            waiting && styles.footerWaiting,
+            { color: statusColor },
           ]}
         >
-          <Text style={[styles.openLabel, { color: theme.accent.textStrong }]}>
-            View thread
-          </Text>
-          <Ionicons
-            color={theme.accent.textStrong}
-            name="arrow-forward"
-            size={13}
-          />
-        </Pressable>
+          {replyText}
+        </Text>
+        <Ionicons color={theme.textGray} name="chevron-forward" size={16} />
       </View>
-    </View>
+    </Pressable>
   );
 };
 
@@ -289,7 +259,7 @@ const EXCERPT_FADE = 44;
  *
  * This is a list of threads, and a card in it used to draw its whole post: one
  * long reply was three screens of scrolling to reach the next thread. Now it
- * is capped, and fades out at the cap when there is more — "View thread" is
+ * is capped, and fades out at the cap when there is more — the thread is
  * where the rest is read.
  *
  * A rule down the leading edge rather than a box in a box: the card is already
@@ -332,17 +302,6 @@ const styles = StyleSheet.create({
     gap: space.ms,
     padding: space.m,
   },
-  concluded: {
-    alignItems: "center",
-    alignSelf: "flex-start",
-    borderRadius: radius.full,
-    borderWidth: border.edge,
-    flexDirection: "row",
-    gap: space.xs,
-    paddingHorizontal: space.sm,
-    paddingVertical: 3,
-  },
-  concludedLabel: { fontSize: fontSize.meta, fontWeight: "600" },
   excerpt: {
     borderLeftWidth: 2,
     maxHeight: EXCERPT_HEIGHT,
@@ -358,6 +317,7 @@ const styles = StyleSheet.create({
   },
   footer: { alignItems: "center", flexDirection: "row", gap: space.s },
   footerLabel: { flex: 1, fontSize: fontSize.caption, fontWeight: "500" },
+  footerWaiting: { fontWeight: "700" },
   header: { alignItems: "center", flexDirection: "row", gap: space.ms },
   identity: { flex: 1, gap: space.xxs, minWidth: 0 },
   image: { height: 160, width: "100%" },
@@ -367,20 +327,6 @@ const styles = StyleSheet.create({
   metaTarget: { flexShrink: 1 },
   name: { flexShrink: 1, fontSize: fontSize.body, fontWeight: "700" },
   nameRow: { alignItems: "center", flexDirection: "row", gap: space.s },
-  open: {
-    alignItems: "center",
-    borderRadius: radius.full,
-    borderWidth: border.edge,
-    flexDirection: "row",
-    gap: space.xs,
-    // 32 rather than 44: it sits inside a card in a scrolling list, where a
-    // taller control would push every card down a row. `hitSlop` makes up the
-    // difference without costing the layout anything.
-    minHeight: 32,
-    paddingHorizontal: space.ms,
-  },
-  openLabel: { fontSize: fontSize.meta, fontWeight: "700" },
-  rule: { height: StyleSheet.hairlineWidth, width: "100%" },
   targetAvatar: {
     borderRadius: radius.full,
     borderWidth: 2,
@@ -398,15 +344,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     paddingVertical: space.xxs,
   },
-  unread: {
-    alignItems: "center",
-    alignSelf: "flex-start",
-    borderRadius: radius.full,
-    height: 24,
-    justifyContent: "center",
-    minWidth: 24,
-  },
-  unreadLabel: { color: "#fff", fontSize: fontSize.meta, fontWeight: "700" },
   video: {
     alignItems: "center",
     backgroundColor: "#000",

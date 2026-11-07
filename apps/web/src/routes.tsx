@@ -151,6 +151,10 @@ export const routes: RouteObject[] = [
             path: "bookmarks",
           },
           {
+            lazy: page(() => import("./app/rp/characters/page")),
+            path: "characters",
+          },
+          {
             lazy: page(() => import("./app/rp/compose/page")),
             path: "compose",
           },
@@ -405,7 +409,6 @@ export const routes: RouteObject[] = [
             lazy: page(() => import("./app/rp/thread/[slug]/page")),
             path: "thread/:slug",
           },
-          { lazy: page(() => import("./app/rp/tiers/page")), path: "tiers" },
           {
             lazy: page(() => import("./app/rp/verify-email/page")),
             path: "verify-email",
@@ -471,6 +474,10 @@ export const routes: RouteObject[] = [
         path: "storyboard",
       },
       { lazy: page(() => import("./app/promo/spell/page")), path: "spell" },
+      {
+        lazy: page(() => import("./app/promo/screen/headcanons/page")),
+        path: "screen/headcanons",
+      },
     ],
     element: withOutlet(PromoLayout),
     errorElement: <RouteErrorBoundary />,

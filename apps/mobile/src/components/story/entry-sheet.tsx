@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { PillButton } from "@/components/settings";
 import { BottomSheet } from "@/components/sheet";
 import { ChapterChips } from "@/components/story/chapter-chips";
 import { StoryProse } from "@/components/story/story-prose";
@@ -69,6 +70,7 @@ export const EntrySheet = ({
   chapters,
   entry,
   onClose,
+  onEdit,
   onOpenChapter,
 }: {
   categoryName?: string | null;
@@ -76,6 +78,8 @@ export const EntrySheet = ({
   chapters: StoryBoardEvent[];
   entry: CodexEntry | null;
   onClose: () => void;
+  /** Given to a story member. */
+  onEdit?: (entry: CodexEntry) => void;
   onOpenChapter: (chapterId: string) => void;
 }) => {
   const theme = useAppTheme();
@@ -108,6 +112,16 @@ export const EntrySheet = ({
             { paddingBottom: insets.bottom + space.lg },
           ]}
         >
+          {onEdit ? (
+            <View style={styles.editRow}>
+              <PillButton
+                icon="create-outline"
+                label="Edit entry"
+                onPress={() => onEdit(shown)}
+              />
+            </View>
+          ) : null}
+
           {/* The sheet's own header already names the entry and its
               category; a picture is the one thing it cannot carry. */}
           {shown.image ? <EntryGlyph entry={shown} size={56} /> : null}
@@ -134,6 +148,7 @@ export const EntrySheet = ({
 const styles = StyleSheet.create({
   body: { gap: space.md, paddingHorizontal: space.md, paddingTop: space.xs },
   category: { fontSize: fontSize.caption, textTransform: "uppercase" },
+  editRow: { flexDirection: "row" },
   glyph: { alignItems: "center", justifyContent: "center" },
   head: { alignItems: "center", flexDirection: "row", gap: space.md },
   headText: { flex: 1, gap: space.xxs },

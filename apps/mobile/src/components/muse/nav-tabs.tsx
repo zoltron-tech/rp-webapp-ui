@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { mixColors } from "@nw/theme";
 import type { MuseNavItem } from "@nw/types";
 import { hasUsableCrop } from "@nw/utils";
 import { IMAGE_SIZES, wsrvImage } from "@nw/utils/image";
@@ -7,7 +8,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text } from "@/components/text";
 import { CroppedImage } from "@/components/cropped-image";
-import { asHex, withAlpha } from "@/lib/color";
+import { asHex } from "@/lib/color";
 import { border, space } from "@/theme";
 
 /**
@@ -28,6 +29,11 @@ import { border, space } from "@/theme";
  * *rotated* size, so the tab's column lays out as if the name were a narrow
  * vertical strip, which after rotation it is.
  *
+ * `vertical-rl` reads top to bottom on *both* tabs, so both turn clockwise.
+ * (The left tab used to turn the other way and read bottom to top.) The strip
+ * is as thick as the line is tall: at 12pt the face's ascenders and
+ * descenders were cut off, which is what made the names hard to read.
+ *
  * ## The portrait is the card's
  *
  * The same fallback chain as the main card — the card background with its
@@ -40,7 +46,11 @@ export const NAV_TAB_HEIGHT = 118;
 
 /** Web's `MuseNavTabName`: `max-height: 64px`, which after rotation is a width. */
 const NAME_LENGTH = 64;
-const NAME_THICKNESS = 12;
+/** Web's 0.58rem, and the line it sets in (`normal`, about 1.4× in this face). */
+const NAME_SIZE = 9.3;
+const NAME_LINE = 13;
+/** The strip: the line's height, with a point either side to spare. */
+const NAME_THICKNESS = NAME_LINE + 2;
 
 export const MuseNavTabs = ({
   busy,
@@ -158,8 +168,9 @@ const NavTab = ({
           style={[
             styles.chevron,
             {
+              // Web: `color-mix(in srgb, accent 55%, black)` — solid.
               backgroundColor: accent
-                ? withAlpha(accent, 0.7)
+                ? mixColors(accent, 0.55, "#000000")
                 : "rgba(0,0,0,0.55)",
             },
           ]}
@@ -176,10 +187,15 @@ const NavTab = ({
           <View
             style={[
               styles.nameBox,
-              { transform: [{ rotate: left ? "-90deg" : "90deg" }] },
+              // `vertical-rl`: top to bottom on both sides.
+              { transform: [{ rotate: "90deg" }] },
             ]}
           >
-            <Text numberOfLines={1} style={styles.name}>
+            <Text
+              ellipsizeMode="tail"
+              numberOfLines={1}
+              style={styles.name}
+            >
               {item.firstName}
             </Text>
           </View>
@@ -206,12 +222,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingVertical: space.sm,
   },
-  fill: { height: "100%", width: "100%" },
+  // Behind the column, like web's background image. In the flow it took the
+  // tab's whole height and pushed the chevron and name off the bottom edge.
+  fill: StyleSheet.absoluteFillObject,
   name: {
     color: "rgba(255,255,255,0.85)",
-    fontSize: 9.5,
+    fontSize: NAME_SIZE,
     fontWeight: "600",
-    letterSpacing: 1.2,
+    // Android pads a line for accents above it; the strip has no room for it.
+    includeFontPadding: false,
+    // Web's 0.12em.
+    letterSpacing: NAME_SIZE * 0.12,
+    lineHeight: NAME_LINE,
     textAlign: "center",
     textShadowColor: "rgba(0,0,0,0.8)",
     textShadowOffset: { height: 1, width: 0 },

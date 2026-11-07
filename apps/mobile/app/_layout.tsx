@@ -22,6 +22,8 @@ import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
+import { AppUpdatePrompt } from "@/components/app-update-prompt";
+import { ImageViewerHost } from "@/components/image-viewer-host";
 import { OfflineBanner } from "@/components/offline-banner";
 import {
   ActivityCapture,
@@ -297,6 +299,8 @@ const RootStack = () => {
         <Stack.Screen name="login" />
         {/* The reset-link request, native: see `app/forgot-password`. */}
         <Stack.Screen name="forgot-password" />
+        <Stack.Screen name="reset-password" />
+        <Stack.Screen name="verify-email" />
         {/* Its own stack: three steps that push, with the draft they
             share held on that stack's layout. See `register/_layout`. */}
         <Stack.Screen name="register" />
@@ -319,6 +323,38 @@ const RootStack = () => {
         <Stack.Screen name="edit-muse" />
         {/* Every story you can read, opened from the menu. Header declared
             here for the reason given on `outbox`. */}
+        <Stack.Screen
+          name="badge-catalogue"
+          options={{
+            headerShown: true,
+            ...glassHeaderOptions(theme),
+            title: "Badges",
+          }}
+        />
+        <Stack.Screen
+          name="bookmarks"
+          options={{
+            headerShown: true,
+            ...glassHeaderOptions(theme),
+            title: "Bookmarks",
+          }}
+        />
+        <Stack.Screen
+          name="books/search"
+          options={{
+            headerShown: true,
+            ...glassHeaderOptions(theme),
+            title: "Open World Library",
+          }}
+        />
+        <Stack.Screen
+          name="faqs"
+          options={{
+            headerShown: true,
+            ...glassHeaderOptions(theme),
+            title: "FAQs",
+          }}
+        />
         <Stack.Screen
           name="library"
           options={{
@@ -358,6 +394,8 @@ const RootStack = () => {
       </Stack>
       {/* After the stack, so it floats over every screen's top bar. */}
       <OfflineBanner />
+      <AppUpdatePrompt />
+      <ImageViewerHost />
     </>
   );
 };

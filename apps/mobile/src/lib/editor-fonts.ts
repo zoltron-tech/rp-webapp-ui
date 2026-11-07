@@ -81,6 +81,52 @@ export const useEditorFonts = () => {
 };
 
 /**
+ * Two vertical metrics per family, from the fonts' `hhea` tables — the
+ * bundled files under `@nw/fonts/files`, and for the three system families
+ * the same Monotype fonts. CoreText lays lines out by these.
+ *
+ * `content` is ascent plus descent, in em: how tall a line of the face is
+ * before any gap between lines. The editor fixes each line's height
+ * (`lineHeight` is both the minimum and the maximum on iOS), and a face
+ * taller than the box it is given has its tops clipped on the first line
+ * and draws its lines into one another; `blockSizing` widens the box for it.
+ *
+ * `leading` is the `lineGap`, in em. iOS adds it under every line of a
+ * `TextInput` on top of `lineHeight`, while React Native measures the field
+ * without it, so the native view wants `lines × leading` more than the
+ * frame it is given. With `scrollEnabled` off the text container is only as
+ * tall as the frame, and the last line of a leaded face never fits: nothing
+ * laid it out, nothing drew it, and the caret sat at the top-left corner
+ * until the measurement reached the line after. Only Times New Roman and
+ * Arial carry a gap; every bundled file and Courier New are at zero. See
+ * `BlockInputView` for the slack that gives it back.
+ */
+const METRICS: Record<string, { content: number; leading: number }> = {
+  Arial: { content: 1.117, leading: 67 / 2048 },
+  BodoniModaSC: { content: 1.525, leading: 0 },
+  "Courier New": { content: 1.133, leading: 0 },
+  Genos: { content: 1.2, leading: 0 },
+  Montserrat: { content: 1.219, leading: 0 },
+  MontserratUnderline: { content: 1.219, leading: 0 },
+  PlayfairDisplaySC: { content: 1.333, leading: 0 },
+  Savate: { content: 1.3, leading: 0 },
+  ShantellSans: { content: 1.34, leading: 0 },
+  "Times New Roman": { content: 1.107, leading: 87 / 2048 },
+  Tourney: { content: 1.1, leading: 0 },
+  ZillaSlab: { content: 1.2, leading: 0 },
+};
+
+/** No family means the interface face, which is Montserrat. */
+const metricsOf = (family: string | undefined) =>
+  (family && METRICS[family]) || METRICS.Montserrat;
+
+export const fontContentEm = (family: string | undefined): number =>
+  metricsOf(family).content;
+
+export const fontLeading = (family: string | undefined): number =>
+  metricsOf(family).leading;
+
+/**
  * What to put in `fontFamily` for a run in this family with these marks.
  *
  * Two answers, and the caller has to know which it got. A system family

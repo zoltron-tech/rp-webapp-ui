@@ -108,11 +108,25 @@ export interface GlassSurfaceProps extends ViewProps {
   highlight?: boolean;
   /** Pick a tier instead of the device's. For the glass lab. */
   forceTier?: GlassTier;
+  /**
+   * For a surface that carries a full screen of content rather than floating
+   * over it — the menu. On the iOS tiers (Liquid Glass draws no fill of its
+   * own; the blur tier's sheet fill is 30%) the page behind read straight
+   * through the rows. This lays the glass's own colour over the material at
+   * `DENSE_ALPHA`, so a hint of the page stays and the text does not compete
+   * with it. Android's sheet fill is already opaque, so it changes nothing
+   * there.
+   */
+  dense?: boolean;
 }
+
+/** How much of the glass's own colour a `dense` surface lays over the material. */
+const DENSE_ALPHA = 0.82;
 
 export const GlassSurface = memo(function GlassSurface({
   bordered = true,
   children,
+  dense = false,
   forceTier,
   highlight,
   radius = 0,
@@ -204,6 +218,15 @@ export const GlassSurface = memo(function GlassSurface({
         <View
           pointerEvents="none"
           style={[StyleSheet.absoluteFill, { backgroundColor: fill }]}
+        />
+      ) : null}
+      {dense && (tier === "liquid" || tier === "blur") ? (
+        <View
+          pointerEvents="none"
+          style={[
+            StyleSheet.absoluteFill,
+            { backgroundColor: theme.glass.opaque, opacity: DENSE_ALPHA },
+          ]}
         />
       ) : null}
       {showHighlight ? (

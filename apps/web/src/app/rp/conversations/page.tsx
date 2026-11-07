@@ -282,7 +282,7 @@ export default function ConversationsPage() {
     const groupLimit = novelist?.tier?.groupLimit ?? 0;
     if (count >= groupLimit) {
       errorToast(
-        `You've reached your group limit of ${groupLimit}. Upgrade your tier to create more.`,
+        `You've reached your limit of ${groupLimit} groups.`,
       );
       return;
     }

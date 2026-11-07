@@ -60,9 +60,15 @@ const IGNORE = namesToWords(["Elara Vance", "umair", "Kael"]);
 
 /** Fixture @mention candidates so the mention dropdown can be exercised. */
 const MENTIONS: MentionDataItem[] = [
-  { displayName: "Elara Vance", id: "m1", image: "", type: "MUSE" },
   { displayName: "kael", id: "n1", image: "", type: "NOVELIST" },
   { displayName: "umair", id: "n2", image: "", type: "NOVELIST" },
+  {
+    displayName: "Elara Vance",
+    id: "m1",
+    image: "",
+    pennedBy: { image: null, username: "kael" },
+    type: "MUSE",
+  },
 ];
 
 const MENTION_TABS: MentionTab[] = [

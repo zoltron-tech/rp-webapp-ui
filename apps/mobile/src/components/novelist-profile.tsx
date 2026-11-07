@@ -6,7 +6,15 @@ import type { Fandom, Friend, Muse, Novelist } from "@nw/types";
 import { mainVerseMuses, toFormattedDate } from "@nw/utils";
 import { IMAGE_SIZES, wsrvImage } from "@nw/utils/image";
 import { useFocusEffect, useRouter } from "expo-router";
-import { memo, useCallback, useMemo, useState } from "react";
+import { Button } from "@/components/button";
+import {
+  type ComponentProps,
+  memo,
+  useCallback,
+  useId,
+  useMemo,
+  useState,
+} from "react";
 import {
   Animated,
   InteractionManager,
@@ -14,9 +22,18 @@ import {
   type NativeSyntheticEvent,
   Pressable,
   StyleSheet,
+  useWindowDimensions,
   View,
   type ViewStyle,
 } from "react-native";
+import Svg, {
+  Defs,
+  Mask,
+  Rect,
+  Stop,
+  LinearGradient as SvgGradient,
+  Image as SvgImage,
+} from "react-native-svg";
 import { useBannerStretch } from "@/animation/effects";
 import { Avatar } from "@/components/avatar";
 import { BadgeSheet } from "@/components/badge-sheet";
@@ -67,8 +84,6 @@ import { border, fontSize, radius, space, type, useAppTheme } from "@/theme";
  *
  * - **Friend/block/report actions** are writes. Phase 4 brings the first write
  *   path; a button that cannot be undone on this client is worse than none.
- * - **Add a character** is a link to a screen that does not exist here yet, so
- *   the section header omits it rather than offering a dead end.
  * - **Stories, posts and the activity feed** are their own screens with
  *   their own fetches, reached from the rows under "Their work".
  * - **The note's emoji** is a key into a hand-drawn SVG icon set
@@ -86,15 +101,74 @@ const HEADER_LIFT = -58;
 /**
  * What web's `Banner` does when a novelist has no banner: blur their avatar.
  *
- * Web blurs the full picture in CSS. Here the stand-in is fetched at 64
- * pixels wide and stretched: a blur is a convolution over every pixel, so
- * blurring a 3,000-pixel original on the UI thread was the most expensive
- * thing on the page, and a 64-pixel one stretched to the banner's width is
- * already soft before the (now tiny) blur touches it. Nobody looks at it —
- * it is the wash behind the avatar.
+ * Web blurs the full picture in CSS, 80px, which on a phone leaves colour and
+ * no shapes. Here the stand-in is fetched 16 pixels wide and stretched: a
+ * blur is a convolution over every pixel, so blurring a 3,000-pixel original
+ * on the UI thread was the most expensive thing on the page, while 16 pixels
+ * stretched to the banner's width are each a soft field 25pt across — the
+ * same wash with no blur at all. (At 64 a face still showed through.) Nobody
+ * looks at it — it is the wash behind the avatar (`BannerWash`).
  */
-const BANNER_BLUR = 6;
-const BANNER_STANDIN = { fit: "cover" as const, h: 26, q: 40, w: 64 };
+const BANNER_STANDIN = { fit: "cover" as const, h: 8, q: 60, w: 16 };
+
+/**
+ * How far the stand-in hangs past the banner's foot. Web's 80px blur paints
+ * past its box on a phone (the clip that stops it is desktop-only), so the
+ * wash runs on under the avatar and dissolves into the page instead of ending
+ * on an edge.
+ */
+const WASH_BLEED = 80;
+
+/**
+ * The no-banner wash: the stand-in drawn through a mask that holds it solid
+ * across the top of the banner and fades it to nothing past the foot.
+ *
+ * A mask rather than a gradient to a colour: the page under it is the ambient
+ * light (`AmbientBackground`), not one flat colour, so only a fade to
+ * transparent meets it without a seam. The stand-in is 64 pixels stretched
+ * across the screen, already as soft as the old blur made it.
+ */
+const BannerWash = memo(function BannerWash({
+  height,
+  uri,
+}: {
+  height: number;
+  uri: string;
+}) {
+  const id = `wash${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
+  const total = height + WASH_BLEED;
+  return (
+    <Svg
+      height={total}
+      pointerEvents="none"
+      style={styles.wash}
+      width="100%"
+    >
+      <Defs>
+        <SvgGradient id={`${id}g`} x1="0" x2="0" y1="0" y2="1">
+          <Stop offset="0" stopColor="#ffffff" stopOpacity={1} />
+          {/* Web's `::after`: the fade starts 45% down the banner. */}
+          <Stop
+            offset={(height * 0.45) / total}
+            stopColor="#ffffff"
+            stopOpacity={1}
+          />
+          <Stop offset="1" stopColor="#ffffff" stopOpacity={0} />
+        </SvgGradient>
+        <Mask id={`${id}m`}>
+          <Rect fill={`url(#${id}g)`} height="100%" width="100%" />
+        </Mask>
+      </Defs>
+      <SvgImage
+        height="100%"
+        href={{ uri }}
+        mask={`url(#${id}m)`}
+        preserveAspectRatio="xMidYMid slice"
+        width="100%"
+      />
+    </Svg>
+  );
+});
 
 /**
  * The sizes this page actually draws, which the payload does not carry.
@@ -271,6 +345,7 @@ export const NovelistProfile = ({
    * and the crests — the parts that read `scrolling` — and leaves the rest.
    */
   const hasBanner = Boolean(novelist.banner?.src);
+  const { width: windowWidth } = useWindowDimensions();
   const bannerUri = useMemo(
     () =>
       hasBanner
@@ -299,6 +374,11 @@ export const NovelistProfile = ({
     [novelist.friends],
   );
   const isOwnProfile = session.novelist?.username === novelist.username;
+  // Web's `atMuseLimit`: the button goes rather than promising what it can't.
+  const canAddMuse =
+    isOwnProfile &&
+    novelist.museCount < (session.novelist?.tier?.museLimit ?? 0);
+  const addMuse = useCallback(() => router.push("/edit-muse/new"), [router]);
   // Support is not playing: no crests, whoever is looking.
   const isSupport = isSupportNovelist(novelist.username);
 
@@ -450,24 +530,25 @@ export const NovelistProfile = ({
           onLayout={stretch.onBannerLayout}
           style={[
             styles.banner,
-            {
-              // Web: `aspect-ratio: 5 / 2`, or 5 / 1 when the banner is a blurred
-              // stand-in rather than a real one.
-              aspectRatio: hasBanner ? 5 / 2 : 5 / 1,
-              backgroundColor: theme.material.fill,
-            },
+            // Web: `aspect-ratio: 5 / 2`, or 5 / 1 when the banner is a blurred
+            // stand-in rather than a real one. The stand-in has no box of its
+            // own: it bleeds past the foot and fades into the page.
+            hasBanner
+              ? { aspectRatio: 5 / 2, backgroundColor: theme.material.fill }
+              : styles.bannerWashed,
             stretch.bannerStyle,
           ]}
         >
-          {bannerUri ? (
+          {hasBanner && bannerUri ? (
             <CroppedImage
-              blurRadius={hasBanner ? 0 : BANNER_BLUR}
               // Web's `Banner`: the stored pan and zoom, or `cover`.
-              crop={hasBanner ? novelist.banner?.crop : null}
+              crop={novelist.banner?.crop}
               playing={heroPlaying}
               style={styles.bannerImage}
               uri={bannerUri}
             />
+          ) : bannerUri ? (
+            <BannerWash height={windowWidth / 5} uri={bannerUri} />
           ) : null}
         </Animated.View>
 
@@ -494,26 +575,34 @@ export const NovelistProfile = ({
 
           {novelist.note?.text ? (
             <View style={styles.noteWrap}>
-              {/* The thought-bubble trail: two circles walking left, back toward
-                the avatar. Web draws them as ::before and ::after. */}
-              <View
-                style={[
-                  styles.noteDotLarge,
-                  { backgroundColor: noteColor ?? theme.accent.tint },
-                ]}
-              />
-              <View
-                style={[
-                  styles.noteDotSmall,
-                  { backgroundColor: noteColor ?? theme.accent.tint },
-                ]}
-              />
               <View
                 style={[
                   styles.note,
                   { backgroundColor: noteColor ?? theme.accent.tintStrong },
                 ]}
               >
+                {/*
+                  The thought-bubble trail: two circles walking down and left
+                  from the bubble's bottom-left corner, back toward the avatar
+                  — web's ::before and ::after, hung off the bubble itself.
+                  Pinned to the bubble's foot, so they stay at the corner
+                  whatever its height; a percentage `top` on the wrapper did
+                  not, and left them well below it.
+                */}
+                <View pointerEvents="none" style={styles.noteTrail}>
+                  <View
+                    style={[
+                      styles.noteDotLarge,
+                      { backgroundColor: noteColor ?? theme.accent.tint },
+                    ]}
+                  />
+                  <View
+                    style={[
+                      styles.noteDotSmall,
+                      { backgroundColor: noteColor ?? theme.accent.tint },
+                    ]}
+                  />
+                </View>
                 <Text
                   style={[
                     styles.noteText,
@@ -625,7 +714,11 @@ export const NovelistProfile = ({
         {song || hasAbout ? (
           <View style={styles.mediaStack}>
             {song ? (
-              <ProfileSongPill attachedBottom={hasAbout} song={song} />
+              <ProfileSongPill
+                attachedBottom={hasAbout}
+                reportable={!isOwnProfile}
+                song={song}
+              />
             ) : null}
 
             {hasAbout ? (
@@ -695,16 +788,36 @@ export const NovelistProfile = ({
         row fetches its own summary and is absent until it has one — and
         absent for good when the owner's privacy hides it from this viewer.
       */}
-        <BookshelfRow
-          Header={SectionHeader}
-          novelist={novelist}
-          onOpen={openBooks}
-          own={isOwnProfile}
-        />
+        {isSupport ? null : (
+          <BookshelfRow
+            Header={SectionHeader}
+            novelist={novelist}
+            onOpen={openBooks}
+            own={isOwnProfile}
+            SeeMore={SeeMore}
+          />
+        )}
+
+        {muses.length === 0 && canAddMuse ? (
+          <View style={styles.section}>
+            <SectionHeader label="Characters (0)" />
+            <Button
+              icon="person-add-outline"
+              label="Add a character"
+              onPress={addMuse}
+              variant="secondary"
+            />
+          </View>
+        ) : null}
 
         {muses.length > 0 ? (
           <View style={styles.section}>
-            <SectionHeader label={`Characters (${novelist.museCount})`} />
+            <SectionHeader
+              action={
+                canAddMuse ? { label: "Add", onPress: addMuse } : undefined
+              }
+              label={`Characters (${novelist.museCount})`}
+            />
 
             <View
               style={[
@@ -845,6 +958,10 @@ export const NovelistProfile = ({
       <BadgeSheet
         badges={novelist.badges}
         onClose={() => setBadgesOpen(false)}
+        onSeeAll={() => {
+          setBadgesOpen(false);
+          router.navigate("/badge-catalogue");
+        }}
         ownerName={novelist.firstName}
         visible={badgesOpen && !isOwnProfile && !isSupport}
       />
@@ -973,10 +1090,19 @@ const FandomChip = memo(function FandomChip({ fandom }: { fandom: Fandom }) {
   );
 });
 
+interface SectionAction {
+  icon?: ComponentProps<typeof Ionicons>["name"];
+  label: string;
+  onPress: () => void;
+}
+
 /** Web's `MuseSectionHeader`: a label, then a rule filling the rest of the row. */
 const SectionHeader = memo(function SectionHeader({
+  action,
   label,
 }: {
+  /** Web's `AddMuseButton`, at the end of the rule. */
+  action?: SectionAction;
   label: string;
 }) {
   const theme = useAppTheme();
@@ -987,6 +1113,28 @@ const SectionHeader = memo(function SectionHeader({
         {label}
       </Text>
       <View style={[styles.rule, { backgroundColor: theme.material.edge }]} />
+      {action ? (
+        <Pressable
+          accessibilityRole="button"
+          hitSlop={space.sm}
+          onPress={action.onPress}
+          style={({ pressed }) => [
+            styles.sectionAction,
+            { opacity: pressed ? 0.6 : 1 },
+          ]}
+        >
+          <Ionicons
+            color={theme.accent.text}
+            name={action.icon ?? "person-add-outline"}
+            size={14}
+          />
+          <Text
+            style={[styles.sectionActionLabel, { color: theme.accent.text }]}
+          >
+            {action.label}
+          </Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 });
@@ -1106,6 +1254,8 @@ const MuseRow = memo(function MuseRow({
 });
 
 const styles = StyleSheet.create({
+  sectionAction: { alignItems: "center", flexDirection: "row", gap: space.xs },
+  sectionActionLabel: { fontSize: fontSize.caption, fontWeight: "600" },
   about: {
     borderBottomLeftRadius: radius.md + 2,
     borderBottomRightRadius: radius.md + 2,
@@ -1122,6 +1272,8 @@ const styles = StyleSheet.create({
   avatarWrap: { flexShrink: 0, zIndex: 1 },
   banner: { overflow: "hidden", width: "100%" },
   bannerImage: { height: "100%", width: "100%" },
+  bannerWashed: { aspectRatio: 5 / 1, overflow: "visible" },
+  wash: { left: 0, position: "absolute", right: 0, top: 0 },
   chip: {
     alignItems: "center",
     borderRadius: radius.full,
@@ -1213,7 +1365,13 @@ const styles = StyleSheet.create({
     marginTop: HEADER_LIFT,
     paddingHorizontal: space.md,
   },
-  identity: { gap: space.sm, paddingHorizontal: space.md, paddingTop: space.m },
+  // Tighter than web's 6px (the header's 4px foot and the name's 2px top), by
+  // request: the avatar already holds the name well clear of the note.
+  identity: {
+    gap: space.sm,
+    paddingHorizontal: space.md,
+    paddingTop: space.xxs,
+  },
   list: {
     borderRadius: radius.md + 2,
     borderWidth: border.edge,
@@ -1258,35 +1416,59 @@ const styles = StyleSheet.create({
   museText: { flex: 1, minWidth: 0 },
   mutualRow: { alignItems: "center", flexDirection: "row", gap: space.sm },
   // Web's 24 at phone width.
-  name: { fontSize: 24, fontWeight: "700", lineHeight: 29 },
+  // Web's `NameMobile`: centred under the hero.
+  name: {
+    fontSize: 24,
+    fontWeight: "700",
+    lineHeight: 29,
+    textAlign: "center",
+  },
   note: {
     borderRadius: radius.lg,
     paddingHorizontal: space.m,
     paddingVertical: space.s,
   },
+  /*
+   * Web's dots and their spacing, measured from the bubble's left edge: the
+   * large one 13px at left -11, the small one 7px at left -21 and 6px lower.
+   * The strip hangs 10pt under the bubble's foot, so the large dot overlaps
+   * the bottom-left corner and the small one trails below it.
+   */
   noteDotLarge: {
     borderRadius: 6.5,
     height: 13,
-    left: -11,
-    marginTop: -6.5,
+    left: 10,
     position: "absolute",
-    top: "50%",
+    top: 0,
     width: 13,
   },
   noteDotSmall: {
     borderRadius: 3.5,
     height: 7,
-    left: -21,
-    marginTop: space.s,
+    left: 0,
     position: "absolute",
-    top: "50%",
+    top: 6.5 + 6,
     width: 7,
+  },
+  noteTrail: {
+    bottom: -10,
+    height: 20,
+    left: -21,
+    position: "absolute",
+    width: 23,
   },
   /** Web's `NoteBubbleEmoji`: pinned to the bubble's top-right corner. */
   noteEmoji: { position: "absolute", right: -9, top: -12 },
   noteEmojiTilted: { transform: [{ rotate: "45deg" }] },
   noteText: { fontSize: fontSize.caption, lineHeight: 16 },
-  noteWrap: { flexShrink: 1, maxWidth: 180 },
+  // Web's `NoteContainer` at ≤800px: low beside the avatar, not centred on
+  // it — where the circle curves away, so the trail's small dot shows.
+  noteWrap: {
+    alignSelf: "flex-end",
+    flexShrink: 1,
+    marginBottom: 20,
+    maxWidth: 180,
+  },
   rule: { flex: 1, height: StyleSheet.hairlineWidth },
   section: { gap: space.sm, marginTop: space.lg, paddingHorizontal: space.md },
   sectionHeader: {

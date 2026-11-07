@@ -16,6 +16,7 @@ import { TextField } from "@/components/text-field";
 import { useRegisterDraft } from "@/context/register-draft";
 import { api } from "@/lib/api";
 import { refreshSessionQueries, signUpWithPassword } from "@/lib/auth";
+import { clearReferral, readReferral } from "@/lib/referral";
 import { authErrorCode, describeAuthError } from "@/lib/auth-errors";
 import { fontSize, radius, space, useAppTheme } from "@/theme";
 import { PRIVACY_URL, TERMS_URL } from "@/lib/links";
@@ -159,11 +160,14 @@ export default function RegisterUsernameScreen() {
     setBusy(true);
     setError(null);
     try {
+      const referralUser = await readReferral();
       await signUpWithPassword({
         email: draft.email,
         password: draft.password,
+        ...(referralUser ? { referralUser } : {}),
         username: username.trim(),
       });
+      void clearReferral();
       await refreshSessionQueries(queryClient);
       // A brand-new account has no novelist profile yet: the set-up flow is
       // next, and the tabs open once it is finished.

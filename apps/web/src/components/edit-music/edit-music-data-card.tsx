@@ -388,6 +388,11 @@ export default function EditMusicDataCard() {
             {fileName && <S.FileName>{fileName}</S.FileName>}
           </S.FileButtonWrapper>
 
+          <S.RightsNotice>
+            Only upload music you made or have the rights to share. Songs that
+            infringe someone's rights can be reported and removed.
+          </S.RightsNotice>
+
           <ShouldRender if={!!errors.source}>
             <S.ErrorMessage>{errors.source}</S.ErrorMessage>
           </ShouldRender>

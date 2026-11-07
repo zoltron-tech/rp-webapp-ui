@@ -1,7 +1,7 @@
 import { Stack, useRouter } from "expo-router";
 import { ambientScreenLayout } from "@/components/ambient-background";
 import { TabHeaderTitle } from "@/components/header-title";
-import { MenuButton } from "@/components/menu-button";
+import { HeaderActions } from "@/components/header-actions";
 import { tabStackBack } from "@/components/stack-back-button";
 import { useAppTheme } from "@/theme";
 import { glassHeaderOptions } from "@/theme/header";
@@ -36,7 +36,7 @@ export default function ProfileStackLayout() {
       screenLayout={ambientScreenLayout}
       screenOptions={(screen) => ({
         contentStyle: { backgroundColor: theme.background },
-        headerRight: () => <MenuButton />,
+        headerRight: () => <HeaderActions />,
         ...glassHeaderOptions(theme),
         // A page that arrived first in this stack (a link from another tab,
         // from a chat, from a story) still needs a way back on iOS.
@@ -56,8 +56,9 @@ export default function ProfileStackLayout() {
         }}
       />
       <Stack.Screen name="friends" options={{ title: "Friends" }} />
+      <Stack.Screen name="music" options={{ title: "Music" }} />
       <Stack.Screen name="muses" options={{ title: "Characters" }} />
-      <Stack.Screen name="books" options={{ title: "Books" }} />
+      <Stack.Screen name="books" options={{ title: "Bookshelf" }} />
       <Stack.Screen name="stories" options={{ title: "Stories" }} />
       <Stack.Screen name="activity" options={{ title: "Activity" }} />
       <Stack.Screen name="prompts" options={{ title: "Prompts" }} />

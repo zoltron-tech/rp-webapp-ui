@@ -1,5 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import { deleteConversationMessage } from "@nw/api/endpoints/conversation-detail";
+import {
+  deleteConversationMessage,
+  getConversationMembers,
+  getConversationMuses,
+  reportMessage,
+} from "@nw/api/endpoints/conversation-detail";
 import {
   conversationUsernames,
   isSameReaction,
@@ -14,7 +19,7 @@ import {
   useMarkConversationRead,
   useSession,
 } from "@nw/features";
-import type { Message } from "@nw/types";
+import type { MentionDataItem, MentionTab, Message } from "@nw/types";
 import { isSameChatDay, toChatDayLabel, toChatTime } from "@nw/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { LinearGradient } from "expo-linear-gradient";
@@ -33,6 +38,7 @@ import { ChatBackground } from "@/components/chat/chat-background";
 import { Composer, type ComposerSubmission } from "@/components/chat/composer";
 import { ConversationHeader } from "@/components/chat/conversation-header";
 import { HelloState } from "@/components/chat/hello-state";
+import { ForwardSheet } from "@/components/chat/forward-sheet";
 import { MessageActions } from "@/components/chat/message-actions";
 import {
   DaySeparator,
@@ -55,6 +61,7 @@ import { useSendChatMessage } from "@/hooks/use-send-chat-message";
 import { useSwipeBack } from "@/hooks/use-swipe-back";
 import { useOffline } from "@/lib/connectivity";
 import { OUTBOX_ID_PREFIX } from "@/lib/local-store";
+import { alertReportSent } from "@/lib/report";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
@@ -157,6 +164,48 @@ export const ConversationScreen = ({
   const api = useApi();
   const queryClient = useQueryClient();
   const { conversation } = useConversation(conversationId);
+
+  /** Web's two lists: who is in the conversation, and their characters. */
+  const mentionTabs = useMemo<MentionTab[]>(
+    () => [
+      {
+        getData: async (prefix: string): Promise<MentionDataItem[]> => {
+          const members = await getConversationMembers(
+            api,
+            conversationId ?? "",
+            1,
+            100,
+          ).catch(() => null);
+          if (!Array.isArray(members)) return [];
+          const needle = prefix.toLowerCase();
+          return members
+            .filter((member) => member.userName !== novelist?.username)
+            .map((member) => ({
+              displayName:
+                `${member.firstName} ${member.lastName ?? ""}`.trim() ||
+                member.userName,
+              id: member.novelistId || member.userName,
+              image: member.image ?? "",
+              type: "NOVELIST" as const,
+            }))
+            .filter((item) => item.displayName.toLowerCase().includes(needle));
+        },
+        iconKey: "avatar",
+        id: "novelists",
+        label: "Novelists",
+      },
+      {
+        getData: (prefix: string) =>
+          getConversationMuses(api, conversationId ?? "", prefix).catch(
+            () => [],
+          ),
+        iconKey: "icon",
+        id: "muses",
+        label: "Characters",
+      },
+    ],
+    [api, conversationId, novelist?.username],
+  );
 
   /*
    * How many are in a group. The service sends `memberCount`; a service
@@ -855,6 +904,35 @@ export const ConversationScreen = ({
   const canDeleteActions = Boolean(
     actionsRow && !actionsRow.pendingId && actionsRow.mine,
   );
+  const canReportActions = Boolean(actionsRow && !actionsRow.mine);
+  const [forwarding, setForwarding] = useState<Message | null>(null);
+
+  /** Web's report dialog: one confirmation, then the shared endpoint. */
+  const confirmReport = (message: Message) =>
+    Alert.alert(
+      "Report this message?",
+      "Our team will review it. The sender is not told who reported it.",
+      [
+        { style: "cancel", text: "Cancel" },
+        {
+          onPress: async () => {
+            const result = await reportMessage(api, message.id).catch(
+              () => null,
+            );
+            if (result === true) {
+              alertReportSent();
+            } else {
+              Alert.alert(
+                "Could not report",
+                "There was an issue while reporting this message.",
+              );
+            }
+          },
+          style: "destructive",
+          text: "Report",
+        },
+      ],
+    );
 
   return (
     // Everything drawn in here is chat: its pictures expire with the messages.
@@ -1054,6 +1132,7 @@ export const ConversationScreen = ({
 
           <Composer
             conversationId={conversationId}
+            mentionTabs={mentionTabs}
             onCancelReply={cancelReply}
             onInsetChange={setBottomInset}
             onSelectSender={selectSender}
@@ -1071,12 +1150,20 @@ export const ConversationScreen = ({
             }
           />
 
+          <ForwardSheet
+            message={forwarding}
+            onClose={() => setForwarding(null)}
+            sourceConversationId={conversationId}
+          />
+
           <MessageActions
             canReact={isConnected}
             message={actionsFor}
             myReaction={myReaction}
             onClose={() => setActionsFor(null)}
             onDelete={canDeleteActions ? removeMessage : undefined}
+            onForward={actionsRow?.pendingId ? undefined : setForwarding}
+            onReport={canReportActions ? confirmReport : undefined}
             onDiscard={
               actionsRow?.pendingId
                 ? () => {

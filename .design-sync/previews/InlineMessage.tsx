@@ -29,10 +29,9 @@ export const EncryptionNotice = () => (
   <div style={col}>
     <InlineMessage variant="info">
       <p>
-        Messages in this conversation are end-to-end encrypted. Only you and
-        night_scribe can read them — not even Novelist World can. If you sign
-        in on a new device, older messages stay locked until you restore your
-        key.
+        Messages in this conversation are encrypted in transit and at rest,
+        and fade away after 14 days. Reported messages can be read by our
+        support team.
       </p>
     </InlineMessage>
   </div>

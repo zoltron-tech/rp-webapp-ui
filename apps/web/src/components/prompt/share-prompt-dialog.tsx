@@ -22,6 +22,7 @@ import { toFormattedDate } from "@/utils/helpers";
 import { AvatarNew } from "../common/avatar-new";
 import * as DropS from "../profile-more-dropdown/styled";
 import * as S from "./styled";
+import { SendToChatButton, SendToChatPanel } from "@/components/send-to-chat";
 import { sharePromptToDiscord } from "@nw/api/endpoints/community";
 import { api } from "@/lib/api";
 
@@ -67,6 +68,8 @@ export const SharePromptDialog: FC<SharePromptDialogProps> = ({
   const { errorToast } = useUIContext();
 
   const [copied, setCopied] = useState(false);
+  // The "Send in a chat" view, in place of the share options.
+  const [chatOpen, setChatOpen] = useState(false);
   const [shareState, setShareState] = useState<ShareState>({ status: "idle" });
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -75,6 +78,7 @@ export const SharePromptDialog: FC<SharePromptDialogProps> = ({
   useEffect(() => {
     if (open) {
       setShareState({ status: "idle" });
+      setChatOpen(false);
       setCopied(false);
     }
   }, [open]);
@@ -206,7 +210,15 @@ export const SharePromptDialog: FC<SharePromptDialogProps> = ({
   // ── Content: success vs share form (errors show inline in the form) ─────
   let dialogContent: React.ReactNode;
 
-  if (shareState.status === "success") {
+  if (chatOpen) {
+    dialogContent = (
+      <SendToChatPanel
+        label="prompt"
+        onBack={() => setChatOpen(false)}
+        url={promptUrl}
+      />
+    );
+  } else if (shareState.status === "success") {
     dialogContent = (
       <S.ShareResultState>
         <S.ShareResultIconWrap>
@@ -238,7 +250,8 @@ export const SharePromptDialog: FC<SharePromptDialogProps> = ({
         <S.ShareDialogHeader>
           <S.ShareDialogTitle>Share prompt</S.ShareDialogTitle>
           <S.ShareDialogDescription>
-            Post it to the NW Discord community or copy its link.
+            Send it to a chat, post it to the NW Discord community, or copy
+            its link.
           </S.ShareDialogDescription>
         </S.ShareDialogHeader>
 
@@ -291,6 +304,10 @@ export const SharePromptDialog: FC<SharePromptDialogProps> = ({
         </S.ShareLinkRow>
 
         <S.ShareActions>
+          <SendToChatButton
+            disabled={!promptUrl}
+            onClick={() => setChatOpen(true)}
+          />
           <S.ShareDiscordButton
             type="button"
             onClick={handleShareToDiscord}

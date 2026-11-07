@@ -63,8 +63,9 @@ import { border, fontSize, radius, space, type, useAppTheme } from "@/theme";
  *
  * ## Limits
  *
- * The server owns them and says so in `reason` — "You've reached your plan's
- * limit…" — and that is what the alert shows. The stories list gates the
+ * The server owns them and says so in `reason` ("Storyboard Limit is reached
+ * for: …") — and that is what the alert shows. No tier or upgrade wording
+ * anywhere (APP_STORE_REVIEW_PLAN.md M1). The stories list gates the
  * Create button before this opens, as web's page does; the check here is the
  * backstop for a shelf that was stale.
  */

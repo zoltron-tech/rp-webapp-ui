@@ -29,10 +29,17 @@ import {
   type TextStyle,
   View,
 } from "react-native";
+import { getNovelistById } from "@nw/api/endpoints/novelists";
+import { useApi } from "@nw/features";
+import { wsrvImage } from "@nw/utils/image";
+import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
+import { Avatar } from "@/components/avatar";
 import { Image } from "@/components/image";
 import { Text } from "@/components/text";
 import { LinkEmbed } from "@/components/link-embeds";
 import { nativeFace } from "@/lib/editor-fonts";
+import { openImage } from "@/lib/image-viewer";
 import { hasLinkEmbeds, splitRichTextAroundLinks } from "@/lib/link-embeds";
 import { openExternalLink } from "@/lib/safe-link";
 import {
@@ -52,10 +59,11 @@ import {
  * — and this file is only the half that cannot be shared: which React Native
  * component each node becomes.
  *
- * Two constraints shape it. Everything inline has to be a `<Text>`, because
- * React Native will not lay a `<View>` out inside one; and an `<Image>` has no
- * intrinsic size until it loads, so images are blocks with a measured aspect
- * ratio rather than inline runs.
+ * Two constraints shape it. Inline runs are `<Text>`, and the one inline that
+ * is not — a mention chip, a face and a name on a pill — is a small view laid
+ * out inside the line, which React Native does for a view of fixed size; and
+ * an `<Image>` has no intrinsic size until it loads, so images are blocks with
+ * a measured aspect ratio rather than inline runs.
  *
  * Spacing follows the browser rather than looking tidy on its own terms. The
  * editor writes one `<div>` per line and a `<div>` has no default margin, so
@@ -121,6 +129,103 @@ export const richTextBlockCount = (html: string | null | undefined): number =>
  */
 const RATIOS = new Map<string, number>();
 
+/**
+ * A mention chip sized to the text, not to web's 22px face.
+ *
+ * React Native does not grow a fixed-height line for an inline view, and the
+ * body line is 24pt: a 20–24pt chip filled it and stood up against the line
+ * above. 16pt — a 14pt face with 1pt above and below — is the height of the
+ * text's own ascent and descent, so it reads as a word, with room either side.
+ */
+const MENTION_AVATAR = 14;
+const MENTION_HEIGHT = MENTION_AVATAR + 2;
+
+/**
+ * How far the chip is moved down from where React Native puts it.
+ *
+ * An inline view rests its bottom on the baseline, so the chip stands
+ * entirely above it, higher than the words. Capitals and the middle of
+ * lower case sit around 0.35em above the baseline; moving the chip's centre
+ * there lines it up with the text. Measured from the baseline, not from the
+ * line box, so it holds whatever line height the paragraph has.
+ */
+const MENTION_DROP = Math.round(MENTION_HEIGHT / 2 - fontSize.prose * 0.35);
+
+/**
+ * Web's saved `.mention-tag`, drawn inline in the line: a pill in the accent
+ * (`--accent` into `--accent-hover`, 135°), the face, and the name in bold.
+ * The chip is text-sized and centred on the text (`MENTION_DROP`).
+ *
+ * The chip carries an id: a character's is its route, but a novelist's
+ * profile is keyed by username, which has to be asked for first.
+ */
+const MentionLink = ({
+  id,
+  image,
+  kind,
+  name,
+}: {
+  id: string;
+  image?: string;
+  kind: "NOVELIST" | "MUSE";
+  name: string;
+}) => {
+  const theme = useAppTheme();
+  const api = useApi();
+  const router = useRouter();
+
+  const open = async () => {
+    if (kind === "MUSE") {
+      router.push({ params: { museId: id }, pathname: "/muse/[museId]" });
+      return;
+    }
+    const novelist = await getNovelistById(api, id).catch(() => null);
+    if (novelist && "username" in novelist && novelist.username) {
+      router.push({
+        params: { username: novelist.username },
+        pathname: "/novelist/[username]",
+      });
+    }
+  };
+
+  return (
+    <Pressable
+      accessibilityLabel={name}
+      accessibilityRole="link"
+      disabled={!id}
+      onPress={() => void open()}
+      style={({ pressed }) => [styles.mention, { opacity: pressed ? 0.7 : 1 }]}
+    >
+      <LinearGradient
+        colors={[theme.accent.surface, theme.accent.surfaceHover]}
+        end={{ x: 1, y: 1 }}
+        locations={[0, 0.7]}
+        start={{ x: 0, y: 0 }}
+        style={StyleSheet.absoluteFill}
+      />
+      <Avatar
+        name={name}
+        size={MENTION_AVATAR}
+        uri={
+          image
+            ? wsrvImage(image, {
+                fit: "cover",
+                h: MENTION_AVATAR * 3,
+                w: MENTION_AVATAR * 3,
+              })
+            : null
+        }
+      />
+      <Text
+        numberOfLines={1}
+        style={[styles.mentionText, { color: theme.text }]}
+      >
+        {name}
+      </Text>
+    </Pressable>
+  );
+};
+
 /** Web's `richTextContentBase`: `line-height: 1.6`. */
 const LINE_HEIGHT = Math.round(fontSize.prose * 1.6);
 
@@ -146,6 +251,23 @@ const LINES_TIMEOUT_MS = 250;
  */
 const toNativeSize = (px: number | undefined): number | undefined =>
   px ? Math.round((px / WEB_BASE_PX) * fontSize.prose) : undefined;
+
+/**
+ * A block's line height: web's `line-height: 1.6` of its size.
+ *
+ * React Native sets one line height for a whole block, where a browser's
+ * unitless 1.6 is per line. Taking the block's largest run spaced *every*
+ * wrapped line by one big word — the whole post read as if it were bigger.
+ * So a block whose runs share one size gets 1.6 of that size, and a block that
+ * mixes sizes is left to its natural line heights: each line as tall as what
+ * is on it, the big run's line taller, nothing overlapping.
+ */
+const blockLines = (size: number | undefined, mixed: boolean | undefined) =>
+  mixed
+    ? styles.naturalLines
+    : size
+      ? { lineHeight: Math.round((toNativeSize(size) ?? 0) * 1.6) }
+      : null;
 
 /** Flex mapping of `text-align`, for laying an image out in its block. */
 const ALIGN_ITEMS: Record<RichAlign, "flex-start" | "center" | "flex-end"> = {
@@ -278,6 +400,8 @@ const RichImage = ({
   // The picture is reloaded on play; the frames of a still are not the
   // frames of the animation, so this is a new source rather than a toggle.
   const playable = gif && !direct;
+  // A tap on a picture opens it, as web's does. An inline emoji stays an emoji.
+  const viewable = !playable && (maxWidth === undefined || maxWidth > 64);
 
   /**
    * Three ways an image knows how wide it is, in the order they are trusted.
@@ -305,9 +429,17 @@ const RichImage = ({
         accessibilityHint={
           playable ? (playing ? "Stops the GIF" : "Plays the GIF") : undefined
         }
-        accessibilityRole={playable ? "button" : "image"}
-        disabled={!playable}
-        onPress={() => setPlaying((value) => !value)}
+        accessibilityRole={playable || viewable ? "button" : "image"}
+        // Never `disabled`, even with nothing to do: a disabled Pressable
+        // passes the tap to the fold around it, and web keeps image taps
+        // from folding or unfolding the post (`handleContentClick`).
+        onPress={
+          playable
+            ? () => setPlaying((value) => !value)
+            : viewable
+              ? () => openImage(src)
+              : undefined
+        }
         style={[
           styles.image,
           { aspectRatio: ratio, width },
@@ -396,7 +528,7 @@ const tableFor = (theme: AppTheme): RichTextComponents => {
         widthPercent={widthPercent}
       />
     ),
-    ListItem: ({ align, children, marker }) => (
+    ListItem: ({ align, children, fontSize: size, marker, mixedSizes }) => (
       <View style={styles.listItem}>
         <Text style={[styles.marker, { color: theme.textGray }]}>
           {marker ?? "•"}
@@ -406,44 +538,37 @@ const tableFor = (theme: AppTheme): RichTextComponents => {
             styles.paragraph,
             styles.beside,
             { color: theme.text, textAlign: align },
+            blockLines(size, mixedSizes),
           ]}
         >
           {children}
         </BlockText>
       </View>
     ),
-    // The chip carries an id, not a username, and the profile route takes a
-    // username — so tapping it cannot resolve to a screen yet. Rendered as
-    // the accent-coloured name it is, without pretending to be a link.
-    Mention: ({ name }) => (
-      <Text style={[styles.mention, { color: theme.accent.text }]}>
-        @{name}
-      </Text>
+    Mention: ({ id, image, kind, name }) => (
+      <MentionLink id={id} image={image} kind={kind} name={name} />
     ),
     // A block with nothing in it is the blank line someone typed between two
     // paragraphs. An empty `<Text>` has no height, so it needs a space to
     // occupy the line a browser would give it.
-    Paragraph: ({ align, children, fontSize: size }) => (
+    Paragraph: ({ align, children, fontSize: size, mixedSizes }) => (
       <BlockText
         style={[
           styles.paragraph,
           { color: theme.text, textAlign: align },
-          // The block's tallest run decides the line: a 43px heading inside a
-          // 24pt line box overlaps whatever is above it.
-          size
-            ? { lineHeight: Math.round((toNativeSize(size) ?? 0) * 1.6) }
-            : null,
+          blockLines(size, mixedSizes),
         ]}
       >
         {Array.isArray(children) && children.length === 0 ? " " : children}
       </BlockText>
     ),
-    Quote: ({ align, children }) => (
+    Quote: ({ align, children, fontSize: size, mixedSizes }) => (
       <View style={[styles.quote, { borderLeftColor: theme.accent.surface }]}>
         <BlockText
           style={[
             styles.paragraph,
             { color: theme.textGray, textAlign: align },
+            blockLines(size, mixedSizes),
           ]}
         >
           {children}
@@ -846,13 +971,17 @@ const RichTextView = ({
    * exit.
    */
   const pieces = splitRichTextAroundLinks(nodes);
-  if (!hasLinkEmbeds(pieces)) return <RichTextFlow nodes={nodes} table={table} />;
+  if (!hasLinkEmbeds(pieces))
+    return <RichTextFlow nodes={nodes} table={table} />;
 
   return (
     <View style={styles.root}>
       {pieces.map((piece, index) =>
         piece.kind === "link" ? (
-          <LinkEmbed key={`${piece.link.kind}-${piece.link.id}-${index}`} link={piece.link} />
+          <LinkEmbed
+            key={`${piece.link.kind}-${piece.link.id}-${index}`}
+            link={piece.link}
+          />
         ) : (
           <RichTextFlow key={index} nodes={piece.nodes} table={table} />
         ),
@@ -912,7 +1041,11 @@ const styles = StyleSheet.create({
   // below the baseline and reads as a rendering fault rather than as a style.
   code: { fontFamily: monospace, fontSize: fontSize.prose },
   fill: { height: "100%", width: "100%" },
-  floatImage: { marginBottom: FLOAT_BOTTOM, marginTop: space.xxs, width: "100%" },
+  floatImage: {
+    marginBottom: FLOAT_BOTTOM,
+    marginTop: space.xxs,
+    width: "100%",
+  },
   floatRow: { alignItems: "flex-start", gap: FLOAT_GAP, width: "100%" },
   /** Web's GIF mark on a still: a small chip in the picture's corner. */
   gifMark: {
@@ -938,7 +1071,29 @@ const styles = StyleSheet.create({
   marker: { fontSize: fontSize.prose, lineHeight: LINE_HEIGHT, minWidth: 16 },
   /** The measuring pass is laid out but not seen. */
   measuring: { opacity: 0 },
-  mention: { fontWeight: "600" },
+  /* Web's `.mention-tag`: padding 1px 6px 1px 2px, gap 4px, 70px at least. */
+  mention: {
+    alignItems: "center",
+    borderRadius: radius.full,
+    flexDirection: "row",
+    gap: 3,
+    height: MENTION_HEIGHT,
+    marginHorizontal: 2,
+    minWidth: 52,
+    overflow: "hidden",
+    paddingBottom: 1,
+    paddingLeft: 1,
+    paddingRight: 6,
+    paddingTop: 1,
+    transform: [{ translateY: MENTION_DROP }],
+  },
+  mentionText: {
+    fontSize: fontSize.caption,
+    fontWeight: "700",
+    lineHeight: MENTION_HEIGHT - 2,
+  },
+  /** A block that mixes sizes: each line as tall as what is on it. */
+  naturalLines: { lineHeight: undefined },
   paragraph: { fontSize: fontSize.prose, lineHeight: LINE_HEIGHT },
   quote: {
     borderLeftWidth: 3,

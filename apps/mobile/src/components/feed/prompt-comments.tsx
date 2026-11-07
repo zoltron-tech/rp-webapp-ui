@@ -78,10 +78,14 @@ const INITIAL_VISIBLE = 3;
 
 const CommentRowView = ({
   comment,
+  onMore,
   onOpenThread,
+  onShowLikers,
 }: {
   comment: Comment;
+  onMore?: (comment: Comment) => void;
   onOpenThread: (threadId: string) => void;
+  onShowLikers?: (comment: Comment) => void;
 }) => {
   const theme = useAppTheme();
   const openSource = useOpenSource();
@@ -167,6 +171,24 @@ const CommentRowView = ({
             size={14}
           />
         ) : null}
+        {onMore ? (
+          <Pressable
+            accessibilityLabel="More options"
+            accessibilityRole="button"
+            hitSlop={space.sm}
+            onPress={() => onMore(comment)}
+            style={({ pressed }) => [
+              styles.more_,
+              { opacity: pressed ? 0.6 : 1 },
+            ]}
+          >
+            <Ionicons
+              color={theme.textGray}
+              name="ellipsis-horizontal"
+              size={16}
+            />
+          </Pressable>
+        ) : null}
       </View>
 
       <CollapsibleRichText
@@ -185,6 +207,11 @@ const CommentRowView = ({
           compact
           liked={reaction.reacted}
           likes={reaction.reactions}
+          onPressCount={
+            onShowLikers && reaction.reactions > 0
+              ? () => onShowLikers(comment)
+              : undefined
+          }
           onToggle={() => void reaction.toggle()}
           size={18}
         />
@@ -238,7 +265,9 @@ const CommentRowSkeleton = ({ index }: { index: number }) => {
 
 export const PromptComments = ({
   expected,
+  onMore,
   onOpenThread,
+  onShowLikers,
   promptId,
 }: {
   /**
@@ -246,7 +275,10 @@ export const PromptComments = ({
    * draw, and whether to draw any.
    */
   expected?: number;
+  /** A comment's ⋯ menu. Omitted when there is nothing this viewer may do. */
+  onMore?: (comment: Comment) => void;
   onOpenThread: (threadId: string) => void;
+  onShowLikers?: (comment: Comment) => void;
   promptId: string;
 }) => {
   const theme = useAppTheme();
@@ -260,7 +292,8 @@ export const PromptComments = ({
   const queued = useMemo(
     () =>
       allQueued.filter(
-        (entry) => entry.type === "comment" && entry.payload.promptId === promptId,
+        (entry) =>
+          entry.type === "comment" && entry.payload.promptId === promptId,
       ),
     [allQueued, promptId],
   );
@@ -272,7 +305,11 @@ export const PromptComments = ({
     queued.length > 0 ? (
       <View style={styles.list}>
         {queued.map((entry) => (
-          <QueuedPostRow entry={entry} key={entry.id} onDiscard={discardQueued} />
+          <QueuedPostRow
+            entry={entry}
+            key={entry.id}
+            onDiscard={discardQueued}
+          />
         ))}
       </View>
     ) : null;
@@ -369,7 +406,9 @@ export const PromptComments = ({
         <CommentRow
           comment={comment}
           key={comment.id}
+          onMore={onMore}
           onOpenThread={onOpenThread}
+          onShowLikers={onShowLikers}
         />
       ))}
       {queued.map((entry) => (
@@ -412,6 +451,7 @@ const styles = StyleSheet.create({
   list: { gap: space.sm },
   media: { maxWidth: 240 },
   meta: { fontSize: fontSize.caption },
+  more_: { marginLeft: "auto" },
   more: {
     alignItems: "center",
     flexDirection: "row",

@@ -44,6 +44,8 @@ import { API_MESSAGE } from "@/utils/constants";
 import { getMuseAppearance } from "../appearance";
 import * as S from "../styles";
 import PennedBy from "./PennedBy";
+import SectionMiniHeader from "./SectionMiniHeader";
+import { useSectionSwitcher } from "./section-switcher";
 
 const PRIVACY_OPTIONS: PrivacyLevel[] = ["PUBLIC", "FRIENDS", "ONLY_ME"];
 const PRIVACY_LABELS: Record<string, string> = {
@@ -65,6 +67,9 @@ type Props = {
 
 export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
   const accent = muse?.useAccent ? muse.accent : undefined;
+  // Phones, About tab: share Story and Canon's header instead of drawing the
+  // big centred one, so the top of the card holds still between them.
+  const sharedHeader = Boolean(useSectionSwitcher());
   const { hideExpandedBackground, nameColor, pennedByColor } =
     getMuseAppearance(muse);
   const theme = useGlobalState("theme");
@@ -622,77 +627,95 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
             )}
           </S.InfoPrivacyCorner>
 
+          {/* Phones, inside the About tab: the same mini header (and
+              switcher) as Story and Canon, pinned above the scroll, so the
+              top of the card stays put when switching between them. */}
+          {sharedHeader && (
+            <>
+              <SectionMiniHeader muse={muse} accent={accent ?? null} />
+              <S.InfoDivider $accent={accent ?? null} />
+            </>
+          )}
+
           <S.InfoScrollBody accent={accent}>
             {/* Header: avatar + name + nicknames + fandom */}
             <S.InfoHeaderSection>
-              {isOwnMuse ? (
-                <S.AvatarWrapper>
-                  <S.InfoCardAvatar
-                    $src={
-                      !avatarError ? muse?.avatar?.src || muse?.image || "" : ""
-                    }
-                    $crop={avatarCrop}
-                    style={{ height: "100%", width: "100%" }}
-                  >
-                    {((!muse?.avatar?.src && !muse?.image) || avatarError) &&
-                      !avatarSaving && <FaUser size={30} />}
-                  </S.InfoCardAvatar>
+              {!sharedHeader && (
+                <>
+                  {isOwnMuse ? (
+                    <S.AvatarWrapper>
+                      <S.InfoCardAvatar
+                        $src={
+                          !avatarError
+                            ? muse?.avatar?.src || muse?.image || ""
+                            : ""
+                        }
+                        $crop={avatarCrop}
+                        style={{ height: "100%", width: "100%" }}
+                      >
+                        {((!muse?.avatar?.src && !muse?.image) ||
+                          avatarError) &&
+                          !avatarSaving && <FaUser size={30} />}
+                      </S.InfoCardAvatar>
 
-                  <S.AvatarEditBtn
-                    type="button"
-                    title={avatarSaving ? "Saving…" : "Change photo"}
-                    disabled={avatarSaving}
-                    onClick={handleAvatarEditClick}
-                  >
-                    {avatarSaving ? (
-                      <span style={{ fontSize: "0.5rem" }}>…</span>
-                    ) : (
-                      <FiCamera size={11} />
-                    )}
-                  </S.AvatarEditBtn>
+                      <S.AvatarEditBtn
+                        type="button"
+                        title={avatarSaving ? "Saving…" : "Change photo"}
+                        disabled={avatarSaving}
+                        onClick={handleAvatarEditClick}
+                      >
+                        {avatarSaving ? (
+                          <span style={{ fontSize: "0.5rem" }}>…</span>
+                        ) : (
+                          <FiCamera size={11} />
+                        )}
+                      </S.AvatarEditBtn>
 
-                  {muse?.avatar && !avatarSaving && (
-                    <S.AvatarRemoveBtn
-                      className="avatar-remove"
-                      type="button"
-                      title="Remove avatar"
-                      onClick={() => setConfirmRemoveAvatar(true)}
+                      {muse?.avatar && !avatarSaving && (
+                        <S.AvatarRemoveBtn
+                          className="avatar-remove"
+                          type="button"
+                          title="Remove avatar"
+                          onClick={() => setConfirmRemoveAvatar(true)}
+                        >
+                          ×
+                        </S.AvatarRemoveBtn>
+                      )}
+
+                      <input
+                        ref={avatarFileInputRef}
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp,image/gif"
+                        style={{ display: "none" }}
+                        onChange={handleAvatarFileChange}
+                      />
+                    </S.AvatarWrapper>
+                  ) : (
+                    <S.InfoCardAvatar
+                      $src={
+                        !avatarError
+                          ? muse?.avatar?.src || muse?.image || ""
+                          : ""
+                      }
+                      $crop={avatarCrop}
                     >
-                      ×
-                    </S.AvatarRemoveBtn>
+                      {((!muse?.avatar?.src && !muse?.image) ||
+                        avatarError) && <FaUser size={30} />}
+                    </S.InfoCardAvatar>
                   )}
 
-                  <input
-                    ref={avatarFileInputRef}
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp,image/gif"
-                    style={{ display: "none" }}
-                    onChange={handleAvatarFileChange}
+                  <S.InfoMuseName $textColor={nameColor}>
+                    {muse?.firstName}
+                    {muse?.lastName ? ` ${muse.lastName}` : ""}
+                  </S.InfoMuseName>
+
+                  <PennedBy
+                    pennedBy={muse?.pennedBy}
+                    accent={accent ?? null}
+                    textColor={pennedByColor}
                   />
-                </S.AvatarWrapper>
-              ) : (
-                <S.InfoCardAvatar
-                  $src={
-                    !avatarError ? muse?.avatar?.src || muse?.image || "" : ""
-                  }
-                  $crop={avatarCrop}
-                >
-                  {((!muse?.avatar?.src && !muse?.image) || avatarError) && (
-                    <FaUser size={30} />
-                  )}
-                </S.InfoCardAvatar>
+                </>
               )}
-
-              <S.InfoMuseName $textColor={nameColor}>
-                {muse?.firstName}
-                {muse?.lastName ? ` ${muse.lastName}` : ""}
-              </S.InfoMuseName>
-
-              <PennedBy
-                pennedBy={muse?.pennedBy}
-                accent={accent ?? null}
-                textColor={pennedByColor}
-              />
 
               {/* Nicknames */}
               {isOwnMuse ? (

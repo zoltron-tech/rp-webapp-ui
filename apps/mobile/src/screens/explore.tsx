@@ -1,9 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
-import { getExplorePrompts, getNewsFeedPage } from "@nw/api/endpoints/feed";
+import {
+  getExplorePrompts,
+  getNewsFeedPage,
+  searchExplorePrompts,
+} from "@nw/api/endpoints/feed";
 import { queryKeys, useApi } from "@nw/features";
 import type { Prompt } from "@nw/types";
 import { FlashList, type FlashListRef } from "@shopify/flash-list";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { keepPreviousData, useInfiniteQuery } from "@tanstack/react-query";
 import {
   type ComponentProps,
   useCallback,
@@ -11,6 +15,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useLocalSearchParams } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import { ComposeTrigger } from "@/components/compose/compose-trigger";
 import { EndOfList } from "@/components/end-of-list";
@@ -26,6 +31,8 @@ import { dedupeById } from "@/lib/feed";
 import { fontSize, space, type, useAppTheme } from "@/theme";
 import { EmptyState, FeedSeparator, LoadMore } from "@/components/list-parts";
 import { SegmentedTabs } from "@/components/segmented-tabs";
+import { CollapsingHeader } from "@/components/collapsing-header";
+import { FandomSearchBar, useFandomSearch } from "@/components/fandom-search";
 import { Text } from "@/components/text";
 
 /**
@@ -146,7 +153,10 @@ export const ExploreScreen = () => {
   const api = useApi();
 
   /** Web opens on Prompts unless `?tab=newsfeed` says otherwise. */
-  const [mode, setMode] = useState<ExploreMode>("PROMPTS");
+  const { tab } = useLocalSearchParams<{ tab?: string }>();
+  const [mode, setMode] = useState<ExploreMode>(
+    tab === "newsfeed" ? "NEWSFEED" : "PROMPTS",
+  );
 
   const actions = usePromptFeedActions();
   const { canAct, cardProps, expandedIds, novelist, openCompose, unfoldedIds } =
@@ -193,18 +203,64 @@ export const ExploreScreen = () => {
   const queued = useMemo(
     () =>
       actions.queuedPrompts.filter(
-        (prompt) => (prompt.source.sourceType === "MUSE") === (mode === "PROMPTS"),
+        (prompt) =>
+          (prompt.source.sourceType === "MUSE") === (mode === "PROMPTS"),
       ),
     [actions.queuedPrompts, mode],
   );
+  /*
+   * The prompt search — the character directory's field and fandom chips
+   * (`useFandomSearch`), over the feed's prompts by the character who wrote
+   * them (`GET /prompt/explore/search`). While it narrows anything, its
+   * results stand in for the feed; the feed's own pages stay cached, so
+   * clearing the search puts it straight back.
+   *
+   * Keyed under `["explore", …]` on purpose: the card actions patch every
+   * list under that root (`usePromptFeedActions`), so a heart, a comment
+   * count or an edit lands on a search result just as on the feed. Changing
+   * the search keeps the old results on screen, dimmed, until the new first
+   * page arrives.
+   */
+  const search = useFandomSearch();
+  const searching = mode === "PROMPTS" && search.filtering;
+  const results = useInfiniteQuery({
+    enabled: searching,
+    getNextPageParam: (
+      lastPage: Prompt[],
+      _all: Prompt[][],
+      lastPageParam: number,
+    ) => (lastPage.length >= PAGE_SIZE.PROMPTS ? lastPageParam + 1 : undefined),
+    initialPageParam: 1,
+    placeholderData: keepPreviousData,
+    queryFn: async ({ pageParam }): Promise<Prompt[]> => {
+      const result = await searchExplorePrompts(api, {
+        fandoms: search.fandomIds,
+        pageNumber: pageParam,
+        pageSize: PAGE_SIZE.PROMPTS,
+        query: search.term,
+      });
+      if (result === null) return [];
+      if ("message" in result) throw new Error(String(result.message));
+      return result;
+    },
+    queryKey: ["explore", "search", search.term, search.fandomKey],
+    staleTime: 60 * 1000,
+  });
+
+  /** Whichever list is on screen: the search's while searching, else the feed. */
+  const active = searching ? results : query;
+
   const prompts = useMemo(
-    () => [...queued, ...dedupeById(query.data?.pages ?? [])],
-    [query.data, queued],
+    () =>
+      searching
+        ? dedupeById(results.data?.pages ?? [])
+        : [...queued, ...dedupeById(query.data?.pages ?? [])],
+    [query.data, queued, results.data, searching],
   );
 
   // The pull spinner is for pulls, not for the refetch of a feed restored from
   // disk or filled by Home — that one updates the cards where they are.
-  const pull = usePullToRefresh(query.refetch);
+  const pull = usePullToRefresh(() => active.refetch());
 
   const renderItem = useCallback(
     ({ item }: { item: Prompt }) => (
@@ -238,14 +294,16 @@ export const ExploreScreen = () => {
         <View style={styles.intro}>
           <View style={styles.introRow}>
             <Text style={[styles.introTitle, { color: theme.textGray }]}>
-              {INTRO[mode].title}
+              {searching ? "Search results" : INTRO[mode].title}
             </Text>
             <View
               style={[styles.rule, { backgroundColor: theme.material.edge }]}
             />
           </View>
           <Text style={[styles.introBody, { color: theme.textGray }]}>
-            {INTRO[mode].body}
+            {searching
+              ? "Prompts by the characters and fandoms you searched for."
+              : INTRO[mode].body}
           </Text>
         </View>
       </View>
@@ -257,6 +315,7 @@ export const ExploreScreen = () => {
       novelist?.firstName,
       novelist?.image,
       openCompose,
+      searching,
       theme,
     ],
   );
@@ -268,7 +327,7 @@ export const ExploreScreen = () => {
   const listRef = useRef<FlashListRef<Prompt>>(null);
   useTabTop(listRef);
 
-  const { fetchNextPage, hasNextPage, isFetchingNextPage } = query;
+  const { fetchNextPage, hasNextPage, isFetchingNextPage } = active;
   const hasPrompts = prompts.length > 0;
 
   /*
@@ -295,88 +354,99 @@ export const ExploreScreen = () => {
   return (
     <View style={styles.fill}>
       {/*
-        Pinned above the list rather than scrolling with it, which is the one
-        place this departs from the Interactions header.
-
-        That screen's header is a title and a count — read once, then gone. This
-        is a *control*, and the whole screen is one of its two answers. A filter
-        that has to be scrolled back to is a filter nobody changes, and on a
-        667pt screen "scrolled back to" can be several flicks up a feed.
+        The switcher is pinned under the header rather than scrolling with
+        the list — a filter that has to be scrolled back to is a filter
+        nobody changes — and leaves with the header when the tab bar
+        shrinks, coming back on the same scroll up (`CollapsingHeader`).
       */}
-      <View
-        style={[
-          styles.switcher,
-          {
-            // The header's own surface, so the title and the control under
-            // it read as one bar with one edge, and the feed passes under it.
-            backgroundColor: theme.glass.opaque,
-            borderBottomColor: theme.glass.edge,
-          },
-        ]}
-      >
-        <SegmentedTabs
-          onChange={(next) => {
-            setMode(next);
-            // The open sets are ids from the feed being left. Carrying
-            // them over would open whichever cards of the *other* feed
-            // happened to share an id — and hold their comment queries
-            // open for a list nobody is reading.
-            actions.reset();
-          }}
-          options={MODES}
-          value={mode}
-        />
-      </View>
-
-      <FlashList
-        {...tabBarScroll}
-        ref={listRef}
-        contentContainerStyle={contentStyle}
-        data={prompts}
-        /*
-         * The feed's identity, not just the list's. Switching tabs swaps every
-         * row for an unrelated one, and a recycling list re-binds its pooled
-         * cells by position — so without this the first OOC post would be drawn
-         * into the cell still holding the first prompt's expanded comments.
-         */
-        extraData={mode}
-        ItemSeparatorComponent={FeedSeparator}
-        keyExtractor={keyExtractor}
-        ListEmptyComponent={
-          query.isPending || query.error ? (
-            <ListStatus
-              error={query.error}
-              loading={query.isPending}
-              offlineWhat="feed"
-              onRetry={() => void query.refetch()}
-              skeleton={
-                <SkeletonRows
-                  count={3}
-                  gap={space.ms}
-                  render={() => <PromptCardSkeleton />}
-                />
-              }
+      <CollapsingHeader
+        title="Explore"
+        under={
+        <View
+          // On the bar's own surface (`CollapsingHeader` draws it), so the
+          // title and the control under it read as one bar with one edge.
+          style={styles.switcher}
+        >
+          <SegmentedTabs
+            onChange={(next) => {
+              setMode(next);
+              // The open sets are ids from the feed being left. Carrying
+              // them over would open whichever cards of the *other* feed
+              // happened to share an id — and hold their comment queries
+              // open for a list nobody is reading.
+              actions.reset();
+            }}
+            options={MODES}
+            value={mode}
+          />
+          {mode === "PROMPTS" ? (
+            <FandomSearchBar
+              placeholder="Search prompts by character or fandom…"
+              search={search}
             />
-          ) : (
-            <EmptyState
-              body={EMPTY[mode].body}
-              icon="compass-outline"
-              title={EMPTY[mode].title}
-            />
-          )
+          ) : null}
+        </View>
         }
-        ListFooterComponent={footer}
-        ListHeaderComponent={header}
-        onEndReached={() => {
-          if (query.hasNextPage && !query.isFetchingNextPage) {
-            void query.fetchNextPage();
+      >
+        <FlashList
+          {...tabBarScroll}
+          ref={listRef}
+          contentContainerStyle={contentStyle}
+          data={prompts}
+          /*
+           * The feed's identity, not just the list's. Switching tabs swaps every
+           * row for an unrelated one, and a recycling list re-binds its pooled
+           * cells by position — so without this the first OOC post would be drawn
+           * into the cell still holding the first prompt's expanded comments.
+           */
+          extraData={`${mode}|${searching}`}
+          ItemSeparatorComponent={FeedSeparator}
+          keyboardDismissMode="on-drag"
+          keyboardShouldPersistTaps="handled"
+          keyExtractor={keyExtractor}
+          ListEmptyComponent={
+            active.isPending || active.error ? (
+              <ListStatus
+                error={active.error}
+                loading={active.isPending}
+                offlineWhat="feed"
+                onRetry={() => void active.refetch()}
+                skeleton={
+                  <SkeletonRows
+                    count={3}
+                    gap={space.ms}
+                    render={() => <PromptCardSkeleton />}
+                  />
+                }
+              />
+            ) : (
+              <EmptyState
+                body={
+                  searching
+                    ? "Try another character, or a different fandom."
+                    : EMPTY[mode].body
+                }
+                icon={searching ? "search-outline" : "compass-outline"}
+                title={searching ? "No prompts match" : EMPTY[mode].title}
+              />
+            )
           }
-        }}
-        onEndReachedThreshold={END_REACHED_THRESHOLD}
-        onRefresh={pull.onRefresh}
-        refreshing={pull.refreshing}
-        renderItem={renderItem}
-      />
+          ListFooterComponent={footer}
+          ListHeaderComponent={header}
+          onEndReached={() => {
+            if (active.hasNextPage && !active.isFetchingNextPage) {
+              void active.fetchNextPage();
+            }
+          }}
+          onEndReachedThreshold={END_REACHED_THRESHOLD}
+          onRefresh={pull.onRefresh}
+          refreshing={pull.refreshing}
+          renderItem={renderItem}
+          style={
+            searching && results.isPlaceholderData ? styles.stale : undefined
+          }
+        />
+      </CollapsingHeader>
 
       {actions.sheets}
     </View>
@@ -392,8 +462,9 @@ const styles = StyleSheet.create({
   introRow: { alignItems: "center", flexDirection: "row", gap: space.m },
   introTitle: type.eyebrow,
   rule: { flex: 1, height: StyleSheet.hairlineWidth },
+  stale: { opacity: 0.55 },
   switcher: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    gap: space.ms,
     paddingBottom: space.ms,
     paddingHorizontal: space.md,
     paddingTop: space.xs,

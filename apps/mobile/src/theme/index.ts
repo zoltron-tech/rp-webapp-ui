@@ -68,7 +68,7 @@ export const AccentProvider = ({
   palette,
 }: {
   children: ReactNode;
-  /** A palette index. `undefined` leaves the surrounding accent alone. */
+  /** A palette index. `undefined` is the viewer's own, whatever is around it. */
   palette: number | undefined | null;
 }) =>
   createElement(
@@ -307,7 +307,12 @@ interface GlassBases {
   strongEdge: string;
 }
 
-const glassFor = ({ base, ink, page, strongEdge }: GlassBases): GlassTokens => ({
+const glassFor = ({
+  base,
+  ink,
+  page,
+  strongEdge,
+}: GlassBases): GlassTokens => ({
   contrastEdge: strongEdge,
   dim: withAlpha("#000000", SCRIM_ALPHA.dim),
   edge: withAlpha(ink, GLASS_ALPHA.edge),
@@ -441,7 +446,11 @@ const lightAccent = (accent: Accent): Accent => {
     surface: mixColors(accent.solid, 0.18, "#ffffff"),
     surfaceActive: mixColors(accent.solid, 0.26, "#ffffff"),
     surfaceHover: mixColors(accent.solid, 0.3, "#ffffff"),
-    text: darkenToContrast(accent.solid, 4.5, [pressed, tintStrong, ambientPeak]),
+    text: darkenToContrast(accent.solid, 4.5, [
+      pressed,
+      tintStrong,
+      ambientPeak,
+    ]),
     textStrong: darkenToContrast(accent.solid, 7, [pressed, tintStrong]),
     tint: mixColors(accent.solid, 0.12, "#ffffff"),
     tintStrong,
@@ -468,18 +477,18 @@ const withInks = (
     contrastRatio("#ffffff", accent.solid) >= 3 ? "#ffffff" : darkInk;
 
   return {
-  ...accent,
-  brand,
-  fill: light ? accent.solid : accent.surface,
-  fillDisabled: disabledFill,
-  fillPressed: light ? accent.solidHover : accent.surfaceHover,
-  onFill: light ? onSolid : text,
-  onFillDisabled: textGray,
-  onSolid,
-  onSurface:
-    contrastRatio(accent.textStrong, accent.surface) >= 3
-      ? accent.textStrong
-      : "#ffffff",
+    ...accent,
+    brand,
+    fill: light ? accent.solid : accent.surface,
+    fillDisabled: disabledFill,
+    fillPressed: light ? accent.solidHover : accent.surfaceHover,
+    onFill: light ? onSolid : text,
+    onFillDisabled: textGray,
+    onSolid,
+    onSurface:
+      contrastRatio(accent.textStrong, accent.surface) >= 3
+        ? accent.textStrong
+        : "#ffffff",
   };
 };
 

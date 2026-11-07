@@ -102,3 +102,5 @@ export {
 } from "./primitives";
 export type { ScenePalette } from "./scene-palette";
 export { SILENT_BELL_VIEW_BOX, SilentBellScene } from "./silent-bell";
+export { TraitGlyph } from "./trait-art";
+export { UNLIT_BULB_VIEW_BOX, UnlitBulbScene } from "./unlit-bulb";

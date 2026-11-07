@@ -1,5 +1,6 @@
 "use client";
 
+import { REPORT_SENT_TOAST } from "@/utils/report";
 import type { Muse } from "@nw/types";
 import { useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
@@ -143,7 +144,7 @@ export function MoreSection({ muse, isOwnMuse }: Props) {
           setShowReportConfirm(false);
           const response = await reportAction(muse.id, "", "MUSE");
           if (response?.message === API_MESSAGE.Success) {
-            successToast?.("Reported successfully.");
+            successToast?.(REPORT_SENT_TOAST);
           } else {
             errorToast?.("There was an issue while reporting this muse.");
           }

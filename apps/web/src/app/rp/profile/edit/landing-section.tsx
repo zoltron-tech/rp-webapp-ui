@@ -411,7 +411,8 @@ export function LandingSection({ onSelect }: Props) {
           <S.LandingCardBody>
             <S.LandingCardTitle>Profile privacy</S.LandingCardTitle>
             <S.LandingCardDesc>
-              Who sees your bookshelf, characters and About me.
+              Who sees your bookshelf, characters and About me, and whether
+              your activity is recorded.
             </S.LandingCardDesc>
           </S.LandingCardBody>
         </S.LandingCard>

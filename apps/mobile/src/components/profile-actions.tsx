@@ -13,6 +13,7 @@ import {
   useConnectionActions,
   useOpenConversation,
 } from "@/hooks/use-connection";
+import { alertReportSent } from "@/lib/report";
 import { border, radius, space, useAppTheme } from "@/theme";
 
 /**
@@ -97,9 +98,13 @@ export const ProfileActions = memo(function ProfileActions({
   const run = (
     mutation: { mutateAsync: () => Promise<unknown> },
     what: string,
+    onDone?: () => void,
   ) => {
     close();
-    mutation.mutateAsync().catch(failed(what));
+    mutation
+      .mutateAsync()
+      .then(() => onDone?.())
+      .catch(failed(what));
   };
 
   const message = () => {
@@ -217,7 +222,7 @@ export const ProfileActions = memo(function ProfileActions({
                 `Report ${novelist.username}?`,
                 "A moderator will review this profile.",
                 "Report",
-                () => run(actions.report, "The report"),
+                () => run(actions.report, "The report", alertReportSent),
               ),
             variant: "danger",
           },
@@ -235,7 +240,7 @@ export const ProfileActions = memo(function ProfileActions({
                   `Report ${novelist.username}?`,
                   "A moderator will review this profile.",
                   "Report",
-                  () => run(actions.report, "The report"),
+                  () => run(actions.report, "The report", alertReportSent),
                 ),
               variant: "danger",
             },

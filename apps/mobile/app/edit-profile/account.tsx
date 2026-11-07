@@ -10,8 +10,9 @@ import {
   getBlockedNovelists,
   unblockNovelist,
 } from "@nw/api/endpoints/profile";
-import { useApi, useSession } from "@nw/features";
-import { API_MESSAGE, type Friend } from "@nw/types";
+import { syncMyBadges } from "@nw/api/endpoints/badges";
+import { queryKeys, useApi, useSession } from "@nw/features";
+import { API_MESSAGE, type Friend, type LinkProvider } from "@nw/types";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -28,23 +29,24 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Avatar } from "@/components/avatar";
 import { UsernameSheet } from "@/components/edit-profile/username-sheet";
 import {
-  Chip,
   Notice,
   PillButton,
   SettingsGroup,
   SettingsRow,
 } from "@/components/settings";
+import { describeAuthError } from "@/lib/auth-errors";
 import { env } from "@/lib/env";
+import { linkAccount } from "@/lib/oauth";
+import { openExternalLink } from "@/lib/safe-link";
 import { fontSize, space, useAppTheme } from "@/theme";
-import { WEB_URL } from "@/lib/links";
 
 /**
  * Web's `AccountSection`: sign-in and security, badges and your circle,
  * connected accounts, where you are signed in, and who you have blocked.
  *
- * Linking Discord or Spotify is an OAuth round trip that lands back on a web
- * page, so "Connect" opens that page in the browser; seeing and ending a link
- * is native.
+ * Linking Discord or Spotify runs the provider's consent in the same in-app
+ * browser sheet as social sign-in and comes back through the app's own
+ * scheme (`linkAccount` in `lib/oauth.ts`); nothing leaves for the website.
  */
 
 type Async = "idle" | "loading" | "success" | "error";
@@ -62,7 +64,8 @@ export default function AccountScreen() {
   const [usernameOpen, setUsernameOpen] = useState(false);
   const [verify, setVerify] = useState<Async>("idle");
   const [reset, setReset] = useState<Async>("idle");
-  const [unlinking, setUnlinking] = useState<"discord" | "spotify" | null>(null);
+  const [unlinking, setUnlinking] = useState<LinkProvider | null>(null);
+  const [linking, setLinking] = useState<LinkProvider | null>(null);
 
   const [blocked, setBlocked] = useState<Friend[]>([]);
   const [blockedPage, setBlockedPage] = useState(1);
@@ -105,7 +108,15 @@ export default function AccountScreen() {
     setReset(result?.message === API_MESSAGE.Success ? "success" : "error");
   };
 
-  const unlink = (provider: "discord" | "spotify") => {
+  // Both accounts earn a badge, and the throttle would hide the change.
+  const resyncBadges = () =>
+    void syncMyBadges(api).then((badges) => {
+      if (badges.length > 0) {
+        queryClient.setQueryData(queryKeys.myBadges(), badges);
+      }
+    });
+
+  const unlink = (provider: LinkProvider) => {
     const label = provider === "discord" ? "Discord" : "Spotify";
     Alert.alert(`Unlink ${label}?`, `Your ${label} account will be disconnected.`, [
       { style: "cancel", text: "Cancel" },
@@ -122,6 +133,7 @@ export default function AccountScreen() {
             return;
           }
           queryClient.setQueryData(["account", provider], null);
+          resyncBadges();
         },
         style: "destructive",
         text: "Unlink",
@@ -129,8 +141,31 @@ export default function AccountScreen() {
     ]);
   };
 
-  const connect = () =>
-    void Linking.openURL(`${WEB_URL}/rp/profile/edit`);
+  const connect = async (provider: LinkProvider) => {
+    const label = provider === "discord" ? "Discord" : "Spotify";
+    setLinking(provider);
+    try {
+      const outcome = await linkAccount(provider);
+      if (outcome === "cancelled") return;
+      if (outcome === "already_linked") {
+        Alert.alert(
+          "Already linked",
+          `That ${label} account is already linked to another Novelist World profile.`,
+        );
+        return;
+      }
+      // The redirect said "linked"; the row's details come from the API.
+      await queryClient.invalidateQueries({ queryKey: ["account", provider] });
+      resyncBadges();
+    } catch (cause) {
+      Alert.alert(
+        "Not linked",
+        describeAuthError(cause, `Could not link ${label}. Try again.`),
+      );
+    } finally {
+      setLinking(null);
+    }
+  };
 
   const loadMore = async () => {
     const next = blockedPage + 1;
@@ -154,7 +189,7 @@ export default function AccountScreen() {
   };
 
   const connection = (
-    provider: "discord" | "spotify",
+    provider: LinkProvider,
     query: { data: unknown; isPending: boolean },
   ) =>
     query.isPending ? (
@@ -167,7 +202,12 @@ export default function AccountScreen() {
         onPress={() => unlink(provider)}
       />
     ) : (
-      <PillButton icon="link-outline" label="Connect" onPress={connect} />
+      <PillButton
+        busy={linking === provider}
+        icon="link-outline"
+        label="Connect"
+        onPress={() => void connect(provider)}
+      />
     );
 
   const discordName = discord.data
@@ -200,19 +240,21 @@ export default function AccountScreen() {
             icon="mail-outline"
             label="Email"
             subtitle={
-              <View style={styles.detail}>
-                <Text
-                  numberOfLines={1}
-                  style={[styles.value, { color: theme.textGray }]}
-                >
-                  {user?.email || "—"}
-                </Text>
-                <Chip
-                  icon={verified ? "checkmark-circle" : "close-circle"}
-                  label={verified ? "Verified" : "Unverified"}
-                  tone={verified ? "positive" : "danger"}
-                />
-              </View>
+              verified ? (
+                user?.email || "—"
+              ) : (
+                <View style={styles.detail}>
+                  <Text
+                    numberOfLines={1}
+                    style={[styles.value, { color: theme.textGray }]}
+                  >
+                    {user?.email || "—"}
+                  </Text>
+                  <Text style={[styles.unverified, { color: theme.error }]}>
+                    Not verified
+                  </Text>
+                </View>
+              )
             }
           />
           {verify === "success" ? (
@@ -226,15 +268,9 @@ export default function AccountScreen() {
             </Notice>
           ) : null}
           <SettingsRow
-            accessory={
-              <PillButton
-                icon="pencil"
-                label="Change"
-                onPress={() => setUsernameOpen(true)}
-              />
-            }
             icon="at-outline"
             label="Username"
+            onPress={() => setUsernameOpen(true)}
             subtitle={user?.username ? `@${user.username}` : "—"}
           />
           {isOauth ? (
@@ -244,18 +280,13 @@ export default function AccountScreen() {
             </Notice>
           ) : (
             <SettingsRow
-              accessory={
-                <PillButton
-                  busy={reset === "loading"}
-                  disabled={!user?.email}
-                  icon="key-outline"
-                  label="Reset"
-                  onPress={() => void resetPassword()}
-                />
-              }
+              busy={reset === "loading"}
+              chevron={false}
+              disabled={!user?.email}
               icon="key-outline"
-              label="Password"
-              subtitle="••••••••"
+              label="Reset password"
+              onPress={() => void resetPassword()}
+              subtitle="We'll email you a link"
             />
           )}
           {reset === "success" ? (
@@ -281,25 +312,33 @@ export default function AccountScreen() {
             onPress={() =>
               router.dismissTo("/(tabs)/(profile)/badges", { withAnchor: true })
             }
-            subtitle="What you have earned around Novelist World"
+            subtitle="What you have earned"
           />
           <SettingsRow
-            external
             icon="people-outline"
             label="Your circle"
-            onPress={() =>
-              void Linking.openURL(`${WEB_URL}/rp/profile/referrals`)
-            }
-            subtitle="Novelists who joined using your referral link"
+            onPress={() => router.push("/edit-profile/referrals")}
+            subtitle="Novelists you invited"
           />
         </SettingsGroup>
 
         <SettingsGroup
-          footer="Connecting opens novelist.world in your browser."
+          footer="Connect signs you in with the provider in a secure sheet. You can unlink at any time."
           title="Connected accounts"
         >
           <SettingsRow
-            accessory={connection("discord", discord)}
+            accessory={
+              <View style={styles.connection}>
+                {discord.data?.avatarUrl ? (
+                  <Avatar
+                    name={discordName ?? undefined}
+                    size={28}
+                    uri={discord.data.avatarUrl}
+                  />
+                ) : null}
+                {connection("discord", discord)}
+              </View>
+            }
             icon="logo-discord"
             label="Discord"
             subtitle={
@@ -307,10 +346,25 @@ export default function AccountScreen() {
             }
             tone="discord"
           />
+          {discord.data && !discord.data.isServerMember && env.DISCORD_INVITE_URL ? (
+            <SettingsRow
+              external
+              icon="people-outline"
+              label="Join the NW server"
+              onPress={() => void Linking.openURL(env.DISCORD_INVITE_URL)}
+              subtitle="Linked, but not in the community yet"
+              tone="discord"
+            />
+          ) : null}
           <SettingsRow
             accessory={connection("spotify", spotify)}
             icon="musical-notes"
             label="Spotify"
+            onPress={
+              spotify.data?.profileUrl
+                ? () => void openExternalLink(spotify.data?.profileUrl ?? "")
+                : undefined
+            }
             subtitle={
               spotify.isPending ? "…" : spotifyName ?? "Not connected"
             }
@@ -393,6 +447,8 @@ export default function AccountScreen() {
 }
 
 const styles = StyleSheet.create({
+  unverified: { fontSize: fontSize.caption, fontWeight: "600" },
+  connection: { alignItems: "center", flexDirection: "row", gap: space.sm },
   blockedName: { fontSize: fontSize.body, fontWeight: "600" },
   blockedRow: {
     alignItems: "center",

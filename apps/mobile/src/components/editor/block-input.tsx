@@ -4,18 +4,21 @@ import {
   type RichInline,
   type RunStyle,
 } from "@nw/richtext";
-import { memo, type ReactNode, useMemo } from "react";
+import { memo, type ReactNode, useMemo, useState } from "react";
 import {
   type NativeSyntheticEvent,
+  PixelRatio,
+  Platform,
   StyleSheet,
   type TextInputKeyPressEventData,
   type TextInputSelectionChangeEventData,
+  type TextLayoutEventData,
   type TextLayoutLine,
   type TextStyle,
   View,
 } from "react-native";
 import { Text, TextInput } from "@/components/text";
-import { nativeFace } from "@/lib/editor-fonts";
+import { fontContentEm, fontLeading, nativeFace } from "@/lib/editor-fonts";
 import { misspelledStyle, splitByFlags } from "@/lib/spell/decorate";
 import type { SpellFlag } from "@/lib/spell/flags";
 import {
@@ -76,9 +79,37 @@ const WEB_BASE_PX = 16;
 export const toNativeSize = (px: number | undefined): number =>
   px ? Math.round((px / WEB_BASE_PX) * fontSize.prose) : fontSize.prose;
 
-/** Web's `line-height: 1.6` on saved content; a touch tighter for headings. */
-const lineHeightFor = (size: number): number =>
-  Math.round(size * (size > 24 ? 1.25 : 1.5));
+/**
+ * Web's `line-height: 1.6` on saved content; a touch tighter for headings —
+ * unless a face in the line is taller than that box. The box is fixed, and a
+ * face whose ascent and descent outrun it (Bodoni Moda SC at 1.525em, Savate,
+ * Playfair Display SC and Shantell Sans past 1.25em) has its tops clipped on
+ * the first line and its lines drawn into one another. See `fontContentEm`.
+ */
+const lineHeightFor = (size: number, contentEm: number): number =>
+  Math.round(size * Math.max(size > 24 ? 1.25 : 1.5, contentEm));
+
+/** The tallest face a block's runs — or what will be typed into it — use. */
+const blockContentEm = (block: RichBlock, typing?: RunStyle): number => {
+  let tallest = fontContentEm(typing?.fontFamily);
+  for (const child of block.children) {
+    if (child.type === "text") {
+      tallest = Math.max(tallest, fontContentEm(child.fontFamily));
+    }
+  }
+  return tallest;
+};
+
+/** The largest leading among a block's runs, or what will be typed into it. */
+const blockLeading = (block: RichBlock, typing?: RunStyle): number => {
+  let leading = typing ? fontLeading(typing.fontFamily) : 0;
+  for (const child of block.children) {
+    if (child.type === "text") {
+      leading = Math.max(leading, fontLeading(child.fontFamily));
+    }
+  }
+  return leading;
+};
 
 /** The renderer's heading sizes, so a pasted `<h2>` edits at the size it reads. */
 const HEADING_SIZE: Record<number, number> = {
@@ -93,12 +124,15 @@ const HEADING_SIZE: Record<number, number> = {
 const CODE_STYLE: TextStyle = { fontFamily: monospace };
 
 /** The size and line height a block is edited at. */
-const blockSizing = (block: RichBlock) => {
+const blockSizing = (block: RichBlock, typing?: RunStyle) => {
   const size =
     block.type === "heading"
       ? (HEADING_SIZE[block.level ?? 2] ?? 21)
       : toNativeSize(block.fontSize);
-  return { lineHeight: lineHeightFor(size), size };
+  return {
+    lineHeight: lineHeightFor(size, blockContentEm(block, typing)),
+    size,
+  };
 };
 
 const isPlain = (run: Extract<RichInline, { type: "text" }>): boolean =>
@@ -309,7 +343,7 @@ const BlockInputView = ({
   const theme = useAppTheme();
 
   const text = blockText(block);
-  const { lineHeight, size } = blockSizing(block);
+  const { lineHeight, size } = blockSizing(block, typing);
   const children = useMemo(
     () => blockRuns(block, theme, flags),
     [block, flags, theme],
@@ -363,6 +397,38 @@ const BlockInputView = ({
     return face ? { fontFamily: face.fontFamily } : null;
   }, [block, text.length]);
 
+  /*
+   * iOS adds a face's leading under every line, on top of `lineHeight`, and
+   * React Native measures the field without it (see `fontLeading`), so a
+   * line set in Times New Roman or Arial wants a little more height than its
+   * frame has — and with `scrollEnabled` off, the native text container is
+   * only as tall as the frame, so the last line of the block was laid out
+   * nowhere: invisible, with the caret at the field's top-left corner, until
+   * the measurement reached the line after it. The frame is given the
+   * leading back. A twin of the runs, laid out by React Native out of
+   * sight, says how many lines there are, and the field's minimum height is
+   * that many line boxes plus that many leadings, rounded up to the pixel.
+   * Only while a face in the block has a leading at all — the default and
+   * the bundled faces have none, and pay nothing for this.
+   *
+   * The frame cannot be the line counter: once a minimum height holds it,
+   * a block losing a line never reports a smaller frame.
+   */
+  const leading = Platform.OS === "ios" ? blockLeading(block, typing) : 0;
+  const [lines, setLines] = useState(0);
+  const slack = useMemo(() => {
+    if (leading === 0 || lines === 0) return null;
+    // Both the line box and the face scale with the user's text size.
+    const scale = PixelRatio.getFontScale();
+    const pixel = PixelRatio.get();
+    const extra = Math.ceil(lines * leading * size * scale * pixel) / pixel;
+    return { minHeight: lines * lineHeight * scale + extra };
+  }, [leading, lineHeight, lines, size]);
+  const onTwinLayout = (event: NativeSyntheticEvent<TextLayoutEventData>) => {
+    const count = event.nativeEvent.lines.length;
+    setLines((previous) => (previous === count ? previous : count));
+  };
+
   return (
     <BlockFrame block={block} lineHeight={lineHeight} size={size}>
       <TextInput
@@ -409,12 +475,32 @@ const BlockInputView = ({
           },
           contentFace,
           typingStyle,
+          slack,
         ]}
         // No `value`. See the note above — with children it is a crash on
         // Android, not a preference.
       >
         {children}
       </TextInput>
+      {leading > 0 ? (
+        <View pointerEvents="none" style={styles.twin}>
+          <Text
+            onTextLayout={onTwinLayout}
+            style={[
+              styles.input,
+              {
+                fontSize: size,
+                lineHeight,
+                textAlign: block.align ?? "left",
+              },
+              contentFace,
+              typingStyle,
+            ]}
+          >
+            {children ?? " "}
+          </Text>
+        </View>
+      ) : null}
     </BlockFrame>
   );
 };
@@ -482,4 +568,6 @@ const styles = StyleSheet.create({
   marker: { minWidth: 18, textAlign: "right" },
   quote: { borderLeftWidth: 3, paddingLeft: space.sm },
   row: { flexDirection: "row", gap: space.sm },
+  // The line counter under the field; see `BlockInputView`.
+  twin: { left: 0, opacity: 0, position: "absolute", right: 0, top: 0 },
 });

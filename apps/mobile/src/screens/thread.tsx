@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import {
+  concludeComment,
   deleteComment,
   deletePrompt,
   deleteReply,
@@ -22,11 +23,11 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   View,
@@ -46,8 +47,10 @@ import {
   PostActions,
   type PostActionsTarget,
 } from "@/components/thread/post-actions";
-import { useTabBarContentStyle, useTabBarScroll } from "@/context/tab-bar";
+import { museToSource } from "@/components/compose/sources";
+import { useTabBarScroll } from "@/context/tab-bar";
 import { findCached } from "@/lib/cache-seed";
+import { alertReportSent } from "@/lib/report";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 import { Avatar } from "@/components/avatar";
 import { QueuedPostRow } from "@/components/queued-post-row";
@@ -60,6 +63,7 @@ import {
 } from "@/lib/local-store";
 import { Button } from "@/components/button";
 import { useHideTabBar } from "@/hooks/use-hide-tab-bar";
+import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 /**
@@ -93,9 +97,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
  *
  * ## What is deliberately not here
  *
- * **No conclude.** Web's menu offers it to the comment's author and to the
- * prompt's owner. It is a state change on somebody else's reading of the
- * thread, and it is a small piece of work of its own.
+ * The opening comment's ⋯ also concludes the thread or reopens it, for the
+ * comment's author and the prompt's owner, as on web.
  *
  * ## Where it departs from web
  *
@@ -271,6 +274,18 @@ export const ThreadScreen = () => {
     [repliesQuery.data],
   );
 
+  /*
+   * Pull down: the head (with its prompt) and every reply page shown, fresh
+   * from the server. Nothing is written to the device here — the store
+   * writes through on every successful fetch (`attachPersistence`), so the
+   * kept copy of this thread is replaced by what came back, and a thread the
+   * server says is gone (404 → null) is deleted from it. Offline, the pull
+   * just settles (`usePullToRefresh`) and the kept copy stays on screen.
+   */
+  const pull = usePullToRefresh(() =>
+    Promise.all([thread.refetch(), repliesQuery.refetch()]),
+  );
+
   /** The newest reply — the turn a new reply answers. */
   const latest = replies.length > 0 ? replies[replies.length - 1] : null;
 
@@ -311,7 +326,8 @@ export const ThreadScreen = () => {
   const queuedReplies = useMemo(
     () =>
       allQueued.filter(
-        (entry) => entry.type === "reply" && entry.payload.commentId === threadId,
+        (entry) =>
+          entry.type === "reply" && entry.payload.commentId === threadId,
       ),
     [allQueued, threadId],
   );
@@ -357,7 +373,7 @@ export const ThreadScreen = () => {
       );
 
       if (succeeded(result)) {
-        Alert.alert("Reported", "Thank you. Our team will review this.");
+        alertReportSent();
         return;
       }
 
@@ -410,48 +426,94 @@ export const ThreadScreen = () => {
   const comment = thread.data;
   const prompt = comment?.prompt ?? null;
 
-  /** Who the reply bar shows: yourself, or your first character in an in-character thread. */
-  const replyAs =
-    comment?.source.sourceType === "NOVELIST"
-      ? novelist
-      : (novelist?.muses?.[0] ?? novelist);
+  const toggleConcluded = useCallback(async () => {
+    if (!comment) return;
+    const next = !comment.concluded;
+    const result = await concludeComment(api, comment.id, next).catch(
+      () => null,
+    );
+    if (result?.message !== API_MESSAGE.Success) {
+      Alert.alert("Not saved", "Could not update that thread. Try again.");
+      return;
+    }
+    queryClient.setQueryData<typeof comment>(
+      queryKeys.thread(threadId ?? ""),
+      (current) => (current ? { ...current, concluded: next } : current),
+    );
+  }, [api, comment, queryClient, threadId]);
+
+  /**
+   * Who the reply bar shows and the composer opens as. Web's rule: yourself on
+   * an out-of-character thread; on an in-character one the character of yours
+   * that spoke last here, so a conversation carries on in the same voice, and
+   * your first character when none has yet.
+   */
+  const replyMuse = useMemo(() => {
+    const muses = novelist?.muses ?? [];
+    const lastOwn = [...replies]
+      .reverse()
+      .find((reply) => muses.some((m) => m.id === reply.source.sourceId));
+    return (
+      muses.find((muse) => muse.id === lastOwn?.source.sourceId) ?? muses[0]
+    );
+  }, [novelist, replies]);
+  const isOoc = comment?.source.sourceType === "NOVELIST";
+  const replyAs = isOoc ? novelist : (replyMuse ?? novelist);
+
+  // Reading a thread clears its replies, so the tab's count may have moved.
+  useEffect(
+    () => () => {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.outgoingUnreadCount(),
+      });
+    },
+    [queryClient],
+  );
+
+  /** Web opens on the newest reply; the prompt is a scroll up. Once only. */
+  const scrollRef = useRef<ScrollView>(null);
+  const openedAtEnd = useRef(false);
+  const openAtEnd = useCallback(() => {
+    if (openedAtEnd.current || !repliesQuery.isSuccess) return;
+    if (replies.length === 0) return;
+    openedAtEnd.current = true;
+    scrollRef.current?.scrollToEnd({ animated: false });
+  }, [replies.length, repliesQuery.isSuccess]);
 
   const openReply = () => {
     if (!comment) return;
     setComposer({
-                // Web's rule: an out-of-character thread takes only
-                // out-of-character replies, an in-character one only muses.
-                dropdownSelection:
-                  comment.source.sourceType === "NOVELIST"
-                    ? "NOVELIST"
-                    : "MUSE",
-                kind: "create",
-                // What is being answered is the last turn, not the opening
-                // one: the newest reply when there is one, the comment
-                // otherwise. `replies` is oldest-first, so the newest is last.
-                parent: latest
-                  ? {
-                      author: latest.source,
-                      createdOn: latest.createdOn,
-                      id: latest.id,
-                      media: latest.media,
-                      reacted: latest.reacted,
-                      reactions: latest.reactions,
-                      text: latest.text,
-                      variant: "reply",
-                    }
-                  : {
-                      author: comment.source,
-                      createdOn: comment.createdOn,
-                      id: comment.id,
-                      media: comment.media,
-                      reacted: comment.reacted,
-                      reactions: comment.reactions,
-                      text: comment.text,
-                      variant: "comment",
-                    },
-                parentId: comment.id,
-                type: "reply",
+      // Web's rule: an out-of-character thread takes only
+      // out-of-character replies, an in-character one only muses.
+      dropdownSelection: isOoc ? "NOVELIST" : "MUSE",
+      initialSource: !isOoc && replyMuse ? museToSource(replyMuse) : undefined,
+      kind: "create",
+      // What is being answered is the last turn, not the opening
+      // one: the newest reply when there is one, the comment
+      // otherwise. `replies` is oldest-first, so the newest is last.
+      parent: latest
+        ? {
+            author: latest.source,
+            createdOn: latest.createdOn,
+            id: latest.id,
+            media: latest.media,
+            reacted: latest.reacted,
+            reactions: latest.reactions,
+            text: latest.text,
+            variant: "reply",
+          }
+        : {
+            author: comment.source,
+            createdOn: comment.createdOn,
+            id: comment.id,
+            media: comment.media,
+            reacted: comment.reacted,
+            reactions: comment.reactions,
+            text: comment.text,
+            variant: "comment",
+          },
+      parentId: comment.id,
+      type: "reply",
     });
   };
 
@@ -463,9 +525,7 @@ export const ThreadScreen = () => {
   // Opened cold: the thread's shape — prompt, comment — as ghosts.
   if (thread.isPending) {
     return (
-      <ScrollView
-        contentContainerStyle={styles.content}
-      >
+      <ScrollView contentContainerStyle={styles.content}>
         <View style={{ gap: space.lg }}>
           <PromptCardSkeleton reply={false} />
           <PromptCardSkeleton reply={false} />
@@ -495,27 +555,55 @@ export const ThreadScreen = () => {
     <View style={styles.screen}>
       <ScrollView
         contentContainerStyle={styles.content}
+        onContentSizeChange={openAtEnd}
+        ref={scrollRef}
+        refreshControl={
+          <RefreshControl
+            onRefresh={pull.onRefresh}
+            refreshing={pull.refreshing}
+            tintColor={theme.accent.solid}
+          />
+        }
         style={styles.scroll}
       >
         {prompt ? (
-          <ThreadPost
-            author={prompt.source}
-            createdOn={prompt.createdOn}
-            id={prompt.id}
-            media={prompt.media}
-            onMore={
-              canAct
-                ? () => openMenu(prompt.id, "prompt", prompt.source)
-                : undefined
-            }
-            onShowLikers={() =>
-              setLikers({ count: prompt.reactions, id: prompt.id })
-            }
-            reacted={prompt.reacted}
-            reactions={prompt.reactions}
-            text={prompt.text}
-            variant="prompt"
-          />
+          <>
+            <ThreadPost
+              author={prompt.source}
+              createdOn={prompt.createdOn}
+              id={prompt.id}
+              media={prompt.media}
+              onMore={
+                canAct
+                  ? () => openMenu(prompt.id, "prompt", prompt.source)
+                  : undefined
+              }
+              onShowLikers={() =>
+                setLikers({ count: prompt.reactions, id: prompt.id })
+              }
+              reacted={prompt.reacted}
+              reactions={prompt.reactions}
+              text={prompt.text}
+              variant="prompt"
+            />
+            <Pressable
+              accessibilityRole="link"
+              hitSlop={space.sm}
+              onPress={() =>
+                router.push({
+                  params: { promptId: prompt.id },
+                  pathname: "/prompt/[promptId]",
+                })
+              }
+              style={styles.openPrompt}
+            >
+              <Text
+                style={[styles.openPromptLabel, { color: theme.accent.text }]}
+              >
+                Open the prompt
+              </Text>
+            </Pressable>
+          </>
         ) : thread.isPlaceholderData ? (
           <PromptCardSkeleton reply={false} />
         ) : (
@@ -546,109 +634,111 @@ export const ThreadScreen = () => {
 
         <Spine />
 
-        <View
-          style={[styles.sheet, theme.material.card]}
-        >
-        <ThreadPost
-          author={comment.source}
-          concluded={comment.concluded}
-          createdOn={comment.createdOn}
-          flat
-          id={comment.id}
-          media={comment.media}
-          onMore={
-            canAct
-              ? () => openMenu(comment.id, "comment", comment.source)
-              : undefined
-          }
-          onShowLikers={() =>
-            setLikers({ count: comment.reactions, id: comment.id })
-          }
-          reacted={comment.reacted}
-          reactions={comment.reactions}
-          text={comment.text}
-          variant="comment"
-        />
-
-        <View
-          style={[
-            styles.repliesHeader,
-            { borderTopColor: theme.material.edge },
-          ]}
-        >
-          <Ionicons
-            color={theme.textGray}
-            name="return-down-forward-outline"
-            size={14}
+        <View style={[styles.sheet, theme.material.card]}>
+          <ThreadPost
+            author={comment.source}
+            concluded={comment.concluded}
+            createdOn={comment.createdOn}
+            flat
+            id={comment.id}
+            media={comment.media}
+            onMore={
+              canAct
+                ? () => openMenu(comment.id, "comment", comment.source)
+                : undefined
+            }
+            onShowLikers={() =>
+              setLikers({ count: comment.reactions, id: comment.id })
+            }
+            reacted={comment.reacted}
+            reactions={comment.reactions}
+            text={comment.text}
+            variant="comment"
           />
-          <Text style={[styles.repliesLabel, { color: theme.textGray }]}>
-            {replies.length === 0 && !repliesQuery.isPending
-              ? "No replies yet"
-              : `${replies.length} ${pluralize("reply", replies.length)}`}
-          </Text>
+
           <View
-            style={[styles.rule, { backgroundColor: theme.material.edge }]}
-          />
-        </View>
-
-        {repliesQuery.isPending ? (
-          <View style={styles.pending}>
-            <PromptCardSkeleton reply={false} />
-            <PromptCardSkeleton reply={false} />
+            style={[
+              styles.repliesHeader,
+              { borderTopColor: theme.material.edge },
+            ]}
+          >
+            <Ionicons
+              color={theme.textGray}
+              name="return-down-forward-outline"
+              size={14}
+            />
+            <Text style={[styles.repliesLabel, { color: theme.textGray }]}>
+              {replies.length === 0 && !repliesQuery.isPending
+                ? "No replies yet"
+                : `${replies.length} ${pluralize("reply", replies.length)}`}
+            </Text>
+            <View
+              style={[styles.rule, { backgroundColor: theme.material.edge }]}
+            />
           </View>
-        ) : null}
 
-        {/*
+          {repliesQuery.isPending ? (
+            <View style={styles.pending}>
+              <PromptCardSkeleton reply={false} />
+              <PromptCardSkeleton reply={false} />
+            </View>
+          ) : null}
+
+          {/*
           An empty thread is the common case — most of these are waiting on
           somebody — so it gets a sentence rather than the bare "No replies yet"
           in the header above. It says what the state *means*, which is the
           difference between a screen that looks broken and one that looks
           finished.
         */}
-        {!repliesQuery.isPending && replies.length === 0 ? (
-          <Text style={[styles.emptyBody, { color: theme.textGray }]}>
-            {comment.concluded
-              ? "This thread was closed before anyone replied."
-              : "Nothing has come back yet. When someone answers, it lands here."}
-          </Text>
-        ) : null}
+          {!repliesQuery.isPending && replies.length === 0 ? (
+            <Text style={[styles.emptyBody, { color: theme.textGray }]}>
+              {comment.concluded
+                ? "This thread was closed before anyone replied."
+                : "Nothing has come back yet. When someone answers, it lands here."}
+            </Text>
+          ) : null}
 
-        {/*
+          {/*
           Above the list, because the replies it fetches are older than the ones
           already drawn and belong at the top. A scroll trigger would put them
           there too — under the reader's thumb, mid-sentence.
         */}
-        {repliesQuery.hasNextPage ? (
-          <View style={styles.earlier}>
-            <View
-              style={[styles.rule, { backgroundColor: theme.material.edge }]}
-            />
-            <Button
-              busy={repliesQuery.isFetchingNextPage}
-              busyLabel="Loading…"
-              icon="arrow-up"
-              label="Earlier replies"
-              onPress={() => void repliesQuery.fetchNextPage()}
-              size="sm"
-            />
-            <View
-              style={[styles.rule, { backgroundColor: theme.material.edge }]}
-            />
-          </View>
-        ) : null}
+          {repliesQuery.hasNextPage ? (
+            <View style={styles.earlier}>
+              <View
+                style={[styles.rule, { backgroundColor: theme.material.edge }]}
+              />
+              <Button
+                busy={repliesQuery.isFetchingNextPage}
+                busyLabel="Loading…"
+                icon="arrow-up"
+                label="Earlier replies"
+                onPress={() => void repliesQuery.fetchNextPage()}
+                size="sm"
+              />
+              <View
+                style={[styles.rule, { backgroundColor: theme.material.edge }]}
+              />
+            </View>
+          ) : null}
 
-        {replies.map((reply) => (
-          <ThreadReply
-            canAct={canAct}
-            key={reply.id}
-            onMenu={openMenu}
-            onShowLikers={setLikers}
-            reply={reply}
-          />
-        ))}
-        {queuedReplies.map((entry) => (
-          <QueuedPostRow entry={entry} key={entry.id} onDiscard={discardQueued} />
-        ))}
+          {replies.map((reply) => (
+            <ThreadReply
+              canAct={canAct}
+              key={reply.id}
+              onMenu={openMenu}
+              onShowLikers={setLikers}
+              reply={reply}
+            />
+          ))}
+          {queuedReplies.map((entry) => (
+            <QueuedPostRow
+              entry={entry}
+              key={entry.id}
+              onDiscard={discardQueued}
+            />
+          ))}
         </View>
 
         {comment.concluded ? (
@@ -679,7 +769,7 @@ export const ThreadScreen = () => {
         which on a long one meant scrolling past every reply to answer any of
         them. The tab bar steps aside for it, as it does in a conversation.
       */}
-      {canAct && !comment.concluded ? (
+      {canAct && prompt?.canInteract && !comment.concluded ? (
         <View
           style={[
             styles.replyBar,
@@ -725,18 +815,21 @@ export const ThreadScreen = () => {
             <View
               style={[styles.replySend, { backgroundColor: theme.accent.fill }]}
             >
-              <Ionicons
-                color={theme.accent.onFill}
-                name="arrow-up"
-                size={18}
-              />
+              <Ionicons color={theme.accent.onFill} name="arrow-up" size={18} />
             </View>
           </Pressable>
         </View>
       ) : null}
 
       <PostActions
+        concluded={comment?.concluded}
         onClose={closeMenu}
+        onConclude={
+          actions?.variant === "comment" &&
+          (actions.owned || ownedBy(prompt?.source))
+            ? () => void toggleConcluded()
+            : undefined
+        }
         onDelete={() => {
           if (actions) void runDelete(actions.id, actions.variant);
         }}
@@ -822,28 +915,28 @@ const ThreadReply = memo(
 
     return (
       <>
-        <View
-          style={[styles.messageRule, { backgroundColor: edge }]}
+        <View style={[styles.messageRule, { backgroundColor: edge }]} />
+        <ThreadPost
+          author={source}
+          createdOn={reply.createdOn}
+          flat
+          id={id}
+          media={reply.media}
+          onMore={canAct ? more : undefined}
+          onShowLikers={likers}
+          reacted={reply.reacted}
+          reactions={reactions}
+          text={reply.text}
+          variant="reply"
         />
-      <ThreadPost
-        author={source}
-        createdOn={reply.createdOn}
-        flat
-        id={id}
-        media={reply.media}
-        onMore={canAct ? more : undefined}
-        onShowLikers={likers}
-        reacted={reply.reacted}
-        reactions={reactions}
-        text={reply.text}
-        variant="reply"
-      />
       </>
     );
   },
 );
 
 const styles = StyleSheet.create({
+  openPrompt: { alignSelf: "flex-end", paddingTop: space.xs },
+  openPromptLabel: { fontSize: fontSize.caption, fontWeight: "600" },
   concluded: {
     alignItems: "center",
     borderRadius: radius.md,

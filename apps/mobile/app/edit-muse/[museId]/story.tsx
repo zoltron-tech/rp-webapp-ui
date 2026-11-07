@@ -1,5 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import { deleteMuseAboutSection } from "@nw/api/endpoints/muse";
+import {
+  deleteMuseAboutSection,
+  updateMuseAboutSection,
+} from "@nw/api/endpoints/muse";
 import { queryKeys, useApi } from "@nw/features";
 import type { Muse, MuseAboutSection } from "@nw/types";
 import { IMAGE_SIZES, wsrvImage } from "@nw/utils/image";
@@ -118,6 +121,61 @@ const Story = ({ muse }: { muse: Muse }) => {
     );
   };
 
+  /**
+   * Swaps a section with its neighbour. Web has an order stepper on the form;
+   * here the order is a move, which says what it does on a small screen. The
+   * stored ordinals are exchanged, so sections never have to be renumbered.
+   */
+  const moveSection = async (section: MuseAboutSection, by: -1 | 1) => {
+    const list = sections ?? [];
+    const index = list.findIndex((s) => s.id === section.id);
+    const other = list[index + by];
+    if (!section.id || !other?.id) return;
+
+    setMenu(null);
+    setBusy(section.id);
+    const ordinal =
+      other.ordinal === section.ordinal
+        ? section.ordinal + by
+        : other.ordinal;
+    const [moved, displaced] = await Promise.all([
+      updateMuseAboutSection(
+        api,
+        section.id,
+        section.text ?? "",
+        ordinal,
+        section.image,
+      ).catch(() => null),
+      updateMuseAboutSection(
+        api,
+        other.id,
+        other.text ?? "",
+        section.ordinal,
+        other.image,
+      ).catch(() => null),
+    ]);
+    setBusy(null);
+
+    if (!moved || "message" in moved || !displaced || "message" in displaced) {
+      Alert.alert("Not moved", "The section could not be moved. Try again.");
+      void query.refetch();
+      return;
+    }
+    queryClient.setQueryData<MuseAboutSection[]>(
+      queryKeys.museAboutSections(id),
+      (current) => {
+        const next = [...(current ?? [])];
+        next[index] = displaced as MuseAboutSection;
+        next[index + by] = moved as MuseAboutSection;
+        return next;
+      },
+    );
+  };
+
+  const menuIndex = menu
+    ? (sections ?? []).findIndex((s) => s.id === menu.id)
+    : -1;
+
   const menuItems: ActionItem[] = menu
     ? [
         {
@@ -128,6 +186,24 @@ const Story = ({ muse }: { muse: Muse }) => {
             setEditor({ section: menu });
           },
         },
+        ...(menuIndex > 0
+          ? [
+              {
+                icon: "arrow-up-outline" as const,
+                label: "Move up",
+                onPress: () => void moveSection(menu, -1),
+              },
+            ]
+          : []),
+        ...(menuIndex >= 0 && menuIndex < (sections?.length ?? 0) - 1
+          ? [
+              {
+                icon: "arrow-down-outline" as const,
+                label: "Move down",
+                onPress: () => void moveSection(menu, 1),
+              },
+            ]
+          : []),
         { separator: true },
         {
           icon: "trash-outline",

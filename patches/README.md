@@ -21,3 +21,16 @@ before iOS 16.
 
 Revisit when upgrading React Native: if upstream opts the text view into
 TextKit 1 itself, or into TextKit 2 for measurement, drop this.
+
+**This patch is inert, and was a wrong diagnosis.** Expo SDK 54 ships React
+Native for iOS as a precompiled `React.xcframework` (`expo-build-properties`
+→ `ios.buildReactNativeFromSource` is `false` by default and the app does
+not set it), so `RCTUITextView.mm` is never compiled and the line above has
+never run. A runtime swizzle to the same effect was built and shipped on
+2026-11-02 and changed nothing: the text system was never the cause. The
+cause was the font's leading (`lineGap`), which iOS adds under every line
+while React Native's measurement leaves it out; the fix is in
+`apps/mobile/src/components/editor/block-input.tsx` and
+`apps/mobile/src/lib/editor-fonts.ts` (`fontLeading`). Remove this patch —
+root `package.json` → `pnpm.patchedDependencies`, delete the file, then
+`pnpm install` with Metro stopped (it locks `node_modules`).

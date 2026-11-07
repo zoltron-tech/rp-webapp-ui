@@ -1,6 +1,9 @@
 import { loadAsync } from "expo-font";
 import { font } from "@/theme";
 
+/** The family name the Google sign-in label asks for. */
+export const GOOGLE_BUTTON_FONT = "Roboto-Medium";
+
 /**
  * The interface's own faces: Montserrat at web's four weights, upright and
  * italic.
@@ -22,6 +25,9 @@ const FILES: Record<string, number> = {
   [font.regular]: require("@nw/fonts/files/Montserrat-Regular.ttf"),
   [font.semibold]: require("@nw/fonts/files/Montserrat-SemiBold.ttf"),
   [font.semiboldItalic]: require("@nw/fonts/files/Montserrat-SemiBoldItalic.ttf"),
+  // Google's sign-in branding names Roboto Medium for the button label
+  // (`components/auth/socials.tsx`). OFL; licence beside the file.
+  [GOOGLE_BUTTON_FONT]: require("../../assets/fonts/Roboto-Medium.ttf"),
 };
 
 /**

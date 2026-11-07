@@ -1,5 +1,6 @@
 "use client";
 
+import { REPORT_SENT_TOAST } from "@/utils/report";
 import { ShouldRender } from "@novelist-world/ui";
 import { type FC, useCallback, useState } from "react";
 import { BsThreeDots } from "react-icons/bs";
@@ -56,7 +57,7 @@ export const CommentSource: FC = () => {
     const response = await reportAction(commentId, "", "COMMENT");
     if (response?.message === API_MESSAGE.Success) {
       setCommentState({ commentAlert: null });
-      successToast(`Reported successfully`);
+      successToast(REPORT_SENT_TOAST);
     } else {
       errorToast("There was an issue while reporting this comment.");
     }

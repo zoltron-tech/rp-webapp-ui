@@ -13,6 +13,14 @@
 // this file is loaded by every CLI path (start, run:android, export, and the
 // Gradle release bundle through export:embed), so setting it here is what
 // makes all of them agree with the pinned root below.
+//
+// One path converts the entry before this file loads: expo-updates'
+// `createReleaseUpdatesResources` Gradle task, which writes the embedded
+// `app.manifest` (the asset list a release build resolves images from). Run
+// without the variable it looks for `apps/mobile/apps/mobile/index.js`, fails,
+// and an incremental build quietly keeps the last good manifest — so images
+// added since then render blank. EAS sets it in `eas.json`; a local release
+// build needs it in the shell: `EXPO_NO_METRO_WORKSPACE_ROOT=1 ./gradlew …`.
 process.env.EXPO_NO_METRO_WORKSPACE_ROOT ??= "1";
 
 const { getDefaultConfig } = require("expo/metro-config");

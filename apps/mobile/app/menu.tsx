@@ -1,6 +1,7 @@
 import { useSession, useUnreadConversations } from "@nw/features";
 import { type Href, useRouter } from "expo-router";
-import { useCallback, useEffect, useRef } from "react";
+import * as WebBrowser from "expo-web-browser";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   Animated,
@@ -18,6 +19,7 @@ import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Avatar } from "@/components/avatar";
 import { GlassSurface } from "@/components/glass-surface";
+import { DiscordSheet, SupportSheet } from "@/components/support-sheet";
 import {
   Chip,
   PillButton,
@@ -46,17 +48,20 @@ import { IconButton } from "@/components/icon-button";
  *   landing step is one tap you do not have to take.
  * - **No Notifications row.** It is a tab in the bar already; a second way to
  *   reach it was a row that pushed the list below the fold on a 667pt phone.
- * - **Bookmarks, Music** are web routes with no native screen yet. A row
- *   that goes nowhere is worse than an absent one. Stories and Library have
- *   theirs: `screens/story-list.tsx` and `app/library.tsx`.
  *
  * ## Swiping it away
  *
  * It slides up from the bottom, so a swipe down puts it back — the same
  * thresholds `BottomSheet` answers. The route is a *transparent* modal with no
  * native animation, so this screen owns both moves: it slides itself up on
- * mount and off before popping. The header is always draggable; the list only
- * while scrolled to the top. Android's back does the same slide.
+ * mount and off before popping. Only the header drags it; Android's back does
+ * the same slide.
+ *
+ * The list used to drag it too, while scrolled to its top. On Android the
+ * scroll view keeps that touch for its own overscroll, so it never fired
+ * there; on iOS it did, and a swipe down meant to scroll took the whole menu
+ * away. A full-screen menu should scroll when its list is swiped — the
+ * header, with ✕ beside it, is the handle.
  */
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -80,8 +85,6 @@ export default function MenuScreen() {
   const { pending, signOut } = useSignOut();
 
   const translateY = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
-  /** Whether the list is at its top — read inside handlers built once. */
-  const atTop = useRef(true);
 
   useEffect(() => {
     Animated.timing(translateY, {
@@ -119,14 +122,10 @@ export default function MenuScreen() {
     }).start();
   };
 
-  const drag = (always: boolean) =>
+  const headerDrag = useRef(
     PanResponder.create({
-      // Claimed in the capture phase so a pull on the list at its top reaches
-      // the sheet before the scroll view takes it.
       onMoveShouldSetPanResponderCapture: (_event, gesture) =>
-        (always || atTop.current) &&
-        gesture.dy > DRAG_SLOP &&
-        Math.abs(gesture.dy) > Math.abs(gesture.dx),
+        gesture.dy > DRAG_SLOP && Math.abs(gesture.dy) > Math.abs(gesture.dx),
       onPanResponderMove: (_event, gesture) => {
         translateY.setValue(Math.max(0, gesture.dy));
       },
@@ -136,10 +135,10 @@ export default function MenuScreen() {
       },
       onPanResponderTerminate: settle,
       onPanResponderTerminationRequest: () => false,
-    });
+    }),
+  ).current;
 
-  const headerDrag = useRef(drag(true)).current;
-  const listDrag = useRef(drag(false)).current;
+  const [sheet, setSheet] = useState<"discord" | "support" | null>(null);
 
   /**
    * Leaves the sheet, then opens the destination beneath where it was.
@@ -188,7 +187,14 @@ export default function MenuScreen() {
         something for the glass to show. The cards inside are translucent
         material, never glass of their own.
       */}
-      <GlassSurface bordered={false} style={styles.screen} variant="sheet">
+      <GlassSurface
+        bordered={false}
+        // A full screen of rows: on iOS the glass alone let the tabs read
+        // through them. See `dense` on GlassSurface.
+        dense
+        style={styles.screen}
+        variant="sheet"
+      >
       <View
         {...headerDrag.panHandlers}
         style={[
@@ -210,15 +216,10 @@ export default function MenuScreen() {
       </View>
 
       <ScrollView
-        {...listDrag.panHandlers}
         contentContainerStyle={[
           styles.body,
           { paddingBottom: insets.bottom + space.lg },
         ]}
-        onScroll={(event) => {
-          atTop.current = event.nativeEvent.contentOffset.y <= 0;
-        }}
-        scrollEventThrottle={32}
       >
         {/* Who is signed in, and the two things you do with that. */}
         <View
@@ -327,6 +328,12 @@ export default function MenuScreen() {
             onPress={() => go("/edit-profile/notifications")}
             subtitle="Which notifications may interrupt you"
           />
+          <SettingsRow
+            icon="lock-closed-outline"
+            label="Privacy"
+            onPress={() => go("/edit-profile/privacy")}
+            subtitle="Who can see your bookshelf, characters & About"
+          />
         </SettingsGroup>
 
         <SettingsGroup title="Your space">
@@ -344,6 +351,21 @@ export default function MenuScreen() {
             icon="library-outline"
             label="Library"
             onPress={() => go("/library")}
+          />
+          <SettingsRow
+            icon="albums-outline"
+            label="Bookshelf"
+            onPress={() => go("/(tabs)/(profile)/books", true)}
+          />
+          <SettingsRow
+            icon="bookmark-outline"
+            label="Bookmarks"
+            onPress={() => go("/bookmarks")}
+          />
+          <SettingsRow
+            icon="musical-notes-outline"
+            label="Music"
+            onPress={() => go("/(tabs)/(profile)/music", true)}
           />
           <SettingsRow
             badge={unreadCount}
@@ -372,24 +394,24 @@ export default function MenuScreen() {
         <SettingsGroup title="Community & help">
           {env.DISCORD_INVITE_URL ? (
             <SettingsRow
-              external
               icon="logo-discord"
               label="Join NW Community"
-              onPress={() => void Linking.openURL(env.DISCORD_INVITE_URL)}
+              onPress={() => setSheet("discord")}
               tone="discord"
             />
           ) : null}
-          {env.SUPPORT_EMAIL ? (
-            <SettingsRow
-              external
-              icon="help-buoy-outline"
-              label="Help & support"
-              onPress={() =>
-                void Linking.openURL(`mailto:${env.SUPPORT_EMAIL}`)
-              }
-              tone="neutral"
-            />
-          ) : null}
+          <SettingsRow
+            icon="help-buoy-outline"
+            label="Help & support"
+            onPress={() => setSheet("support")}
+            tone="neutral"
+          />
+          <SettingsRow
+            icon="help-circle-outline"
+            label="FAQs"
+            onPress={() => go("/faqs")}
+            tone="neutral"
+          />
           <SettingsRow
             external
             icon="globe-outline"
@@ -398,17 +420,15 @@ export default function MenuScreen() {
             tone="neutral"
           />
           <SettingsRow
-            external
             icon="document-text-outline"
             label="Terms & conditions"
-            onPress={() => void Linking.openURL(TERMS_URL)}
+            onPress={() => void WebBrowser.openBrowserAsync(TERMS_URL)}
             tone="neutral"
           />
           <SettingsRow
-            external
             icon="shield-checkmark-outline"
             label="Privacy policy"
-            onPress={() => void Linking.openURL(PRIVACY_URL)}
+            onPress={() => void WebBrowser.openBrowserAsync(PRIVACY_URL)}
             tone="neutral"
           />
         </SettingsGroup>
@@ -425,6 +445,15 @@ export default function MenuScreen() {
         </SettingsGroup>
       </ScrollView>
       </GlassSurface>
+
+      <DiscordSheet
+        onClose={() => setSheet(null)}
+        visible={sheet === "discord"}
+      />
+      <SupportSheet
+        onClose={() => setSheet(null)}
+        visible={sheet === "support"}
+      />
     </Animated.View>
   );
 }

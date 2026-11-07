@@ -100,6 +100,31 @@ export const Art = styled.span<{ $slim?: boolean }>`
 `;
 
 /** Circular play/pause control parked in the pill's right corner. */
+/** Report flag for someone else's uploaded song (APP_STORE_REVIEW_PLAN.md M12). */
+export const ReportButton = styled.button`
+  all: unset;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    color: var(--text);
+    background: color-mix(in srgb, var(--text) 8%, transparent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+`;
+
 export const PlayButton = styled.button<{ $slim?: boolean }>`
   all: unset;
   flex-shrink: 0;

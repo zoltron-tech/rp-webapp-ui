@@ -8,7 +8,7 @@ import {
   type RichImageBlock,
 } from "@nw/richtext";
 import { Image } from "@/components/image";
-import { memo, useRef } from "react";
+import { memo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   PanResponder,
@@ -311,6 +311,16 @@ export const ImageControls = ({
   );
 };
 
+/**
+ * Each picture's own width ÷ height, once it has loaded, for the session. The
+ * frame takes the picture's shape, as web's editor (`height: auto`) and the
+ * published post (`RichImage`) do; held here so a block that re-renders or
+ * remounts — every keystroke elsewhere, a scroll — starts at the right size.
+ */
+const RATIOS = new Map<string, number>();
+/** Before the first load: a box that neither collapses nor fills the screen. */
+const PLACEHOLDER_RATIO = 16 / 9;
+
 const ImageBlockView = ({
   float = false,
   image,
@@ -326,6 +336,10 @@ const ImageBlockView = ({
 
   const width = clamp(image.widthPercent ?? 100);
   const align = image.align ?? "left";
+  // The picture's own shape. It used to be a fixed 16:9 box with the picture
+  // fitted inside on a grey fill, so a portrait GIF or a square sticker sat
+  // between grey bars while it was being written — and only on the phone.
+  const [ratio, setRatio] = useState(() => RATIOS.get(image.src) ?? null);
 
   const frame = (
     <Pressable
@@ -357,8 +371,27 @@ const ImageBlockView = ({
         <Image
           cachePolicy="memory-disk"
           contentFit="contain"
+          onLoad={({ source }) => {
+            if (!source?.width || !source?.height) return;
+            const next = source.width / source.height;
+            RATIOS.set(image.src, next);
+            setRatio((current) =>
+              current !== null && Math.abs(current - next) < 0.001
+                ? current
+                : next,
+            );
+          }}
           source={{ uri: image.src }}
-          style={[styles.image, { backgroundColor: theme.glass.field }]}
+          style={[
+            styles.image,
+            ratio === null
+              ? // Grey only while there is nothing to show yet.
+                {
+                  aspectRatio: PLACEHOLDER_RATIO,
+                  backgroundColor: theme.glass.field,
+                }
+              : { aspectRatio: ratio },
+          ]}
           transition={0}
         />
         {uploading ? (
@@ -417,7 +450,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   group: { alignItems: "center", flexDirection: "row", gap: space.xxs },
-  image: { aspectRatio: 16 / 9, width: "100%" },
+  image: { width: "100%" },
   overlay: {
     alignItems: "center",
     backgroundColor: "rgba(0,0,0,0.4)",

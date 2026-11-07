@@ -142,6 +142,8 @@ export interface ImageCropEditorProps {
   initial: CropState;
   onClose: () => void;
   onConfirm: (crop: CropState) => void;
+  /** "GIF or sticker": the library instead of the phone. Avatars only. */
+  onLibrary?: () => void;
   /** "Choose another" — pick a different picture, same flow. */
   onReplace?: () => void;
   title: string;
@@ -159,6 +161,7 @@ export const ImageCropEditor = ({
   initial,
   onClose,
   onConfirm,
+  onLibrary,
   onReplace,
   title,
   uploading = false,
@@ -793,6 +796,14 @@ export const ImageCropEditor = ({
                 onPress={onReplace}
               />
             ) : null}
+            {onLibrary ? (
+              <Tool
+                disabled={uploading || busy}
+                icon="happy-outline"
+                label="GIF or sticker"
+                onPress={onLibrary}
+              />
+            ) : null}
           </View>
         </View>
       </View>
@@ -907,7 +918,7 @@ const styles = StyleSheet.create({
     paddingVertical: space.sm,
   },
   toolLabel: { color: "#ffffff", fontSize: fontSize.label, fontWeight: "600" },
-  tools: { flexDirection: "row", gap: space.sm },
+  tools: { flexDirection: "row", flexWrap: "wrap", gap: space.sm },
   topBar: {
     alignItems: "center",
     backgroundColor: "#000000",

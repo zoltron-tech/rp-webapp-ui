@@ -1,6 +1,7 @@
 import type { Muse, Novelist, StoryBoard } from "@nw/types";
+import { API_MESSAGE } from "@nw/types";
 import type { Activity } from "@nw/types/activity";
-import type { DataType } from "@nw/types/common";
+import type { DataType, WithMessage } from "@nw/types/common";
 import {
   transformActivity,
   transformMuse,
@@ -89,6 +90,23 @@ export const getFriendActivities = async (
     ),
     (a) => transformActivity(a, "feed"),
   );
+
+/**
+ * Removes one of the caller's own activities. The server answers 404 for
+ * anybody else's row and for a missing one alike, so anything but `Success`
+ * is "not yours or already gone".
+ */
+export const deleteActivity = async (
+  api: ApiClient,
+  activityId: string,
+): Promise<WithMessage> => {
+  const response = await api.raw(
+    `/rp/portfolio/activity/${encodeURIComponent(activityId)}`,
+    { label: "deleteActivity", method: "DELETE" },
+  );
+  if (!response.ok) return { message: API_MESSAGE.UncategorizedError };
+  return (await response.json()) as WithMessage;
+};
 
 /**
  * Auth is optional: without a token only published (public) stories come back;

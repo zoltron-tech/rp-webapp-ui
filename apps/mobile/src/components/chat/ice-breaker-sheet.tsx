@@ -21,6 +21,7 @@ import {
   View,
 } from "react-native";
 import { Avatar } from "@/components/avatar";
+import { BookCover } from "@/components/book-cover";
 import {
   IceBreakerTrail,
   useIceBreakerPaint,
@@ -277,6 +278,39 @@ export const IceBreakerSheet = ({
             </View>
           </View>
 
+          {iceBreaker.book ? (
+            <View
+              style={[
+                styles.book,
+                {
+                  backgroundColor: theme.material.fill,
+                  borderColor: theme.material.edge,
+                },
+              ]}
+            >
+              <BookCover book={iceBreaker.book} width={48} />
+              <View style={styles.bookText}>
+                <Text style={[styles.when, { color: theme.textGray }]}>
+                  Currently reading
+                </Text>
+                <Text
+                  numberOfLines={2}
+                  style={[styles.bookTitle, { color: theme.text }]}
+                >
+                  {iceBreaker.book.title}
+                </Text>
+                {iceBreaker.book.authors[0] ? (
+                  <Text
+                    numberOfLines={1}
+                    style={[styles.when, { color: theme.textGray }]}
+                  >
+                    {iceBreaker.book.authors[0]}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
+          ) : null}
+
           {/*
             The prompt, drawn the way the rail draws it — the same gradient and
             the same trailing circles, only larger. Someone who tapped a bubble
@@ -445,6 +479,16 @@ export const IceBreakerSheet = ({
 };
 
 const styles = StyleSheet.create({
+  book: {
+    alignItems: "center",
+    borderRadius: radius.field,
+    borderWidth: border.edge,
+    flexDirection: "row",
+    gap: space.m,
+    padding: space.m,
+  },
+  bookText: { flex: 1, gap: 2 },
+  bookTitle: { fontSize: fontSize.body, fontWeight: "600" },
   author: { fontSize: fontSize.body, fontWeight: "700", lineHeight: 20 },
   body: {
     gap: space.md,

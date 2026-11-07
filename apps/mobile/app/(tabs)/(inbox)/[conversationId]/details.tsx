@@ -1,5 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
-import { deleteGroup, leaveGroup } from "@nw/api/endpoints/conversation-detail";
+import {
+  deleteGroup,
+  leaveGroup,
+  removeGroupMember,
+} from "@nw/api/endpoints/conversation-detail";
 import { isGroupAdmin, resolveConversationTarget } from "@nw/chat";
 import {
   conversationMuteKey,
@@ -30,6 +34,9 @@ import {
 } from "react-native";
 import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
+import { Button } from "@/components/button";
+import { AddMembersSheet, EditGroupSheet } from "@/components/chat/group-sheets";
+import { VerifiedMark } from "@/components/chat/verified-mark";
 import { ListStatus } from "@/components/list-status";
 import { BottomSheet } from "@/components/sheet";
 import { useChatSocket, useIsOnline, useTrackOnline } from "@/context/socket";
@@ -103,6 +110,7 @@ export default function ConversationDetailsScreen() {
    */
   const muteActions = useMuteActions();
   const [muteSheet, setMuteSheet] = useState(false);
+  const [groupSheet, setGroupSheet] = useState<"add" | "edit" | null>(null);
   const muteKey = conversationMuteKey(conversationId ?? "");
   // The mutes list is the authority; the row's `mutedUntil` is the same fact
   // as the server last sent it, and covers a list that has not loaded yet.
@@ -185,6 +193,42 @@ export default function ConversationDetailsScreen() {
       ],
     );
 
+  /** Web's rule: an admin may remove anyone but themselves, after one check. */
+  const confirmRemove = useCallback(
+    (member: ConversationParticipant) => {
+      const name = member.firstName || member.userName;
+      Alert.alert(
+        `Remove ${name}?`,
+        "They will stop receiving this group's messages.",
+        [
+          { style: "cancel", text: "Cancel" },
+          {
+            onPress: async () => {
+              const result = await removeGroupMember(
+                api,
+                conversationId ?? "",
+                member.novelistId,
+              ).catch(() => null);
+              if (result !== true) {
+                Alert.alert(
+                  "Could not remove",
+                  "That did not go through. Try again.",
+                );
+                return;
+              }
+              void queryClient.invalidateQueries({
+                queryKey: queryKeys.conversationMembers(conversationId ?? ""),
+              });
+            },
+            style: "destructive",
+            text: "Remove",
+          },
+        ],
+      );
+    },
+    [api, conversationId, queryClient],
+  );
+
   const openProfile = useCallback(
     (username: string) => {
       if (!username) return;
@@ -203,9 +247,10 @@ export default function ConversationDetailsScreen() {
         isMe={item.userName === myUsername}
         member={item}
         onOpen={openProfile}
+        onRemove={amAdmin ? confirmRemove : undefined}
       />
     ),
-    [myUsername, openProfile],
+    [amAdmin, confirmRemove, myUsername, openProfile],
   );
 
   const busy = leave.isPending || remove.isPending;
@@ -281,6 +326,8 @@ export default function ConversationDetailsScreen() {
 
             {isGroup ? (
               <>
+                {/* An admin deletes the group rather than walking out of it. */}
+                {amAdmin ? null : (
                 <Pressable
                   disabled={busy}
                   onPress={confirmLeave}
@@ -300,6 +347,7 @@ export default function ConversationDetailsScreen() {
                     {leave.isPending ? "Leaving..." : "Leave group"}
                   </Text>
                 </Pressable>
+                )}
 
                 {amAdmin ? (
                   <Pressable
@@ -382,6 +430,25 @@ export default function ConversationDetailsScreen() {
               </Pressable>
             ) : null}
 
+            {isGroup && amAdmin ? (
+              <View style={styles.adminRow}>
+                <Button
+                  icon="create-outline"
+                  label="Edit group"
+                  onPress={() => setGroupSheet("edit")}
+                  size="sm"
+                  stretch
+                />
+                <Button
+                  icon="person-add-outline"
+                  label="Add members"
+                  onPress={() => setGroupSheet("add")}
+                  size="sm"
+                  stretch
+                />
+              </View>
+            ) : null}
+
             <Text style={[styles.sectionTitle, { color: theme.text }]}>
               {isGroup ? "Members" : "In this conversation"}
             </Text>
@@ -393,6 +460,22 @@ export default function ConversationDetailsScreen() {
         onEndReachedThreshold={0.5}
         renderItem={renderMember}
       />
+
+      {conversation && isGroup && amAdmin ? (
+        <>
+          <EditGroupSheet
+            conversation={conversation}
+            onClose={() => setGroupSheet(null)}
+            visible={groupSheet === "edit"}
+          />
+          <AddMembersSheet
+            groupId={conversation.id}
+            members={members}
+            onClose={() => setGroupSheet(null)}
+            visible={groupSheet === "add"}
+          />
+        </>
+      ) : null}
 
       <BottomSheet
         ignoreKeyboard
@@ -438,10 +521,13 @@ const MemberRow = memo(function MemberRow({
   isMe,
   member,
   onOpen,
+  onRemove,
 }: {
   isMe: boolean;
   member: ConversationParticipant;
   onOpen: (username: string) => void;
+  /** Present for a group admin. */
+  onRemove?: (member: ConversationParticipant) => void;
 }) {
   const theme = useAppTheme();
   const name =
@@ -477,11 +563,7 @@ const MemberRow = memo(function MemberRow({
             {name}
           </Text>
           {member.isVerified ? (
-            <Ionicons
-              color={theme.accent.text}
-              name="checkmark-circle"
-              size={14}
-            />
+            <VerifiedMark username={member.userName} />
           ) : null}
           {role === "ADMIN" || role === "OWNER" ? (
             <View
@@ -508,6 +590,21 @@ const MemberRow = memo(function MemberRow({
         </Text>
       </View>
 
+      {!isMe && onRemove ? (
+        <Pressable
+          accessibilityLabel={`Remove ${name}`}
+          accessibilityRole="button"
+          hitSlop={space.sm}
+          onPress={() => onRemove(member)}
+          style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+        >
+          <Ionicons
+            color={theme.error}
+            name="person-remove-outline"
+            size={20}
+          />
+        </Pressable>
+      ) : null}
       {!isMe ? (
         <Ionicons color={theme.textGray} name="chevron-forward" size={16} />
       ) : null}
@@ -528,6 +625,12 @@ const styles = StyleSheet.create({
     paddingVertical: space.md,
   },
   dangerLabel: { fontSize: fontSize.body, fontWeight: "600" },
+  adminRow: {
+    alignSelf: "stretch",
+    flexDirection: "row",
+    gap: space.sm,
+    marginTop: space.sm,
+  },
   footer: { gap: space.sm, paddingTop: space.sm },
   header: { alignItems: "center", gap: space.xs, paddingBottom: space.sm },
   memberHandle: { fontSize: fontSize.caption },

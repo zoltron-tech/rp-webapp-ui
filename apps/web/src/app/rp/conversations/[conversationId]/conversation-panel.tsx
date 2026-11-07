@@ -1,5 +1,6 @@
 "use client";
 
+import { REPORT_SENT_TOAST } from "@/utils/report";
 import { helloNoticeFor, retentionNoticeFor } from "@nw/chat";
 import type { Conversation, MentionDataItem, Message } from "@nw/types";
 import type { MessageSender, Reaction } from "@nw/types/conversation";
@@ -729,7 +730,7 @@ export function ConversationPanel({
     if (!reportingMessage) return;
     const response = await reportMessageAction(reportingMessage.id);
     if (response === true) {
-      successToast("Message reported successfully.");
+      successToast(REPORT_SENT_TOAST);
     } else {
       errorToast("There was an issue while reporting this message.");
     }

@@ -46,6 +46,12 @@ export interface RichTextBlockProps {
   align?: RichAlign;
   /** The largest run size in the block, for clients that must set line height. */
   fontSize?: number;
+  /**
+   * The block's text is not all one size. A client that sets one line height
+   * for the whole block (React Native) should leave it natural instead, so
+   * only the lines holding the bigger run grow.
+   */
+  mixedSizes?: boolean;
   /** 1–6 on a heading, undefined elsewhere. */
   level?: number;
   /** The bullet or number on a list item. */
@@ -159,6 +165,7 @@ export const renderRichText = (
             align={node.align}
             fontSize={node.fontSize}
             key={key}
+            mixedSizes={mixesSizes(node.children)}
             level={node.level}
             marker={node.marker}
           >
@@ -168,6 +175,18 @@ export const renderRichText = (
       })}
     </Root>
   );
+};
+
+/** Whether the visible text runs of a block are not all the same size. */
+const mixesSizes = (children: RichInline[]): boolean => {
+  let first: number | null = null;
+  for (const child of children) {
+    if (child.type !== "text" || child.text.trim() === "") continue;
+    const size = child.fontSize ?? 0;
+    if (first === null) first = size;
+    else if (size !== first) return true;
+  }
+  return false;
 };
 
 /** Parse and render in one step, for the common case. */

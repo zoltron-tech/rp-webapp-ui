@@ -15,7 +15,6 @@ import {
 import type { Conversation, IceBreaker } from "@nw/types";
 import { useRouter } from "expo-router";
 import {
-  type ComponentProps,
   useCallback,
   useMemo,
   useRef,
@@ -27,6 +26,7 @@ import {
   FlatList,
   Pressable,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   View,
 } from "react-native";
@@ -191,6 +191,13 @@ function InboxContent() {
   );
   const unreadSet = useMemo(() => new Set(unreadIds), [unreadIds]);
 
+  /** Web's badge on Load more: unread conversations not on a loaded page yet. */
+  const unreadBelow = useMemo(() => {
+    if (!hasNextPage) return 0;
+    const loaded = new Set(conversations.map((c) => c.id));
+    return unreadIds.filter((id) => !loaded.has(id)).length;
+  }, [conversations, hasNextPage, unreadIds]);
+
   // Everyone visible in the list, so the green rings mean something. The server
   // only answers about usernames it has been asked about.
   useTrackOnline(
@@ -338,12 +345,14 @@ function InboxContent() {
    * scrolls with the list, under a title that says what it is, and the
    * toolbar keeps only what acts on the rows: search and the filters.
    *
-   * Hidden while searching, when the reader is after one conversation.
+   * Hidden while searching or filtering, when the reader is after conversations.
+   * The line under it speaks only when something is waiting: "all answered" is a
+   * line of the screen spent on nothing to do.
    */
   const header = useMemo(
     () => (
       <View style={styles.head}>
-        {search ? null : (
+        {search || filter !== "all" ? null : (
           <>
             <View style={styles.headRow}>
               <Text style={[styles.headTitle, { color: theme.textGray }]}>
@@ -362,7 +371,7 @@ function InboxContent() {
             />
           </>
         )}
-        {conversations.length > 0 ? (
+        {conversations.length > 0 && unreadIds.length > 0 ? (
           <Text
             style={[
               styles.summary,
@@ -377,6 +386,7 @@ function InboxContent() {
     ),
     [
       conversations.length,
+      filter,
       iceBreakers,
       iceBreakersPending,
       search,
@@ -411,7 +421,16 @@ function InboxContent() {
         ) : null}
 
         <View style={styles.controlRow}>
-          <View style={styles.filters}>
+          {/*
+            Scrolls only when it must: on a 375pt phone with an unread count,
+            the pills and the + can outgrow the room Support leaves them.
+          */}
+          <ScrollView
+            contentContainerStyle={styles.filters}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.filterScroller}
+          >
           {INBOX_FILTERS.map((entry) => {
             const active = entry.id === filter;
             const count =
@@ -456,26 +475,54 @@ function InboxContent() {
               </Pressable>
             );
           })}
-          </View>
+          {/*
+            New group, beside the Groups filter it adds to — a + reads as
+            "another one of these" there without a label of its own.
+          */}
+          <IconButton
+            accessibilityLabel="Create group"
+            color={theme.accent.text}
+            hitSlop={space.xs}
+            icon="add"
+            onPress={() => setGroupOpen(true)}
+            size={30}
+            tone="surface"
+          />
+          </ScrollView>
 
           {/*
-            The two things the inbox does besides open a conversation, sharing
-            the filter row rather than taking one of their own. Icons, not
-            labelled buttons: both are used rarely, and a labelled pair would
-            cost the row the list needs on a 667pt screen.
+            Support stays in the toolbar, in words: at the foot of the list it
+            sank further with every page of conversations loaded.
           */}
-          <ToolbarButton
-            busy={false}
-            icon="people-circle-outline"
-            label="Create group"
-            onPress={() => setGroupOpen(true)}
-          />
-          <ToolbarButton
-            busy={support.isPending}
-            icon="help-buoy-outline"
-            label="Contact support"
+          <Pressable
+            accessibilityLabel="Contact support"
+            accessibilityRole="button"
+            disabled={support.isPending}
+            hitSlop={space.xs}
             onPress={() => void contactSupport()}
-          />
+            style={({ pressed }) => [
+              styles.support,
+              {
+                backgroundColor: pressed
+                  ? theme.material.fillPressed
+                  : theme.material.fill,
+                borderColor: theme.material.edge,
+              },
+            ]}
+          >
+            {support.isPending ? (
+              <ActivityIndicator color={theme.textGray} size="small" />
+            ) : (
+              <Ionicons
+                color={theme.textGray}
+                name="help-buoy-outline"
+                size={15}
+              />
+            )}
+            <Text style={[styles.filterLabel, { color: theme.textGray }]}>
+              Support
+            </Text>
+          </Pressable>
         </View>
       </View>
 
@@ -527,7 +574,8 @@ function InboxContent() {
           )
         }
         ListFooterComponent={
-          isFetchingNextPage ? (
+          <>
+            {isFetchingNextPage ? (
             <View style={styles.footer}>
               <ActivityIndicator color={theme.primary} size="small" />
             </View>
@@ -539,7 +587,12 @@ function InboxContent() {
              */
             !hasNextPage && filter === "all" && !search && visible.length > 0 ? (
               <EndOfList />
-            ) : null
+            ) : unreadBelow > 0 ? (
+              <Text style={[styles.unreadBelow, { color: theme.accent.text }]}>
+                {unreadBelow} unread further down
+              </Text>
+            ) : null}
+          </>
         }
         onEndReached={() => {
           // Paging while a filter is on would fetch pages the filter then
@@ -581,38 +634,26 @@ function InboxContent() {
   );
 }
 
-/** One of the inbox's two corner actions. */
-const ToolbarButton = ({
-  busy,
-  icon,
-  label,
-  onPress,
-}: {
-  busy: boolean;
-  icon: ComponentProps<typeof Ionicons>["name"];
-  label: string;
-  onPress: () => void;
-}) => {
-  const theme = useAppTheme();
-
-  return (
-    <IconButton
-      accessibilityLabel={label}
-      busy={busy}
-      color={theme.accent.text}
-      hitSlop={space.xs}
-      icon={icon}
-      onPress={onPress}
-      size={34}
-      tone="surface"
-    />
-  );
-};
-
 const styles = StyleSheet.create({
+  support: {
+    alignItems: "center",
+    borderRadius: radius.full,
+    borderWidth: border.edge,
+    flexDirection: "row",
+    flexShrink: 0,
+    gap: space.xs,
+    paddingHorizontal: space.ms,
+    paddingVertical: space.s,
+  },
+  unreadBelow: {
+    fontSize: fontSize.caption,
+    fontWeight: "600",
+    paddingVertical: space.m,
+    textAlign: "center",
+  },
   /* The rows carry their own padding; this exists only to be added to. */
   content: { paddingBottom: space.sm },
-  controlRow: { alignItems: "center", flexDirection: "row", gap: space.xs },
+  controlRow: { alignItems: "center", flexDirection: "row", gap: space.sm },
   badge: {
     alignItems: "center",
     borderRadius: radius.full,
@@ -629,11 +670,12 @@ const styles = StyleSheet.create({
     borderWidth: border.edge,
     flexDirection: "row",
     gap: space.xs,
-    paddingHorizontal: space.md,
+    paddingHorizontal: space.m,
     paddingVertical: space.s,
   },
   filterLabel: { fontSize: fontSize.caption, fontWeight: "500" },
-  filters: { flex: 1, flexDirection: "row", gap: space.xs },
+  filterScroller: { flex: 1 },
+  filters: { alignItems: "center", flexDirection: "row", gap: space.xs },
   footer: { padding: space.md },
   name: { flexShrink: 1, fontSize: fontSize.body },
   preview: { flex: 1, fontSize: fontSize.label },

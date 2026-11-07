@@ -1,11 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useSession } from "@nw/features";
 import type { Activity } from "@nw/types/activity";
 import { toFormattedDateFromUnix, wsrvImage } from "@nw/utils";
 import { Image } from "@/components/image";
 import { useRouter } from "expo-router";
 import type { ComponentProps } from "react";
 import { memo } from "react";
-import { Linking, Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { FeedClip, FeedImage } from "@/components/feed/feed-media";
@@ -13,8 +14,8 @@ import { HeartButton } from "@/components/heart-button";
 import { RichText } from "@/components/rich-text";
 import { sourceLinkLabel, useOpenSource } from "@/hooks/use-open-source";
 import type { ReactionTarget } from "@/hooks/use-toggle-reaction";
+import { canShareActivity } from "@/components/activity/use-activity-share";
 import { useToggleReaction } from "@/hooks/use-toggle-reaction";
-import { env } from "@/lib/env";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
@@ -166,10 +167,21 @@ const reactionTargetFor = (targetType: string): ReactionTarget => {
 
 const ActivityBoxView = ({
   activity,
+  onDelete,
   onOpenMedia,
+  onShare,
   onShowLikers,
 }: {
   activity: Activity;
+  /**
+   * The trash was tapped on one of the viewer's own activities; the screen
+   * confirms and removes it. The button shows only when this is given and
+   * `activity.novelistId` is the signed-in novelist — the server refuses
+   * anyone else anyway.
+   */
+  onDelete?: (activity: Activity) => void;
+  /** The share button was tapped; the screen owns the sheets. */
+  onShare?: (activity: Activity) => void;
   /** A picture activity was tapped; the screen opens it full screen. */
   onOpenMedia?: (url: string) => void;
   /** The like count was tapped; the screen shows who. */
@@ -178,6 +190,11 @@ const ActivityBoxView = ({
   const theme = useAppTheme();
   const openSource = useOpenSource();
   const router = useRouter();
+  const { novelist } = useSession();
+  const canDelete = Boolean(
+    onDelete && activity.novelistId && novelist?.id === activity.novelistId,
+  );
+  const canShare = Boolean(onShare && canShareActivity(activity));
 
   const targetType = activity.target?.activityTargetType ?? "";
   const kind = kindFor(targetType);
@@ -209,9 +226,12 @@ const ActivityBoxView = ({
         router.push({ params: { username }, pathname: "/novelist/[username]" });
       }
     } else if (targetType === "STORY_BOARD") {
-      void Linking.openURL(`${env.WEB_URL}/rp/story/${id}`);
+      router.push({ params: { storyId: id }, pathname: "/story/[storyId]" });
     } else if (targetType === "STORY_BOARD_EVENT") {
-      void Linking.openURL(`${env.WEB_URL}/rp/story/event/${id}`);
+      router.push({
+        params: { eventId: id },
+        pathname: "/story/chapter/[eventId]",
+      });
     } else if (isMedia && mediaKind === "image" && url) {
       onOpenMedia?.(url);
     }
@@ -221,12 +241,7 @@ const ActivityBoxView = ({
   const bodyRoutes = !(isMedia && mediaKind !== "image");
 
   return (
-    <View
-      style={[
-        styles.card,
-        theme.material.card,
-      ]}
-    >
+    <View style={[styles.card, theme.material.card]}>
       {/* ── Who, and what they did ─────────────────────────────────────── */}
       <View style={styles.header}>
         <Pressable
@@ -249,7 +264,9 @@ const ActivityBoxView = ({
           style={({ pressed }) => [styles.who, { opacity: pressed ? 0.6 : 1 }]}
         >
           {/* Web's double ring: the card's own colour, then the accent. */}
-          <View style={[styles.ring, { borderColor: theme.accent.surfaceHover }]}>
+          <View
+            style={[styles.ring, { borderColor: theme.accent.surfaceHover }]}
+          >
             <Avatar
               name={activity.source?.title}
               size={AVATAR}
@@ -366,6 +383,41 @@ const ActivityBoxView = ({
             }
             onToggle={() => void reaction.toggle()}
           />
+          {canShare || canDelete ? (
+            // Share, and — on your own — delete, at the far end of the row.
+            <View style={styles.secondary}>
+              {canShare ? (
+                <Pressable
+                  accessibilityLabel="Share"
+                  accessibilityRole="button"
+                  hitSlop={space.sm}
+                  onPress={() => onShare?.(activity)}
+                  style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+                >
+                  <Ionicons
+                    color={theme.textGray}
+                    name="share-social-outline"
+                    size={22}
+                  />
+                </Pressable>
+              ) : null}
+              {canDelete ? (
+                <Pressable
+                  accessibilityLabel="Delete activity"
+                  accessibilityRole="button"
+                  hitSlop={space.sm}
+                  onPress={() => onDelete?.(activity)}
+                  style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+                >
+                  <Ionicons
+                    color={theme.textGray}
+                    name="trash-outline"
+                    size={21}
+                  />
+                </Pressable>
+              ) : null}
+            </View>
+          ) : null}
         </View>
       ) : null}
     </View>
@@ -545,6 +597,12 @@ const BACKDROP = { fit: "inside", q: 60, w: 240 } as const;
 const STAGE_HEIGHT = 200;
 
 const styles = StyleSheet.create({
+  secondary: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: space.m,
+    marginLeft: "auto",
+  },
   actions: {
     alignItems: "center",
     flexDirection: "row",

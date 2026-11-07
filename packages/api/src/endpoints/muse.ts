@@ -128,6 +128,44 @@ export const getHeroPageMuses = (api: ApiClient) =>
     anonymous: true,
   });
 
+/**
+ * One page of the character directory (`GET /muse/directory`): every muse the
+ * caller may see, alphabetically.
+ *
+ * `query` matches a first, last or full name prefix, or a fandom ("hp");
+ * `fandoms` are fandom ids, any of which a muse must be in — with an empty
+ * query, every muse in them. Session optional: signed out sees PUBLIC only.
+ * An empty page is the end of the directory.
+ */
+export const getMuseDirectory = (
+  api: ApiClient,
+  {
+    fandoms = [],
+    pageNumber,
+    pageSize,
+    query = "",
+  }: {
+    fandoms?: readonly string[];
+    pageNumber: number;
+    pageSize: number;
+    query?: string;
+  },
+) => {
+  const params = new URLSearchParams({
+    pageNumber: String(pageNumber),
+    pageSize: String(pageSize),
+  });
+  const trimmed = query.trim();
+  if (trimmed) params.set("query", trimmed);
+  if (fandoms.length > 0) params.set("fandoms", fandoms.join(","));
+  return musesWith(
+    api,
+    `${MUSE}/directory?${params.toString()}`,
+    "getMuseDirectoryAction",
+    "feed",
+  );
+};
+
 /** Public: the fandom picker is usable before sign-in. */
 export const searchFandoms = (api: ApiClient, prefix: string) =>
   api.requestNullable<Fandom[]>(

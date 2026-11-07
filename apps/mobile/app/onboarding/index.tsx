@@ -48,7 +48,7 @@ import { fontSize, radius, space, useAppTheme } from "@/theme";
  */
 
 const MAX_NAME = 50;
-const MAX_USERNAME = 30;
+const MAX_USERNAME = 50;
 const NEUTRAL_FILTERS = { blur: 0, brightness: 100, greyscale: 0 };
 
 export default function OnboardingProfileScreen() {

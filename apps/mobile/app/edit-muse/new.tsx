@@ -41,7 +41,7 @@ import { border, fontSize, radius, space, useAppTheme } from "@/theme";
  *
  * The same four things — a face, a name, a fandom, who can see it — and the
  * same rules: a verse starts from its character's name and fandom and keeps
- * its privacy, and nobody past their plan's character limit (verses count)
+ * its privacy, and nobody past their character limit (verses count)
  * gets to fill the form in only to be refused.
  *
  * The avatar can be cropped before the character exists; it is uploaded at
@@ -132,7 +132,7 @@ export default function NewMuseScreen() {
     if (atLimit) {
       Alert.alert(
         "Character limit reached",
-        `You've reached your plan's limit of ${limit} characters (alternate verses count toward this too).`,
+        `You've reached your limit of ${limit} characters (alternate verses count toward this too).`,
       );
       return;
     }
@@ -156,6 +156,12 @@ export default function NewMuseScreen() {
       // The flow's next step, not the character's settings: those are a
       // tap away from the profile once the person is in the app.
       router.replace("/onboarding/discord");
+      return;
+    }
+    // Web's nudge: somebody with a character and nobody to write with is one
+    // step from the point of the app.
+    if ((novelist?.friends?.length ?? 0) === 0) {
+      router.dismissTo("/(tabs)/(home)/fellows");
       return;
     }
     router.replace({
@@ -196,7 +202,7 @@ export default function NewMuseScreen() {
       >
         {atLimit ? (
           <Notice tone="error">
-            {`You've reached your plan's limit of ${limit} characters (alternate verses count toward this too). Upgrade your tier or remove a character to add a new ${isVerse ? "verse" : "one"}.`}
+            {`You've reached your limit of ${limit} characters (alternate verses count toward this too). Remove a character to add a new ${isVerse ? "verse" : "one"}.`}
           </Notice>
         ) : novelist ? (
           <Text style={[styles.usage, { color: theme.textGray }]}>

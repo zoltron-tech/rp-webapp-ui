@@ -1,0 +1,110 @@
+[
+  {
+    "android": {
+      "background": "./assets/app-icons/cyan-background.png",
+      "color": "#045468",
+      "foreground": "./assets/app-icons/cyan-foreground.png"
+    },
+    "ios": "./assets/app-icons/cyan.png",
+    "name": "Cyan"
+  },
+  {
+    "android": {
+      "background": "./assets/app-icons/iris-background.png",
+      "color": "#3d3e82",
+      "foreground": "./assets/app-icons/iris-foreground.png"
+    },
+    "ios": "./assets/app-icons/iris.png",
+    "name": "Iris"
+  },
+  {
+    "android": {
+      "background": "./assets/app-icons/crimson-background.png",
+      "color": "#6d2545",
+      "foreground": "./assets/app-icons/crimson-foreground.png"
+    },
+    "ios": "./assets/app-icons/crimson.png",
+    "name": "Crimson"
+  },
+  {
+    "android": {
+      "background": "./assets/app-icons/gold-background.png",
+      "color": "#6d621d",
+      "foreground": "./assets/app-icons/gold-foreground.png"
+    },
+    "ios": "./assets/app-icons/gold.png",
+    "name": "Gold"
+  },
+  {
+    "android": {
+      "background": "./assets/app-icons/red-background.png",
+      "color": "#72232d",
+      "foreground": "./assets/app-icons/red-foreground.png"
+    },
+    "ios": "./assets/app-icons/red.png",
+    "name": "Red"
+  },
+  {
+    "android": {
+      "background": "./assets/app-icons/lime-background.png",
+      "color": "#4a7a38",
+      "foreground": "./assets/app-icons/lime-foreground.png"
+    },
+    "ios": "./assets/app-icons/lime.png",
+    "name": "Lime"
+  },
+  {
+    "android": {
+      "background": "./assets/app-icons/lotus-background.png",
+      "color": "#bf7db1",
+      "foreground": "./assets/app-icons/lotus-foreground.png"
+    },
+    "ios": "./assets/app-icons/lotus.png",
+    "name": "Lotus"
+  },
+  {
+    "android": {
+      "background": "./assets/app-icons/dracula-background.png",
+      "color": "#ac0a0a",
+      "foreground": "./assets/app-icons/dracula-foreground.png"
+    },
+    "ios": "./assets/app-icons/dracula.png",
+    "name": "Dracula"
+  },
+  {
+    "android": {
+      "background": "./assets/app-icons/lunar-background.png",
+      "color": "#2563eb",
+      "foreground": "./assets/app-icons/lunar-foreground.png"
+    },
+    "ios": "./assets/app-icons/lunar.png",
+    "name": "Lunar"
+  },
+  {
+    "android": {
+      "background": "./assets/app-icons/ember-background.png",
+      "color": "#b3620a",
+      "foreground": "./assets/app-icons/ember-foreground.png"
+    },
+    "ios": "./assets/app-icons/ember.png",
+    "name": "Ember"
+  },
+  {
+    "android": {
+      "background": "./assets/app-icons/onyx-background.png",
+      "color": "#6f6b96",
+      "foreground": "./assets/app-icons/onyx-foreground.png"
+    },
+    "ios": "./assets/app-icons/onyx.png",
+    "name": "Onyx"
+  },
+  {
+    "android": {
+      "background": "./assets/app-icons/tobacco-background.png",
+      "color": "#8b613c",
+      "foreground": "./assets/app-icons/tobacco-foreground.png"
+    },
+    "ios": "./assets/app-icons/tobacco.png",
+    "name": "Tobacco"
+  }
+]

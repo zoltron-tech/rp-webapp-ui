@@ -1,6 +1,6 @@
 import { verifyEmailPattern } from "@nw/utils";
-import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text } from "@/components/text";
 import {
@@ -11,6 +11,7 @@ import {
 import { Socials } from "@/components/auth/socials";
 import { TextField } from "@/components/text-field";
 import { useRegisterDraft } from "@/context/register-draft";
+import { rememberReferral } from "@/lib/referral";
 import { fontSize, space, useAppTheme } from "@/theme";
 
 /**
@@ -36,6 +37,13 @@ export default function RegisterEmailScreen() {
   const theme = useAppTheme();
   const router = useRouter();
   const { draft, update } = useRegisterDraft();
+  const { referralUser } = useLocalSearchParams<{ referralUser?: string }>();
+
+  // An invite opens this screen with who sent it. Held in storage, because
+  // either way of signing up from here needs it.
+  useEffect(() => {
+    if (referralUser) void rememberReferral(referralUser);
+  }, [referralUser]);
 
   const [email, setEmail] = useState(draft.email);
   /*

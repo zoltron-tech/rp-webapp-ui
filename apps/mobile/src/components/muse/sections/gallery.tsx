@@ -44,7 +44,12 @@ import {
 import { AddButton } from "@/components/muse/sections/info";
 import { Text } from "@/components/text";
 import { useMuseMedia, useMuseMediaMetadata } from "@/hooks/use-muse";
-import { MAX_GALLERY_BYTES, pickMedia, uploadFile } from "@/lib/media-upload";
+import {
+  alertMediaRejected,
+  MAX_GALLERY_BYTES,
+  pickMedia,
+  uploadFile,
+} from "@/lib/media-upload";
 import type { MuseLook } from "@/lib/muse-appearance";
 import { fontSize, radius, space } from "@/theme";
 
@@ -127,7 +132,10 @@ export const MuseGallerySection = ({
     if (next !== width) setWidth(next);
   };
 
-  const tile = width > 0 ? (width - GAP * (COLUMNS - 1)) / COLUMNS : 0;
+  // Rounded down: a fractional tile (say 66.44pt) made three tiles and two
+  // gaps come out a hair over the row, and the third wrapped — two columns.
+  const tile =
+    width > 0 ? Math.floor((width - GAP * (COLUMNS - 1)) / COLUMNS) : 0;
   const count = media?.length ?? 0;
   const remaining = MAX_TOTAL - count;
 
@@ -157,9 +165,11 @@ export const MuseGallerySection = ({
 
     setProgress({ done: 0, total: accepted.length });
     const urls: string[] = [];
+    let rejected = 0;
     for (const file of accepted) {
-      const url = await uploadFile(api, file, museId);
-      if (url) urls.push(url);
+      const result = await uploadFile(api, file, museId);
+      if (result.url) urls.push(result.url);
+      if (result.rejected) rejected += 1;
       setProgress((current) =>
         current ? { ...current, done: current.done + 1 } : current,
       );
@@ -175,7 +185,9 @@ export const MuseGallerySection = ({
         setMedia((list) => [...list, ...urls]);
       }
     }
-    if (urls.length < accepted.length) {
+    if (rejected > 0) {
+      alertMediaRejected();
+    } else if (urls.length < accepted.length) {
       Alert.alert("Upload failed", "Some files did not upload. Try again.");
     }
     setProgress(null);
@@ -271,35 +283,49 @@ export const MuseGallerySection = ({
 
   return (
     <>
-      <MusePanel accent={accent} hideBackground={look.hideExpandedBackground}>
-        <MiniHeader look={look} muse={muse} />
-        <Divider accent={accent} />
-        <SectionLabel
-          trailing={
-            isOwnMuse && media ? (
-              progress ? (
-                <View style={styles.progress}>
-                  <ActivityIndicator color={PANEL.secondary} size="small" />
-                  <Text style={styles.progressLabel}>
-                    {progress.done} / {progress.total}
-                  </Text>
-                </View>
-              ) : (
-                <View style={styles.tools}>
-                  {media.length > 0 && !selection.selecting ? (
-                    <SelectButton dark onPress={() => selection.start()} />
-                  ) : null}
-                  <AddButton
-                    label={remaining > 0 ? "Add media" : "Full"}
-                    onPress={() => void upload()}
-                  />
-                </View>
-              )
-            ) : undefined
-          }
-        >
-          Gallery
-        </SectionLabel>
+      <MusePanel
+        accent={accent}
+        hideBackground={look.hideExpandedBackground}
+        header={
+          <>
+            <MiniHeader look={look} muse={muse} />
+            <Divider accent={accent} />
+            <SectionLabel
+              trailing={
+                isOwnMuse && media ? (
+                  progress ? (
+                    <View style={styles.progress}>
+                      <ActivityIndicator color={PANEL.secondary} size="small" />
+                      <Text style={styles.progressLabel}>
+                        {progress.done} / {progress.total}
+                      </Text>
+                    </View>
+                  ) : selection.selecting ? undefined : (
+                    <AddButton
+                      label={remaining > 0 ? "Add media" : "Full"}
+                      onPress={() => void upload()}
+                    />
+                  )
+                ) : undefined
+              }
+            >
+              Gallery
+            </SectionLabel>
+          </>
+        }
+      >
+        {/*
+          Its own line, not beside the heading: with Add media there as well
+          the row ran out and Select ended up against the word Gallery.
+        */}
+        {isOwnMuse && media && media.length > 0 && !selection.selecting ? (
+          <View style={styles.toolRow}>
+            <Text style={styles.toolCount}>
+              {count} of {MAX_TOTAL}
+            </Text>
+            <SelectButton dark onPress={() => selection.start()} />
+          </View>
+        ) : null}
 
         {selection.selecting && media ? (
           <View style={styles.selectionBar}>
@@ -396,6 +422,16 @@ export const MuseGallerySection = ({
                               <Text style={styles.badgeLabel}>GIF</Text>
                             </View>
                           ) : null}
+                          {/* Web shows the owner what each one is used for. */}
+                          {isOwnMuse && muse ? (
+                            <View style={styles.inUse}>
+                              {inUseLabels(url, muse).map((label) => (
+                                <View key={label} style={styles.badgeInline}>
+                                  <Text style={styles.badgeLabel}>{label}</Text>
+                                </View>
+                              ))}
+                            </View>
+                          ) : null}
                         </>
                       )}
                       {selection.selecting ? (
@@ -427,7 +463,31 @@ export const MuseGallerySection = ({
   );
 };
 
+/** Web's tile badges: what this file is doing for the character now. */
+const inUseLabels = (url: string, muse: Muse) => {
+  const labels: string[] = [];
+  if (muse.image === url || muse.avatar?.src === url) labels.push("Avatar");
+  if (muse.cardBackground?.src === url) labels.push("Card BG");
+  if (muse.wallpaper?.src === url) labels.push("Wallpaper");
+  return labels;
+};
+
 const styles = StyleSheet.create({
+  badgeInline: {
+    backgroundColor: "rgba(0,0,0,0.65)",
+    borderRadius: radius.xs,
+    paddingHorizontal: space.xs,
+    paddingVertical: 1,
+  },
+  inUse: {
+    bottom: space.xs,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 2,
+    left: space.xs,
+    position: "absolute",
+    right: space.xs,
+  },
   badge: {
     backgroundColor: "rgba(0,0,0,0.6)",
     borderRadius: radius.xs,
@@ -456,13 +516,24 @@ const styles = StyleSheet.create({
     fontSize: fontSize.meta,
     fontWeight: "600",
   },
-  selectionBar: { marginBottom: space.sm },
+  selectionBar: { marginBottom: space.m },
   tile: {
     backgroundColor: PANEL.shimmer,
     borderRadius: 6,
     overflow: "hidden",
   },
-  tools: { alignItems: "center", flexDirection: "row", gap: space.s },
+  toolCount: {
+    color: PANEL.secondary,
+    fontSize: fontSize.caption,
+    fontWeight: "500",
+  },
+  toolRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: space.m,
+    width: "100%",
+  },
   video: {
     alignItems: "center",
     backgroundColor: "rgba(0,0,0,0.55)",

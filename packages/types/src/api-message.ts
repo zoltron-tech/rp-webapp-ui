@@ -8,6 +8,8 @@ export enum API_MESSAGE {
   Unauthorized = "unauthorized",
   AccessDenied = "access_denied",
   MediaError = "media_error",
+  /** The upload NSFW check refused the file (portfolio-service answers 422). */
+  MediaRejected = "media_rejected",
   BadPayload = "bad_payload",
   ServerError = "server_error",
   Conflict = "conflict",

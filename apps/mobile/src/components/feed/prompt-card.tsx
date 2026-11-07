@@ -1,12 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useSession } from "@nw/features";
-import type { Prompt } from "@nw/types";
+import type { Comment, Prompt } from "@nw/types";
 import { pluralize, toFormattedDate } from "@nw/utils";
 import { Image } from "@/components/image";
-import { memo, useCallback, useMemo } from "react";
+import type { ProfileSong } from "@nw/types/music";
+import { memo, useCallback, useMemo, useState } from "react";
 import { Animated, Pressable, StyleSheet, View } from "react-native";
 import { useCommentsReveal } from "@/animation/effects";
 import { OUTBOX_ID_PREFIX } from "@/lib/local-store";
+import { ProfileSongPill } from "@/components/profile-song";
 import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { CollapsibleRichText } from "@/components/collapsible-rich-text";
@@ -104,6 +105,12 @@ export interface PromptCardProps {
   onMore?: (prompt: Prompt) => void;
   /** Takes a waiting post out of the outbox. Drawn only on a queued card. */
   onDiscardQueued?: (promptId: string) => void;
+  /** A comment's ⋯ menu under this card. */
+  onCommentMore?: (comment: Comment) => void;
+  /** A comment's like count was tapped. */
+  onShowCommentLikers?: (comment: Comment) => void;
+  /** The privacy icon on a custom-privacy post: who it is shared with. */
+  onShowSharedWith?: (prompt: Prompt) => void;
   /** Web's share button on the footer: the share sheet, for anyone. */
   onShare?: (prompt: Prompt) => void;
   /** Given a *comment* id — the root of the thread that comment opened. */
@@ -131,13 +138,16 @@ export interface PromptCardProps {
 
 const PromptCardView = ({
   expanded,
+  onCommentMore,
   onCompose,
   onDiscardQueued,
   onMore: onMoreProp,
   onOpenThread,
   onReacted,
   onShare,
+  onShowCommentLikers,
   onShowLikers,
+  onShowSharedWith,
   onToggleComments,
   onUnfold,
   prompt,
@@ -202,12 +212,7 @@ const PromptCardView = ({
       : "No comments";
 
   return (
-    <View
-      style={[
-        styles.card,
-        theme.material.card,
-      ]}
-    >
+    <View style={[styles.card, theme.material.card]}>
       {/* ── Who, and when ─────────────────────────────────────────────── */}
       <View style={styles.header}>
         {/* The face and the name go to whoever wrote it, as on web. */}
@@ -268,7 +273,24 @@ const PromptCardView = ({
                 {when}
               </Text>
               <Text style={[styles.meta, { color: theme.textGray }]}>·</Text>
-              <Ionicons color={theme.textGray} name={privacyIcon} size={12} />
+              {onShowSharedWith &&
+              privacy === "CUSTOM" &&
+              prompt.sharedWith?.length ? (
+                <Pressable
+                  accessibilityLabel={`Shared with ${prompt.sharedWith.length}`}
+                  accessibilityRole="button"
+                  hitSlop={space.sm}
+                  onPress={() => onShowSharedWith(prompt)}
+                >
+                  <Ionicons
+                    color={theme.accent.text}
+                    name={privacyIcon}
+                    size={12}
+                  />
+                </Pressable>
+              ) : (
+                <Ionicons color={theme.textGray} name={privacyIcon} size={12} />
+              )}
             </View>
           </View>
         </Pressable>
@@ -311,62 +333,11 @@ const PromptCardView = ({
       {media ? <FeedMedia url={media} /> : null}
 
       {/*
-        The song a prompt was posted with, as a line rather than a player.
-        Web mounts a waveform player per card; a player per feed cell is a
-        player per recycle, and most readers scroll past. The title and the
-        artist are what the author wanted seen.
+        The song a prompt was posted with. A line until it is pressed, then
+        the player: web mounts one per card, but a player per feed cell is a
+        player per recycle, and most readers scroll past.
       */}
-      {featuredSong ? (
-        <View
-          style={[
-            styles.song,
-            {
-              backgroundColor: theme.glass.field,
-              borderColor: theme.material.edge,
-            },
-          ]}
-        >
-          {featuredSong.imageUrl ? (
-            <Image
-              cachePolicy="memory-disk"
-              contentFit="cover"
-              recyclingKey={featuredSong.imageUrl}
-              source={{ uri: featuredSong.imageUrl }}
-              style={styles.songArt}
-              transition={0}
-            />
-          ) : (
-            <View style={[styles.songArt, styles.songArtFallback]}>
-              <Ionicons
-                color={theme.accent.text}
-                name="musical-notes"
-                size={14}
-              />
-            </View>
-          )}
-          <View style={styles.songText}>
-            <Text
-              numberOfLines={1}
-              style={[styles.songTitle, { color: theme.text }]}
-            >
-              {featuredSong.title}
-            </Text>
-            {featuredSong.artist ? (
-              <Text
-                numberOfLines={1}
-                style={[styles.songArtist, { color: theme.textGray }]}
-              >
-                {featuredSong.artist}
-              </Text>
-            ) : null}
-          </View>
-          <Ionicons
-            color={theme.textGray}
-            name="musical-note-outline"
-            size={14}
-          />
-        </View>
-      ) : null}
+      {featuredSong ? <PromptSong key={id} song={featuredSong} /> : null}
 
       {/* ── Actions ───────────────────────────────────────────────────── */}
       {queued ? (
@@ -393,75 +364,75 @@ const PromptCardView = ({
           ) : null}
         </View>
       ) : (
-      <View style={[styles.actions, { borderTopColor: theme.material.edge }]}>
-        {/*
+        <View style={[styles.actions, { borderTopColor: theme.material.edge }]}>
+          {/*
           Web's sentence, and web's tap on it: "3 novelists like this" opens the
           list of who. The sentence yields width first — it can shorten to an
           ellipsis, the comment bubble and the share glyph cannot.
         */}
-        <HeartButton
-          liked={reaction.reacted}
-          likes={reaction.reactions}
-          onPressCount={
-            onShowLikers && reaction.reactions > 0
-              ? () => onShowLikers(prompt)
-              : undefined
-          }
-          onToggle={() => void reaction.toggle()}
-        />
-
-        <Pressable
-          accessibilityLabel={
-            expanded ? "Hide comments" : `Show comments: ${commentSentence}`
-          }
-          accessibilityRole="button"
-          accessibilityState={{ expanded }}
-          hitSlop={space.xs}
-          onPress={() => onToggleComments(id)}
-          style={({ pressed }) => [
-            styles.action,
-            { opacity: pressed ? 0.6 : 1 },
-          ]}
-        >
-          <Ionicons
-            color={expanded ? theme.accent.text : theme.textGray}
-            name={expanded ? "chatbubble" : "chatbubble-outline"}
-            size={ACTION_ICON}
+          <HeartButton
+            liked={reaction.reacted}
+            likes={reaction.reactions}
+            onPressCount={
+              onShowLikers && reaction.reactions > 0
+                ? () => onShowLikers(prompt)
+                : undefined
+            }
+            onToggle={() => void reaction.toggle()}
           />
-          {commentCount > 0 ? (
-            <Text
-              style={[
-                styles.actionCount,
-                { color: expanded ? theme.accent.text : theme.textGray },
-              ]}
-            >
-              {commentCount}
-            </Text>
-          ) : null}
-        </Pressable>
 
-        <View style={styles.spacer} />
-
-        {/* Web's third footer button. Share is for anyone, signed in or not. */}
-        {onShare ? (
           <Pressable
-            accessibilityLabel="Share this post"
+            accessibilityLabel={
+              expanded ? "Hide comments" : `Show comments: ${commentSentence}`
+            }
             accessibilityRole="button"
+            accessibilityState={{ expanded }}
             hitSlop={space.xs}
-            onPress={() => onShare(prompt)}
+            onPress={() => onToggleComments(id)}
             style={({ pressed }) => [
               styles.action,
               { opacity: pressed ? 0.6 : 1 },
             ]}
           >
             <Ionicons
-              color={theme.textGray}
-              name="share-social-outline"
+              color={expanded ? theme.accent.text : theme.textGray}
+              name={expanded ? "chatbubble" : "chatbubble-outline"}
               size={ACTION_ICON}
             />
+            {commentCount > 0 ? (
+              <Text
+                style={[
+                  styles.actionCount,
+                  { color: expanded ? theme.accent.text : theme.textGray },
+                ]}
+              >
+                {commentCount}
+              </Text>
+            ) : null}
           </Pressable>
-        ) : null}
-      </View>
+
+          <View style={styles.spacer} />
+
+          {/* Web's third footer button. Share is for anyone, signed in or not. */}
+          {onShare ? (
+            <Pressable
+              accessibilityLabel="Share this post"
+              accessibilityRole="button"
+              hitSlop={space.xs}
+              onPress={() => onShare(prompt)}
+              style={({ pressed }) => [
+                styles.action,
+                { opacity: pressed ? 0.6 : 1 },
+              ]}
+            >
+              <Ionicons
+                color={theme.textGray}
+                name="share-social-outline"
+                size={ACTION_ICON}
+              />
+            </Pressable>
+          ) : null}
+        </View>
       )}
 
       {/*
@@ -470,7 +441,7 @@ const PromptCardView = ({
         rather than only on the thread page, because a post you can answer
         right where you read it is what makes a feed a conversation.
       */}
-      {onCompose && !queued ? (
+      {onCompose && !queued && prompt.canInteract ? (
         <ComposeTrigger
           avatarImage={replyAs?.avatar}
           avatarUri={replyAs?.avatar?.src ?? replyAs?.image}
@@ -500,7 +471,9 @@ const PromptCardView = ({
           <PromptComments
             expected={commentCount}
             key={id}
+            onMore={onCommentMore}
             onOpenThread={onOpenThread}
+            onShowLikers={onShowCommentLikers}
             promptId={id}
           />
         </Animated.View>
@@ -517,6 +490,65 @@ const PromptCardView = ({
  * card and leaves every other one on screen alone.
  */
 export const PromptCard = memo(PromptCardView);
+
+/**
+ * A prompt's song: a line until it is pressed, then the player. Its own
+ * component, keyed by prompt, because a cell is re-bound to other prompts and
+ * state held in the card would start the next prompt's song.
+ */
+const PromptSong = ({ song }: { song: ProfileSong }) => {
+  const theme = useAppTheme();
+  const [started, setStarted] = useState(false);
+
+  if (started) return <ProfileSongPill autoStart song={song} />;
+
+  return (
+    <Pressable
+      accessibilityLabel={`Play ${song.title}`}
+      accessibilityRole="button"
+      onPress={() => setStarted(true)}
+      style={[
+        styles.song,
+        {
+          backgroundColor: theme.glass.field,
+          borderColor: theme.material.edge,
+        },
+      ]}
+    >
+      {song.imageUrl ? (
+        <Image
+          cachePolicy="memory-disk"
+          contentFit="cover"
+          recyclingKey={song.imageUrl}
+          source={{ uri: song.imageUrl }}
+          style={styles.songArt}
+          transition={0}
+        />
+      ) : (
+        <View style={[styles.songArt, styles.songArtFallback]}>
+          <Ionicons color={theme.accent.text} name="musical-notes" size={14} />
+        </View>
+      )}
+      <View style={styles.songText}>
+        <Text
+          numberOfLines={1}
+          style={[styles.songTitle, { color: theme.text }]}
+        >
+          {song.title}
+        </Text>
+        {song.artist ? (
+          <Text
+            numberOfLines={1}
+            style={[styles.songArtist, { color: theme.textGray }]}
+          >
+            {song.artist}
+          </Text>
+        ) : null}
+      </View>
+      <Ionicons color={theme.accent.text} name="play" size={18} />
+    </Pressable>
+  );
+};
 
 const styles = StyleSheet.create({
   action: {

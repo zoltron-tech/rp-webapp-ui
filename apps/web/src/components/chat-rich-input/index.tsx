@@ -527,7 +527,6 @@ export const ChatRichInput = forwardRef<
           focusedIndex={focusedIndex}
           onSelect={insertMention}
           onHover={setFocusedIndex}
-          showType
           style={{ bottom: "calc(100% + 6px)", left: 0, right: 0 }}
         />
       )}

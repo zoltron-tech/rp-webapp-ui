@@ -1,4 +1,5 @@
 import {
+  deleteActivity,
   getFriendActivities as fetchFriendActivities,
   getRandomStories as fetchRandomStories,
   getUserActivities as fetchUserActivities,
@@ -7,6 +8,10 @@ import {
   getStrangerNovelists,
 } from "@nw/api/endpoints/home";
 import { api, authedApi } from "@/lib/api";
+
+/** Removes one of the signed-in novelist's own activities. */
+export const deleteActivityAction = (activityId: string) =>
+  deleteActivity(authedApi, activityId);
 
 export const getStrangerNovelistsAction = (
   pageNumber: number,

@@ -26,6 +26,7 @@ import type {
 import { ROUTES } from "@/utils/constants/routes";
 import * as DropS from "../profile-more-dropdown/styled";
 import * as S from "./styled";
+import { SendToChatButton, SendToChatPanel } from "@/components/send-to-chat";
 import { shareMuseToDiscord } from "@nw/api/endpoints/community";
 import { api } from "@/lib/api";
 
@@ -54,6 +55,8 @@ export const ShareMuseDialog: FC<ShareMuseDialogProps> = ({
   const { errorToast } = useUIContext();
 
   const [copied, setCopied] = useState(false);
+  // The "Send in a chat" view, in place of the share options.
+  const [chatOpen, setChatOpen] = useState(false);
   const [shareState, setShareState] = useState<ShareState>({ status: "idle" });
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -62,6 +65,7 @@ export const ShareMuseDialog: FC<ShareMuseDialogProps> = ({
   useEffect(() => {
     if (open) {
       setShareState({ status: "idle" });
+      setChatOpen(false);
       setCopied(false);
     }
   }, [open]);
@@ -216,7 +220,15 @@ export const ShareMuseDialog: FC<ShareMuseDialogProps> = ({
   // ── Content: success vs share form (errors show inline in the form) ─────
   let dialogContent: React.ReactNode;
 
-  if (shareState.status === "success") {
+  if (chatOpen) {
+    dialogContent = (
+      <SendToChatPanel
+        label="muse"
+        onBack={() => setChatOpen(false)}
+        url={museUrl}
+      />
+    );
+  } else if (shareState.status === "success") {
     dialogContent = (
       <S.ResultState>
         <S.ResultIconWrap>
@@ -284,6 +296,10 @@ export const ShareMuseDialog: FC<ShareMuseDialogProps> = ({
         </S.LinkRow>
 
         <S.Actions>
+          <SendToChatButton
+            disabled={!museUrl}
+            onClick={() => setChatOpen(true)}
+          />
           <S.DiscordButton
             type="button"
             onClick={handleShareToDiscord}

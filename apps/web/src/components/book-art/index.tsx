@@ -16,6 +16,8 @@ import {
   OPEN_STARTER_VIEW_BOX,
   OpenStarterScene,
   type ScenePalette,
+  UNLIT_BULB_VIEW_BOX,
+  UnlitBulbScene,
 } from "@nw/animations";
 import { useId } from "react";
 import * as S from "./styles";
@@ -399,6 +401,20 @@ export const BlankScrollArt = ({ className, accent }: ArtProps) => (
   >
     <BlankScrollScene palette={SCENE_PALETTE} />
   </S.ScrollSvg>
+);
+
+/** An unlit bulb on its cord — the muse headcanons placeholder. */
+export const NoHeadcanonsArt = ({ className, accent }: ArtProps) => (
+  <S.HeadcanonsSvg
+    className={className}
+    $accent={accent}
+    viewBox={UNLIT_BULB_VIEW_BOX}
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+  >
+    <UnlitBulbScene palette={SCENE_PALETTE} />
+  </S.HeadcanonsSvg>
 );
 
 /** A blank character card — the muse info placeholder. */

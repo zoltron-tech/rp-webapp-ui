@@ -34,6 +34,7 @@ import * as S from "./styles";
 import {
   BookmarksIcon,
   BookshelfIcon,
+  CharacterDirectoryIcon,
   CharactersIcon,
   ExploreIcon,
   FAQsIcon,
@@ -202,6 +203,10 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
     routeToPage(ROUTES.Library);
   };
 
+  const toCharacterDirectory = () => {
+    routeToPage(ROUTES.CharacterDirectory);
+  };
+
   const toBookshelfPage = () => {
     routeToPage(ROUTES.Profile.View(user?.username || "").Books);
   };
@@ -356,6 +361,13 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                   <Flex justify="flex-start" align="center" gap="12px">
                     <ExploreIcon size={20} />
                     Explore Posts
+                  </Flex>
+                  <FiChevronRight size={16} color="gray" />
+                </S.Element>
+                <S.Element onClick={toCharacterDirectory}>
+                  <Flex justify="flex-start" align="center" gap="12px">
+                    <CharacterDirectoryIcon size={20} />
+                    Character Directory
                   </Flex>
                   <FiChevronRight size={16} color="gray" />
                 </S.Element>
@@ -574,6 +586,18 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                       <Flex justify="flex-start" align="center" gap="12px">
                         <ExploreIcon size={20} />
                         Explore Posts
+                      </Flex>
+                      <FiChevronRight size={16} color="gray" />
+                    </S.MobilePanelMenuItem>
+                    <S.MobilePanelMenuItem
+                      onClick={() => {
+                        closeMobilePanel();
+                        toCharacterDirectory();
+                      }}
+                    >
+                      <Flex justify="flex-start" align="center" gap="12px">
+                        <CharacterDirectoryIcon size={20} />
+                        Character Directory
                       </Flex>
                       <FiChevronRight size={16} color="gray" />
                     </S.MobilePanelMenuItem>

@@ -2,7 +2,7 @@ import { Stack, useRouter } from "expo-router";
 import { Platform } from "react-native";
 import { ambientScreenLayout } from "@/components/ambient-background";
 import { TabHeaderTitle } from "@/components/header-title";
-import { MenuButton } from "@/components/menu-button";
+import { HeaderActions } from "@/components/header-actions";
 import { StackBackButton, tabStackBack } from "@/components/stack-back-button";
 import { ConversationOverlayHost } from "@/context/conversation-overlay";
 import { InboxRevealProvider } from "@/context/inbox-reveal";
@@ -25,7 +25,7 @@ export default function InboxStackLayout() {
         screenLayout={ambientScreenLayout}
         screenOptions={(screen) => ({
           contentStyle: { backgroundColor: theme.background },
-          headerRight: () => <MenuButton />,
+          headerRight: () => <HeaderActions />,
           ...glassHeaderOptions(theme),
           // A page that arrived first in this stack (a link from another tab,
           // from a chat, from a story) still needs a way back on iOS.

@@ -1,6 +1,6 @@
 import type { User } from "./user";
 
-export type LoginOAuthProvider = "google" | "discord";
+export type LoginOAuthProvider = "google" | "discord" | "apple";
 
 export interface LoginPayload {
   email?: string;
@@ -77,6 +77,19 @@ export type SessionsResponsePayload = {
 
 /** A short-lived, single-use credential for the WebSocket handshake only. */
 export type WsTicketPayload = {
+  message: string;
+  ticket?: string;
+  expiresInSeconds?: number;
+};
+
+/** An account the app can link from the settings screen. */
+export type LinkProvider = "discord" | "spotify";
+
+/**
+ * A short-lived, single-use credential that lets the mobile app open the
+ * Discord/Spotify link flow in a browser sheet that carries no cookie.
+ */
+export type LinkTicketPayload = {
   message: string;
   ticket?: string;
   expiresInSeconds?: number;

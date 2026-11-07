@@ -16,6 +16,7 @@ import { Image } from "@/components/image";
 import { memo } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Avatar } from "@/components/avatar";
+import { VerifiedMark } from "@/components/chat/verified-mark";
 import type { RowPlace } from "@/components/notification-row";
 import { SwipeableRow } from "@/components/swipeable-row";
 import { Text } from "@/components/text";
@@ -231,15 +232,20 @@ const ConversationRowComponent = ({
           </View>
 
           <View style={styles.body}>
-            <Text
-              numberOfLines={1}
-              style={[
-                styles.name,
-                { color: theme.text, fontWeight: unread ? "700" : "600" },
-              ]}
-            >
-              {name}
-            </Text>
+            <View style={styles.nameRow}>
+              <Text
+                numberOfLines={1}
+                style={[
+                  styles.name,
+                  { color: theme.text, fontWeight: unread ? "700" : "600" },
+                ]}
+              >
+                {name}
+              </Text>
+              {!conversation.isGroup && target?.participant?.isVerified ? (
+                <VerifiedMark size={12} username={target.username} />
+              ) : null}
+            </View>
 
             <Text
               numberOfLines={1}
@@ -311,6 +317,7 @@ const ConversationRowComponent = ({
 export const ConversationRow = memo(ConversationRowComponent);
 
 const styles = StyleSheet.create({
+  nameRow: { alignItems: "center", flexDirection: "row", gap: space.xs },
   body: { flex: 1, gap: space.xxs, minWidth: 0 },
   dot: { borderRadius: radius.xs, height: 8, width: 8 },
   // The preview's line height, so the dot centres on that line.

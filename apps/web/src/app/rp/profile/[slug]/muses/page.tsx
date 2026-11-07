@@ -238,7 +238,7 @@ export default function MusesListPage({}) {
       )}
       <AppAlertDialog
         heading="Character limit reached"
-        text={`You've reached your plan's limit of ${museLimit} characters (alternate verses count toward this too). Upgrade your tier or remove a character to add a new one.`}
+        text={`You've reached your limit of ${museLimit} characters (alternate verses count toward this too). Remove a character to add a new one.`}
         open={limitDialogOpen}
         onOpenChange={setLimitDialogOpen}
         showConfirm={false}

@@ -1,7 +1,6 @@
 import { Stack, useRouter } from "expo-router";
 import { ambientScreenLayout } from "@/components/ambient-background";
-import { TabHeaderTitle } from "@/components/header-title";
-import { MenuButton } from "@/components/menu-button";
+import { HeaderActions } from "@/components/header-actions";
 import { tabStackBack } from "@/components/stack-back-button";
 import { useAppTheme } from "@/theme";
 import { glassHeaderOptions } from "@/theme/header";
@@ -38,7 +37,7 @@ export default function HomeStackLayout() {
       screenLayout={ambientScreenLayout}
       screenOptions={(screen) => ({
         contentStyle: { backgroundColor: theme.background },
-        headerRight: () => <MenuButton />,
+        headerRight: () => <HeaderActions />,
         ...glassHeaderOptions(theme),
         // A page that arrived first in this stack (a link from another tab,
         // from a chat, from a story) still needs a way back on iOS.
@@ -53,11 +52,25 @@ export default function HomeStackLayout() {
       <Stack.Screen
         name="index"
         options={{
-          headerTitle: () => <TabHeaderTitle />,
+          // The screen draws its own header (`CollapsingHeader`), which slides
+          // away with the tab bar on scroll — the native one cannot. It keeps
+          // the magnifier, bell and menu.
+          headerShown: false,
           title: "Home",
         }}
       />
       <Stack.Screen name="directory" options={{ title: "Novelists" }} />
+      <Stack.Screen name="fellows" options={{ title: "Fellow Novelists" }} />
+      {/*
+        Draws its own bar — a back chevron and the field, grown out from the
+        magnifier — so the native header is off, and the screen fades in over
+        Home rather than sliding, which is what lets the field read as the
+        header bar opening up. See `screens/global-search`.
+      */}
+      <Stack.Screen
+        name="search"
+        options={{ animation: "fade", headerShown: false, title: "Search" }}
+      />
       <Stack.Screen name="threads/[threadId]" options={{ title: "Thread" }} />
       <Stack.Screen name="prompt/[promptId]" options={{ title: "Prompt" }} />
       <Stack.Screen name="novelist/[username]/index" />

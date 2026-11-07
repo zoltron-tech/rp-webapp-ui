@@ -418,6 +418,17 @@ export const RichTextEditor = forwardRef<
     query: string;
   } | null>(null);
   const [sheet, setSheet] = useState<Sheet>(null);
+  /**
+   * A sheet is up, or still sliding away. A focus taken then lands on a
+   * window that is leaving and Android drops it — the keyboard only came up
+   * on `ensureKeyboard`'s retry, most of a second later. So a focus asked for
+   * in that time waits here and is taken on the sheet's `onDismissed`.
+   */
+  const sheetUp = useRef(false);
+  const focusAfterSheet = useRef<number | null>(null);
+  useEffect(() => {
+    if (sheet) sheetUp.current = true;
+  }, [sheet]);
   /** Whether any line has the keyboard. Only the compact shape reads it. */
   const [focused, setFocused] = useState(false);
   /** Held in a ref so the focus handlers below stay stable across renders. */
@@ -442,10 +453,13 @@ export const RichTextEditor = forwardRef<
   const inputs = useRef(new Map<number, TextInput>());
   const focusAfterRender = useRef<Caret | null>(null);
   const focusRetry = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** When the keyboard last announced it was coming up (`keyboardWillShow`). */
+  const keyboardRisingAt = useRef(0);
 
   /** Looks again a moment after a focus, and raises the keyboard if it is not up. */
   const ensureKeyboard = useCallback((index: number) => {
     if (focusRetry.current) clearTimeout(focusRetry.current);
+    const requestedAt = Date.now();
     /*
      * Looks after a sheet has had time to leave (its slide is 180ms), and if
      * the keyboard is not up, takes the focus properly: lets go of whatever
@@ -456,10 +470,18 @@ export const RichTextEditor = forwardRef<
      * Two steps and not a blur-and-focus in one go: the keyboard-hidden
      * listener below answers a blur by blurring whatever is focused, and
      * would take the new focus away with it.
+     *
+     * A keyboard that is still sliding up is not missing. `isVisible()` turns
+     * true only once the slide ends, and the focus after a font, symbol, GIF
+     * or sticker usually lands while the sheet is still leaving — so at 280ms
+     * the keyboard was often half-way up, and blurring it there made it come
+     * up, drop, and come up again. Any `keyboardWillShow` since this request
+     * means the focus took; only a silence is the dropped focus this is for.
      */
     const raise = (attemptsLeft: number) => {
       focusRetry.current = null;
       if (KeyboardController.isVisible()) return;
+      if (keyboardRisingAt.current >= requestedAt) return;
       const field = inputs.current.get(index);
       if (!field) return;
       if (field.isFocused()) field.blur();
@@ -473,6 +495,29 @@ export const RichTextEditor = forwardRef<
     };
     focusRetry.current = setTimeout(() => raise(1), 280);
   }, []);
+  /** Focuses a line and raises its keyboard — once any sheet has gone. */
+  const focusLine = useCallback(
+    (index: number) => {
+      if (sheetUp.current) {
+        focusAfterSheet.current = index;
+        return;
+      }
+      inputs.current.get(index)?.focus();
+      ensureKeyboard(index);
+    },
+    [ensureKeyboard],
+  );
+
+  /** A sheet's `onDismissed`: the window is the editor's again. */
+  const sheetGone = useCallback(() => {
+    sheetUp.current = false;
+    const index = focusAfterSheet.current;
+    focusAfterSheet.current = null;
+    if (index === null) return;
+    inputs.current.get(index)?.focus();
+    ensureKeyboard(index);
+  }, [ensureKeyboard]);
+
   /*
    * A line never stays focused without a keyboard.
    *
@@ -483,11 +528,18 @@ export const RichTextEditor = forwardRef<
    * goes, the focus goes with it, and the next tap or `focus()` is a real one.
    */
   useEffect(() => {
-    const subscription = KeyboardEvents.addListener("keyboardDidHide", () => {
+    const hidden = KeyboardEvents.addListener("keyboardDidHide", () => {
+      keyboardRisingAt.current = 0;
       const input = TextInput.State.currentlyFocusedInput();
       if (input) TextInput.State.blurTextInput(input);
     });
-    return () => subscription.remove();
+    const rising = KeyboardEvents.addListener("keyboardWillShow", () => {
+      keyboardRisingAt.current = Date.now();
+    });
+    return () => {
+      hidden.remove();
+      rising.remove();
+    };
   }, []);
 
   const lastBulletStyle = useRef(DEFAULT_UNORDERED_LIST_STYLE);
@@ -516,7 +568,6 @@ export const RichTextEditor = forwardRef<
     const target = focusAfterRender.current;
     if (!target) return;
     focusAfterRender.current = null;
-    inputs.current.get(target.index)?.focus();
     activeRef.current = target;
     setActive(target);
     setCaret(target);
@@ -525,9 +576,10 @@ export const RichTextEditor = forwardRef<
      * or one focused while a media tray or the photo picker is still closing
      * takes the call before it can show a keyboard, and Android drops it. So
      * look again a moment later: not focused, focus; focused with no keyboard,
-     * blur and focus, which is what raises it.
+     * blur and focus, which is what raises it. Behind a sheet, it waits for
+     * the sheet to go (`focusLine`).
      */
-    ensureKeyboard(target.index);
+    focusLine(target.index);
   });
 
   useEffect(
@@ -1014,11 +1066,10 @@ ${text.slice(offset)}`,
         selection: at.selection,
         style,
       });
-      inputs.current.get(at.index)?.focus();
-      // Called as a sheet closes, when the first focus can be dropped.
-      ensureKeyboard(at.index);
+      // Called as a sheet closes: waits for it to go (`focusLine`).
+      focusLine(at.index);
     },
-    [ensureKeyboard, typingStyleAt],
+    [focusLine, typingStyleAt],
   );
 
   /** A sheet dismissed without a choice: back to the line, keyboard up. */
@@ -1026,9 +1077,8 @@ ${text.slice(offset)}`,
     setSheet(null);
     const at = activeRef.current;
     if (!at) return;
-    inputs.current.get(at.index)?.focus();
-    ensureKeyboard(at.index);
-  }, [ensureKeyboard]);
+    focusLine(at.index);
+  }, [focusLine]);
 
   const actions = useMemo<ToolbarActions>(
     () => ({
@@ -1508,6 +1558,7 @@ ${text.slice(offset)}`,
         ignoreKeyboard
         maxHeightRatio={0.4}
         onClose={closeSheet}
+        onDismissed={sheetGone}
         title="Text size"
         visible={sheet === "size"}
       >
@@ -1557,6 +1608,7 @@ ${text.slice(offset)}`,
       <FontSheet
         active={toolbarState.fontFamily}
         onClose={closeSheet}
+        onDismissed={sheetGone}
         onSelect={pickFont}
         visible={sheet === "font"}
       />
@@ -1564,6 +1616,7 @@ ${text.slice(offset)}`,
       <HighlightSheet
         active={toolbarState.highlight}
         onClose={closeSheet}
+        onDismissed={sheetGone}
         onSelect={pickHighlight}
         visible={sheet === "highlight"}
       />
@@ -1571,6 +1624,7 @@ ${text.slice(offset)}`,
       <SymbolSheet
         categories={BULLET_POINT_CATEGORIES}
         onClose={closeSheet}
+        onDismissed={sheetGone}
         onSelect={(value) => pickListStyle(false, value)}
         selected={toolbarState.list?.style ?? DEFAULT_UNORDERED_LIST_STYLE}
         subtitle="For the list the caret is in"
@@ -1581,6 +1635,7 @@ ${text.slice(offset)}`,
       <SymbolSheet
         categories={[{ name: "Numbering", symbols: ORDERED_LIST_STYLES }]}
         onClose={closeSheet}
+        onDismissed={sheetGone}
         onSelect={(value) => pickListStyle(true, value)}
         selected={toolbarState.list?.style ?? DEFAULT_ORDERED_LIST_STYLE}
         subtitle="For the list the caret is in"
@@ -1591,6 +1646,7 @@ ${text.slice(offset)}`,
       <SymbolSheet
         categories={QUOTATION_MARK_CATEGORIES}
         onClose={closeSheet}
+        onDismissed={sheetGone}
         onSelect={pickQuote}
         subtitle="Inserted at the caret"
         title="Quotation marks"

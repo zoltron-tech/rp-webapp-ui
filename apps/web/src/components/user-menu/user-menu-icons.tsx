@@ -2957,3 +2957,199 @@ export const BookshelfIcon: FC<SvgProps> = ({ size = 20 }) => (
     />
   </svg>
 );
+
+/**
+ * Character Directory — a fanned deck of character cards with a portrait on
+ * the front one, and a gold magnifier over the corner: a card catalogue you
+ * search. Distinct from `CharactersIcon` (the masks), which is your own cast.
+ * Same gloss language as the rest of the set.
+ */
+export const CharacterDirectoryIcon: FC<SvgProps> = ({ size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <defs>
+      {/* Back-left card: bright violet → royal purple → deep plum */}
+      <linearGradient
+        id="umCdBk1"
+        x1="4"
+        y1="4"
+        x2="12"
+        y2="19"
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop offset="0%" stopColor="#B07CFF" />
+        <stop offset="50%" stopColor="#7A3FE0" />
+        <stop offset="100%" stopColor="#4A1A9A" />
+      </linearGradient>
+      {/* Back-right card: bright aqua → teal → deep teal */}
+      <linearGradient
+        id="umCdBk2"
+        x1="12"
+        y1="4"
+        x2="20"
+        y2="19"
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop offset="0%" stopColor="#3EE0C4" />
+        <stop offset="50%" stopColor="#0BA88E" />
+        <stop offset="100%" stopColor="#046A5C" />
+      </linearGradient>
+      {/* Front card: ivory parchment → warm cream → aged tan */}
+      <linearGradient
+        id="umCdFace"
+        x1="7"
+        y1="3"
+        x2="16"
+        y2="18"
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop offset="0%" stopColor="#FFF8E6" />
+        <stop offset="55%" stopColor="#F2DFB4" />
+        <stop offset="100%" stopColor="#D8BB80" />
+      </linearGradient>
+      {/* Portrait: bright rose → crimson → deep burgundy */}
+      <linearGradient
+        id="umCdBust"
+        x1="8"
+        y1="6"
+        x2="15"
+        y2="15"
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop offset="0%" stopColor="#F0486E" />
+        <stop offset="50%" stopColor="#C81838" />
+        <stop offset="100%" stopColor="#7A0A1E" />
+      </linearGradient>
+      {/* Magnifier rim: pale gold → gold → deep gold */}
+      <linearGradient
+        id="umCdRim"
+        x1="13.5"
+        y1="13.3"
+        x2="20"
+        y2="20"
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop offset="0%" stopColor="#FFE680" />
+        <stop offset="50%" stopColor="#D4A018" />
+        <stop offset="100%" stopColor="#8A6006" />
+      </linearGradient>
+      {/* Lens: clear sky glass, brighter at the top-left */}
+      <radialGradient id="umCdLens" cx="38%" cy="34%" r="72%">
+        <stop offset="0%" stopColor="#E8F6FF" stopOpacity="0.85" />
+        <stop offset="60%" stopColor="#8CC8F0" stopOpacity="0.45" />
+        <stop offset="100%" stopColor="#3A88C8" stopOpacity="0.35" />
+      </radialGradient>
+      {/* Handle: warm walnut → deep umber */}
+      <linearGradient
+        id="umCdGrip"
+        x1="19"
+        y1="19"
+        x2="22"
+        y2="22"
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop offset="0%" stopColor="#8A5A20" />
+        <stop offset="100%" stopColor="#40260A" />
+      </linearGradient>
+      {/* Gloss dome overlay */}
+      <radialGradient id="umCdGl" cx="32%" cy="24%" r="74%">
+        <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.5" />
+        <stop offset="55%" stopColor="#FFFFFF" stopOpacity="0.08" />
+        <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+      </radialGradient>
+    </defs>
+
+    {/* ── Back-left card (violet), fanned out ── */}
+    <g transform="rotate(-14 8 12)">
+      <rect x="3.6" y="4.6" width="9" height="13.4" rx="1.5" fill="url(#umCdBk1)" />
+      <rect x="3.6" y="4.6" width="9" height="13.4" rx="1.5" fill="url(#umCdGl)" />
+      <rect
+        x="3.6"
+        y="4.6"
+        width="9"
+        height="13.4"
+        rx="1.5"
+        stroke="#4A1A9A"
+        strokeWidth="0.5"
+        fill="none"
+        opacity="0.5"
+      />
+    </g>
+
+    {/* ── Back-right card (teal), fanned out ── */}
+    <g transform="rotate(13 16 12)">
+      <rect x="11.4" y="4.6" width="9" height="13.4" rx="1.5" fill="url(#umCdBk2)" />
+      <rect x="11.4" y="4.6" width="9" height="13.4" rx="1.5" fill="url(#umCdGl)" />
+      <rect
+        x="11.4"
+        y="4.6"
+        width="9"
+        height="13.4"
+        rx="1.5"
+        stroke="#046A5C"
+        strokeWidth="0.5"
+        fill="none"
+        opacity="0.5"
+      />
+    </g>
+
+    {/* ── Front card: the character ── */}
+    <rect x="6.6" y="2.8" width="10.4" height="15.4" rx="1.8" fill="url(#umCdFace)" />
+    {/* Portrait: head and shoulders */}
+    <circle cx="11.8" cy="7.9" r="2.3" fill="url(#umCdBust)" />
+    <path
+      d="M7.9 14.1C8.3 11.6 9.9 10.7 11.8 10.7C13.7 10.7 15.3 11.6 15.7 14.1Z"
+      fill="url(#umCdBust)"
+    />
+    {/* Name line */}
+    <line
+      x1="9"
+      y1="16"
+      x2="13.6"
+      y2="16"
+      stroke="#A07A3A"
+      strokeWidth="0.9"
+      strokeLinecap="round"
+      opacity="0.85"
+    />
+    <rect x="6.6" y="2.8" width="10.4" height="15.4" rx="1.8" fill="url(#umCdGl)" />
+    <rect
+      x="6.6"
+      y="2.8"
+      width="10.4"
+      height="15.4"
+      rx="1.8"
+      stroke="#9A7A40"
+      strokeWidth="0.5"
+      fill="none"
+      opacity="0.6"
+    />
+
+    {/* ── Magnifier over the corner ── */}
+    <line
+      x1="19.1"
+      y1="19.1"
+      x2="21.5"
+      y2="21.5"
+      stroke="url(#umCdGrip)"
+      strokeWidth="2.1"
+      strokeLinecap="round"
+    />
+    <circle cx="16.6" cy="16.6" r="3.2" fill="url(#umCdLens)" />
+    <circle
+      cx="16.6"
+      cy="16.6"
+      r="3.2"
+      stroke="url(#umCdRim)"
+      strokeWidth="1.25"
+      fill="none"
+    />
+    {/* Lens glint */}
+    <path
+      d="M14.8 15.6C15.1 14.9 15.6 14.5 16.3 14.3"
+      stroke="#FFFFFF"
+      strokeWidth="0.7"
+      strokeLinecap="round"
+      opacity="0.85"
+    />
+  </svg>
+);

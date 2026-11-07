@@ -1105,21 +1105,19 @@ const ComposerScreen = ({
 
         <ActionMenu
           items={[
+            // `onSelect`, not `onPress`: the picker opens once this menu has
+            // really gone. Launched while the sheet was still leaving, iOS
+            // refused it (first tap did nothing), then dismissed it a moment
+            // after it appeared on the next, leaving taps blocked.
             {
               icon: "image-outline",
               label: "Photo — into the text",
-              onPress: () => {
-                setSheet(null);
-                void media.pickImage();
-              },
+              onSelect: () => void media.pickImage(),
             },
             {
               icon: "videocam-outline",
               label: "Video — under the post",
-              onPress: () => {
-                setSheet(null);
-                void media.pickVideo();
-              },
+              onSelect: () => void media.pickVideo(),
             },
           ]}
           onClose={() => setSheet(null)}

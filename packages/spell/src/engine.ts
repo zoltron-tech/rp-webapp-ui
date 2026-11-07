@@ -18,6 +18,47 @@ import nspell from "nspell";
 
 const MAX_SUGGESTIONS = 6;
 
+/**
+ * The longest word Hunspell's two-edit search is allowed to run on.
+ *
+ * When no word is one edit away, nspell falls back to every two-edit variant
+ * — for a nine-letter word about a hundred thousand candidates, each checked
+ * against the affix tables and all kept in memory. A worker shrugs that off;
+ * a phone runs it on the JS thread, and on Hermes a keyboard mash
+ * ("aksdhkjas") took seconds and ran an iPhone out of memory. Short words
+ * cost little (nspell bounds the batch by length), and long real misspellings
+ * are what the phonetic index is for ("nolidge" → knowledge).
+ */
+const DEEP_SEARCH_MAX_LENGTH = 7;
+
+const LETTERS = "abcdefghijklmnopqrstuvwxyz";
+
+/**
+ * Whether any word is one edit from `word` (delete, transpose, replace,
+ * insert) — about 54n + 25 dictionary lookups, stopping at the first hit.
+ * That is when Hunspell's search ends at its cheap first level.
+ */
+const hasNeighbour = (word: string, known: (w: string) => boolean): boolean => {
+  const n = word.length;
+  for (let i = 0; i < n; i++) {
+    if (known(word.slice(0, i) + word.slice(i + 1))) return true;
+    if (
+      i < n - 1 &&
+      known(word.slice(0, i) + word[i + 1] + word[i] + word.slice(i + 2))
+    )
+      return true;
+  }
+  for (let i = 0; i <= n; i++) {
+    for (const c of LETTERS) {
+      if (i < n && c !== word[i]) {
+        if (known(word.slice(0, i) + c + word.slice(i + 1))) return true;
+      }
+      if (known(word.slice(0, i) + c + word.slice(i))) return true;
+    }
+  }
+  return false;
+};
+
 /** nspell keeps the parsed word list on `data`; the typings don't say so. */
 type Speller = ReturnType<typeof nspell> & { data: Record<string, unknown> };
 
@@ -117,7 +158,13 @@ export const createSpellEngine = (
       seen.add(key);
       out.push(w);
     };
-    const own = speller.suggest(word);
+    // Hunspell only where its search stays cheap: a word one edit from
+    // something real, or a short one (see `DEEP_SEARCH_MAX_LENGTH`).
+    const own =
+      word.length <= DEEP_SEARCH_MAX_LENGTH ||
+      hasNeighbour(word.toLowerCase(), (w) => speller.correct(w))
+        ? speller.suggest(word)
+        : [];
     for (const w of own) push(w);
     // Sound-alikes may stray as far as longer words need ("nolidge" is three
     // edits from "knowledge"), but when Hunspell already has suggestions they

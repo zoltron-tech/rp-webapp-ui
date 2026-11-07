@@ -11,7 +11,6 @@ import {
   MATERIAL_CARD,
   Z_INDEX,
 } from "@/theme";
-import { Badge } from "../../tiers/styles";
 
 interface BannerProps {
   /* Transient: this renders a <div>, which has no src attribute. Left
@@ -754,23 +753,6 @@ export const AvatarWrap = styled.div`
 
   @media (max-width: 800px) {
     margin-left: 2px;
-  }
-`;
-
-export const ExtendedBadge = styled(Badge)`
-  width: 30px;
-  height: 30px;
-  margin-bottom: 5px;
-  cursor: pointer;
-
-  & svg {
-    width: 30px;
-    height: 30px;
-  }
-  &:hover {
-    & svg {
-      transform: scale(1.1);
-    }
   }
 `;
 

@@ -7,6 +7,7 @@ import {
   deleteMedia as apiDeleteMedia,
   enhanceAvatar as apiEnhanceAvatar,
   getPresignedFileUploadObject as apiGetPresignedFileUploadObject,
+  moderateUpload as apiModerateUpload,
   reportProfile as apiReportProfile,
   sendFeedbackMessage as apiSendFeedbackMessage,
   sendFriendRequest as apiSendFriendRequest,
@@ -25,6 +26,10 @@ export const getPresignedFileUploadObject = (formData: FormData) =>
 
 export const uploadMedia = (formData: FormData) =>
   apiUploadMedia(authedApi, formData);
+
+/** The service's NSFW check on a presigned upload; `false` = refused and deleted. */
+export const moderateUpload = (fileUrl: string) =>
+  apiModerateUpload(authedApi, fileUrl);
 
 /** Unauthenticated by design — this endpoint never checked a token. */
 export const enhanceAvatar = (formData: FormData) =>

@@ -14,9 +14,12 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
   Pressable,
   StyleSheet,
   View,
+  type ViewToken,
 } from "react-native";
 import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -28,11 +31,16 @@ import { IconButton } from "@/components/icon-button";
 import { EmptyScene } from "@/components/empty-feed";
 import { ListStatus } from "@/components/list-status";
 import { ProfileSongPill } from "@/components/profile-song";
+import { PillButton } from "@/components/settings";
+import { SoundCuesSheet } from "@/components/story/sound-cue-sheets";
+import { useChapterBookmark } from "@/hooks/use-bookmarks";
+import { useSoundscape } from "@/hooks/use-soundscape";
 import { ShareChapterSheet } from "@/components/share/share-story-sheet";
 import { Asterism } from "@/components/story/asterism";
 import { PassageComposer } from "@/components/story/passage-composer";
 import { StoryProse } from "@/components/story/story-prose";
 import {
+  useChapterSoundscape,
   useStory,
   useStoryChapter,
   useStoryChapterThreads,
@@ -56,10 +64,24 @@ import { border, fontSize, radius, space, useAppTheme } from "@/theme";
  * time as the reader nears the end, and each renders its characters' dialog
  * lines in the design its author chose.
  *
- * Web's book mode is a two-page desktop spread and does not come across; its
- * bookmarks and soundscape are left out. The chapter's featured song stays —
- * it is part of reading it. At the foot, the previous and next chapters, so a
- * story can be read end to end without going back to its page.
+ * Web's book mode is a two-page desktop spread and does not come across. The
+ * chapter's featured song stays — it is part of reading it. At the foot, the
+ * previous and next chapters, so a story can be read end to end without going
+ * back to its page.
+ *
+ * ## Sound
+ *
+ * A chapter with cues offers a Sound button, off until pressed. The passage at
+ * the top of the screen is the reader's position, which is what the cues are
+ * ranges over (`use-soundscape.ts`). A story member also gets the cue sheet.
+ *
+ * ## Bookmarks
+ *
+ * Each passage has a bookmark beside its byline. The saved passage shows filled
+ * and a button floats over the page to go back to it. `t` on the route opens at
+ * a passage, which is how a bookmark card comes back: the pages up to it are
+ * loaded first, because a passage that has not been fetched has nowhere to
+ * scroll to.
  *
  * ## Writing
  *
@@ -83,7 +105,10 @@ export default function ChapterScreen() {
   const theme = useAppTheme();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { eventId } = useLocalSearchParams<{ eventId: string }>();
+  const { eventId, t } = useLocalSearchParams<{
+    eventId: string;
+    t?: string;
+  }>();
 
   const chapter = useStoryChapter(eventId);
   const event = chapter.data;
@@ -101,6 +126,29 @@ export default function ChapterScreen() {
   );
 
   const list = useRef<FlatList<StoryBoardEventThread>>(null);
+  const soundscapeData = useChapterSoundscape(eventId);
+  const soundCues = useMemo(
+    () => soundscapeData.data?.cues ?? [],
+    [soundscapeData.data?.cues],
+  );
+  const [topPassage, setTopPassage] = useState(0);
+  const soundscape = useSoundscape({ cues: soundCues, position: topPassage });
+  const [cueSheet, setCueSheet] = useState(false);
+  // Stable for the list's life: it refuses a changed one.
+  const onViewableItemsChanged = useRef(
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+      const first = viewableItems[0]?.index;
+      if (typeof first === "number") setTopPassage(first);
+    },
+  ).current;
+  /** Whether the last ask was for a passage not measured yet. */
+  const walking = useRef(false);
+  const bookmark = useChapterBookmark(eventId);
+  /** A passage to go to, once it has been loaded. */
+  const [seekTo, setSeekTo] = useState<number | null>(() => {
+    const index = t === undefined ? Number.NaN : Number(t);
+    return Number.isInteger(index) && index >= 0 ? index : null;
+  });
   const [dockHeight, setDockHeight] = useState(0);
   /** The composer: closed, a new passage (`thread: null`), or an edit. */
   const [composing, setComposing] = useState<{
@@ -165,6 +213,59 @@ export default function ChapterScreen() {
   );
 
   const { isFetching } = threads;
+
+  /**
+   * Goes to a passage, by way of those before it.
+   *
+   * Passages are as tall as they are, so the list can only go to one it has
+   * measured, and it measures the ones it renders. A far passage is reached by
+   * going to the furthest one measured, which renders more, and asking again.
+   * The last ask is repeated once for what moved as the final page laid out.
+   */
+  const scrollToPassage = useCallback(
+    (index: number, settled = false): void => {
+      walking.current = false;
+      list.current?.scrollToIndex({ animated: false, index, viewPosition: 0 });
+      if (walking.current) {
+        setTimeout(() => scrollToPassage(index), SEEK_STEP_MS);
+      } else if (!settled) {
+        setTimeout(() => scrollToPassage(index, true), SEEK_SETTLE_MS);
+      }
+    },
+    [],
+  );
+
+  const onScrollToIndexFailed = useCallback(
+    (info: { highestMeasuredFrameIndex: number }) => {
+      walking.current = true;
+      list.current?.scrollToIndex({
+        animated: false,
+        index: Math.max(0, info.highestMeasuredFrameIndex),
+        viewPosition: 0,
+      });
+    },
+    [],
+  );
+
+  // Loads up to the passage, then goes there. A stale bookmark can point past
+  // the end of a chapter that has since lost passages: it lands on the last.
+  useEffect(() => {
+    if (seekTo === null || isFetching || passages.length === 0) return;
+    if (seekTo >= passages.length && hasNextPage) {
+      void fetchNextPage();
+      return;
+    }
+    setSeekTo(null);
+    scrollToPassage(Math.min(seekTo, passages.length - 1));
+  }, [
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    passages.length,
+    scrollToPassage,
+    seekTo,
+  ]);
+
   useEffect(() => {
     if (!seekingEnd || isFetching) return;
     if (hasNextPage) {
@@ -217,15 +318,35 @@ export default function ChapterScreen() {
       pathname: "/story/chapter/[eventId]",
     });
 
+  /** Past the first screen: where the jump buttons start to be useful. */
+  const [farIn, setFarIn] = useState(false);
+  const onScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const next = event.nativeEvent.contentOffset.y > JUMP_FROM;
+      setFarIn((current) => (current === next ? current : next));
+    },
+    [],
+  );
+
+  const { saved: savedPassage, signedIn, toggle } = bookmark;
   const renderItem = useCallback(
-    ({ item }: { item: StoryBoardEventThread }) => (
+    ({
+      index,
+      item,
+    }: {
+      index: number;
+      item: StoryBoardEventThread;
+    }) => (
       <Passage
+        bookmarked={savedPassage === index}
         divider={event?.passageAsterism}
+        index={index}
+        onBookmark={signedIn ? toggle : undefined}
         onMenu={canWrite ? openMenu : undefined}
         thread={item}
       />
     ),
-    [canWrite, event?.passageAsterism, openMenu],
+    [canWrite, event?.passageAsterism, openMenu, savedPassage, signedIn, toggle],
   );
 
   if (!event) {
@@ -402,6 +523,34 @@ export default function ChapterScreen() {
                   ) : null}
                 </View>
               ) : null}
+              {soundCues.length > 0 || canWrite ? (
+                <View style={styles.soundRow}>
+                  {soundCues.length > 0 ? (
+                    <PillButton
+                      icon={
+                        soundscape.enabled
+                          ? "volume-high-outline"
+                          : "volume-mute-outline"
+                      }
+                      label={
+                        soundscape.activeCount > 0
+                          ? `Sound ${soundscape.activeCount}`
+                          : "Sound"
+                      }
+                      onPress={soundscape.toggle}
+                      tone={soundscape.enabled ? "accent" : "neutral"}
+                    />
+                  ) : null}
+                  {canWrite ? (
+                    <PillButton
+                      icon="musical-notes-outline"
+                      label="Sound cues"
+                      onPress={() => setCueSheet(true)}
+                      tone="neutral"
+                    />
+                  ) : null}
+                </View>
+              ) : null}
               {event.song ? (
                 <View style={styles.song}>
                   <ProfileSongPill song={event.song} />
@@ -418,10 +567,59 @@ export default function ChapterScreen() {
         }
         onEndReached={loadMore}
         onEndReachedThreshold={1.5}
+        onScroll={onScroll}
+        onScrollToIndexFailed={onScrollToIndexFailed}
+        onViewableItemsChanged={onViewableItemsChanged}
+        scrollEventThrottle={200}
+        viewabilityConfig={PASSAGE_VIEWABILITY}
         ref={list}
         renderItem={renderItem}
         windowSize={9}
       />
+
+      {savedPassage !== null || farIn ? (
+        <View
+          style={[
+            styles.bookmarkJump,
+            {
+              bottom:
+                (canWrite ? dockHeight : insets.bottom) + space.md,
+            },
+          ]}
+        >
+          {farIn ? (
+            <>
+              <IconButton
+                accessibilityLabel="Back to the top"
+                icon="arrow-up"
+                onPress={() =>
+                  list.current?.scrollToOffset({ animated: true, offset: 0 })
+                }
+                size={36}
+                tone="surface"
+              />
+              <IconButton
+                accessibilityLabel="Go to the end"
+                icon="arrow-down"
+                // Past any passage there is: pages load up to the last one.
+                onPress={() => setSeekTo(Number.MAX_SAFE_INTEGER)}
+                size={36}
+                tone="surface"
+              />
+            </>
+          ) : null}
+          {savedPassage !== null ? (
+            <IconButton
+              accessibilityLabel={`Go to your bookmark, passage ${savedPassage + 1}`}
+              icon="bookmark"
+              iconSize={18}
+              onPress={() => setSeekTo(savedPassage)}
+              size={44}
+              tone="primary"
+            />
+          ) : null}
+        </View>
+      ) : null}
 
       {canWrite ? (
         <GlassSurface
@@ -478,6 +676,17 @@ export default function ChapterScreen() {
         />
       ) : null}
 
+      {canWrite && eventId ? (
+        <SoundCuesSheet
+          cues={soundCues}
+          currentPassage={topPassage}
+          eventId={eventId}
+          onClose={() => setCueSheet(false)}
+          passageCount={soundscapeData.data?.passageCount ?? passages.length}
+          visible={cueSheet}
+        />
+      ) : null}
+
       <ShareChapterSheet
         chapter={event}
         onClose={() => setSharing(false)}
@@ -489,11 +698,19 @@ export default function ChapterScreen() {
 }
 
 const Passage = ({
+  bookmarked,
   divider,
+  index,
+  onBookmark,
   onMenu,
   thread,
 }: {
+  bookmarked: boolean;
   divider: string | null | undefined;
+  /** Its place in the chapter, which is what a bookmark stores. */
+  index: number;
+  /** Given to a signed-in reader: saves this passage, or clears it. */
+  onBookmark?: (index: number) => void;
   /** Given to a co-author: opens this passage's edit and delete. */
   onMenu?: (thread: StoryBoardEventThread) => void;
   thread: StoryBoardEventThread;
@@ -514,6 +731,22 @@ const Passage = ({
           </Text>
           {thread.createdAt ? `  ·  ${toFormattedDate(thread.createdAt)}` : ""}
         </Text>
+        {onBookmark ? (
+          <IconButton
+            accessibilityLabel={
+              bookmarked
+                ? "Remove bookmark from this passage"
+                : "Bookmark this passage"
+            }
+            color={bookmarked ? theme.accent.text : undefined}
+            hitSlop={space.ms}
+            icon={bookmarked ? "bookmark" : "bookmark-outline"}
+            iconSize={16}
+            onPress={() => onBookmark(index)}
+            size={28}
+            tone="quiet"
+          />
+        ) : null}
         {onMenu ? (
           <IconButton
             accessibilityLabel="Passage options"
@@ -583,8 +816,30 @@ const PagerCard = ({
   );
 };
 
+/** A passage counts as read from the moment it is on screen. */
+const PASSAGE_VIEWABILITY = { itemVisiblePercentThreshold: 1 };
+
+/** How far down, in points, before the jump buttons show. */
+const JUMP_FROM = 600;
+
+/** The pauses in `scrollToPassage`: for a step to render, and for it to end. */
+const SEEK_STEP_MS = 100;
+const SEEK_SETTLE_MS = 400;
+
 const styles = StyleSheet.create({
   alignEnd: { alignItems: "flex-end" },
+  soundRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: space.sm,
+    justifyContent: "center",
+  },
+  bookmarkJump: {
+    alignItems: "center",
+    gap: space.sm,
+    position: "absolute",
+    right: space.md,
+  },
   byline: { flex: 1, fontSize: fontSize.caption },
   bylineRow: {
     alignItems: "center",

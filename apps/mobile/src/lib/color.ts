@@ -89,6 +89,22 @@ export const darkenToContrast = (
 };
 
 /**
+ * Web's `color-mix(in srgb, X 75%, #000)`: each channel scaled by `keep`.
+ * Anything that is not a colour `asHex` can read is returned untouched.
+ */
+export const mixWithBlack = (color: string, keep: number): string => {
+  const hex = asHex(color);
+  if (!hex) return color;
+  return `#${[1, 3, 5]
+    .map((i) =>
+      Math.round(Number.parseInt(hex.slice(i, i + 2), 16) * keep)
+        .toString(16)
+        .padStart(2, "0"),
+    )
+    .join("")}`;
+};
+
+/**
  * `#rrggbb` with an alpha channel — web's `color-mix(in srgb, X 70%,
  * transparent)`. Anything that is not a six-digit hex is returned untouched
  * rather than turned into a string the platform would silently drop.

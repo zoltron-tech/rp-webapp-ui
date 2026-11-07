@@ -1,5 +1,6 @@
 "use client";
 
+import { REPORT_SENT_TOAST } from "@/utils/report";
 import { Flex, ShouldRender } from "@novelist-world/ui";
 import type { Tag } from "@nw/types/common";
 import type { Song } from "@nw/types/music";
@@ -134,7 +135,7 @@ export const MusicListItem: FC<Props> = ({ song, className, ...rest }) => {
 
     const response = await reportAction(song.id, "", "SONG");
     if (response?.message === API_MESSAGE.Success) {
-      successToast(`Reported successfully`);
+      successToast(REPORT_SENT_TOAST);
     } else {
       errorToast("There was an issue while reporting this song.");
     }

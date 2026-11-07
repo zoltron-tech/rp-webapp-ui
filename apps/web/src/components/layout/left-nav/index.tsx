@@ -5,6 +5,7 @@ import { EmailVerifiedBadge } from "@/components/common";
 import {
   BookmarksIcon,
   BookshelfIcon,
+  CharacterDirectoryIcon,
   CharactersIcon,
   EditProfileIcon,
   ExploreIcon,
@@ -63,6 +64,11 @@ export const LeftNav: FC<Props> = ({ visible }) => {
           icon: <ExploreIcon size={18} />,
           label: "Explore Posts",
           route: ROUTES.explore,
+        },
+        {
+          icon: <CharacterDirectoryIcon size={18} />,
+          label: "Character Directory",
+          route: ROUTES.CharacterDirectory,
         },
         {
           icon: <LibraryIcon size={18} />,

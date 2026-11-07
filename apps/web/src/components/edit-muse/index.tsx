@@ -95,6 +95,7 @@ export const EditMuseForm: FC<EditMuseCardProps> = ({ id }) => {
             story: muse?.story || "",
             useAccent: muse?.useAccent || false,
             useExtraImages: muse?.useExtraImages || false,
+            verses: muse?.verses ?? null,
             wallpaper: muse?.wallpaper || null,
           }}
         >

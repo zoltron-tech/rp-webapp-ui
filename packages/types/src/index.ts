@@ -3,6 +3,7 @@ export * from "./badge";
 export * from "./books";
 export * from "./connection";
 export * from "./conversation";
+export * from "./headcanon";
 export * from "./leaderboard";
 export * from "./login";
 export * from "./notification";

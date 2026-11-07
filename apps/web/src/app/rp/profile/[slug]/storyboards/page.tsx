@@ -101,7 +101,7 @@ export default function MusesListPage({}) {
       </ShouldRender>
       <AppAlertDialog
         heading="Story limit reached"
-        text={`You've reached your plan's limit of ${storyBoardLimit} stories. Upgrade your tier or remove a story to create a new one.`}
+        text={`You've reached your limit of ${storyBoardLimit} stories. Remove a story to create a new one.`}
         open={limitDialogOpen}
         onOpenChange={setLimitDialogOpen}
         showConfirm={false}

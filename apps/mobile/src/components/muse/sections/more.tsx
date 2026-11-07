@@ -17,6 +17,7 @@ import {
 import { MiniHeader } from "@/components/muse/mini-header";
 import {
   Divider,
+  glassCard,
   MusePanel,
   PANEL,
   SectionLabel,
@@ -25,7 +26,8 @@ import { ShareMuseSheet } from "@/components/share/share-muse-sheet";
 import { Text } from "@/components/text";
 import { env } from "@/lib/env";
 import type { MuseLook } from "@/lib/muse-appearance";
-import { fontSize, radius, space } from "@/theme";
+import { alertReportSent } from "@/lib/report";
+import { border, fontSize, radius, space } from "@/theme";
 
 /**
  * Web's `MoreSection`: what you can do with this character.
@@ -95,14 +97,14 @@ export const MuseMoreSection = ({
             setBusy("report");
             const response = await report(api, id, "", "MUSE");
             setBusy(null);
-            Alert.alert(
-              response?.message === API_MESSAGE.Success
-                ? "Reported"
-                : "Not reported",
-              response?.message === API_MESSAGE.Success
-                ? "Thank you. Our team will take a look."
-                : "There was an issue while reporting this character.",
-            );
+            if (response?.message === API_MESSAGE.Success) {
+              alertReportSent();
+            } else {
+              Alert.alert(
+                "Not reported",
+                "There was an issue while reporting this character.",
+              );
+            }
           },
           text: "Report",
         },
@@ -168,14 +170,18 @@ export const MuseMoreSection = ({
     <MusePanel
       accent={look.accent}
       hideBackground={look.hideExpandedBackground}
+      header={
+        <>
+          <MiniHeader look={look} muse={muse} />
+          <Divider accent={look.accent} />
+          <SectionLabel>Options</SectionLabel>
+        </>
+      }
     >
-      <MiniHeader look={look} muse={muse} />
-      <Divider accent={look.accent} />
-      <SectionLabel>Options</SectionLabel>
-
       <View style={styles.list}>
         {isOwnMuse ? (
           <Row
+            accent={look.accent}
             disabled={!id}
             hint="Name, looks, story, gallery and connections"
             icon="create-outline"
@@ -190,12 +196,14 @@ export const MuseMoreSection = ({
           />
         ) : null}
         <Row
+          accent={look.accent}
           disabled={!id}
           icon="share-social-outline"
           label="Share character"
           onPress={() => setSharing(true)}
         />
         <Row
+          accent={look.accent}
           disabled={!id}
           icon={copied ? "checkmark-outline" : "link-outline"}
           label={copied ? "Link copied" : "Copy link"}
@@ -203,6 +211,7 @@ export const MuseMoreSection = ({
         />
         {isOwnMuse ? (
           <Row
+            accent={look.accent}
             busy={busy === "delete"}
             disabled={!id || busy !== null}
             icon="trash-outline"
@@ -212,6 +221,7 @@ export const MuseMoreSection = ({
           />
         ) : (
           <Row
+            accent={look.accent}
             busy={busy === "report"}
             disabled={!id || busy !== null}
             icon="flag-outline"
@@ -235,6 +245,7 @@ export const MuseMoreSection = ({
 
 /** Web's `MoreMenuItem`: a full-width row, red or amber when it bites. */
 const Row = ({
+  accent,
   busy,
   disabled,
   hint,
@@ -243,6 +254,8 @@ const Row = ({
   onPress,
   variant,
 }: {
+  /** The muse's accent, for the shared item surface (`glassCard`). */
+  accent?: string;
   busy?: boolean;
   disabled?: boolean;
   hint?: string;
@@ -266,14 +279,11 @@ const Row = ({
       accessibilityState={{ busy, disabled }}
       disabled={disabled}
       onPress={onPress}
+      // The soft surface the details, story and posts sit on.
       style={({ pressed }) => [
         styles.row,
-        {
-          backgroundColor: pressed
-            ? "rgba(255,255,255,0.1)"
-            : "rgba(255,255,255,0.05)",
-          opacity: disabled && !busy ? 0.5 : 1,
-        },
+        glassCard(accent),
+        { opacity: disabled && !busy ? 0.5 : pressed ? 0.75 : 1 },
       ]}
     >
       {busy ? (
@@ -296,6 +306,7 @@ const styles = StyleSheet.create({
   row: {
     alignItems: "center",
     borderRadius: radius.md,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.m,
     paddingHorizontal: space.md + 2,

@@ -1,4 +1,5 @@
 import type {
+  RichMention,
   RichBlock,
   RichImageBlock,
   RichInline,
@@ -128,20 +129,19 @@ const serializeRun = (run: RichTextRun, blockFontSize?: number): string => {
   return html;
 };
 
+/** One mention, as the rich editors store it. */
+export const mentionToHtml = (inline: RichMention): string =>
+  `<span class="mention-tag" contenteditable="false" data-type="${inline.kind}" data-id="${escapeAttribute(inline.id)}">` +
+  `<img src="${escapeAttribute(inline.image ?? "")}" alt="${escapeAttribute(inline.name)}" class="mention-avatar">` +
+  `<span class="mention-text">${escapeText(inline.name)}</span>` +
+  "</span>";
+
 const serializeInline = (
   inline: RichInline,
   blockFontSize?: number,
 ): string => {
   if (inline.type === "break") return "<br>";
-
-  if (inline.type === "mention") {
-    return (
-      `<span class="mention-tag" contenteditable="false" data-type="${inline.kind}" data-id="${escapeAttribute(inline.id)}">` +
-      `<img src="${escapeAttribute(inline.image ?? "")}" alt="${escapeAttribute(inline.name)}" class="mention-avatar">` +
-      `<span class="mention-text">${escapeText(inline.name)}</span>` +
-      "</span>"
-    );
-  }
+  if (inline.type === "mention") return mentionToHtml(inline);
 
   return serializeRun(inline, blockFontSize);
 };

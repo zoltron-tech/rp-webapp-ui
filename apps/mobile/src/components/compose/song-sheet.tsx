@@ -7,6 +7,7 @@ import { useDebounce } from "@nw/utils/hooks/use-debounce";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Image, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { AudioCard } from "@/components/chat/audio-card";
 import { Text } from "@/components/text";
 import { SkeletonRows } from "@/components/list-skeletons";
 import { BottomSheet } from "@/components/sheet";
@@ -22,12 +23,10 @@ import { SearchField } from "@/components/search-field";
  * web's `pickLibrary` / `pickSpotify` build one, so the prompt carries the
  * same shape whichever client attached it.
  *
- * What is not here is the preview player web puts on every row. On web that
- * is a shared `<audio>` and an off-screen Spotify iframe; here it would be an
- * `expo-video` player and a hidden web view per sheet — the profile song
- * already carries both (`profile-song.tsx`), and the post shows the picked
- * song through that same player the moment it is chosen. Previewing before
- * choosing is the one step dropped, and choosing is one tap to undo.
+ * A library song can be heard first: the row's play button opens a player
+ * under it, which loads only when pressed. A Spotify result has no preview
+ * here, because that means a hidden web view per sheet; a Spotify track plays
+ * on the post once chosen, and choosing is one tap to undo.
  */
 
 type Tab = "library" | "spotify";
@@ -53,6 +52,39 @@ const fromSpotify = (track: SpotifyTrack): ProfileSong => ({
   title: track.title,
   url: null,
 });
+
+/** A row with its preview: the player opens under it, and only when asked. */
+const PreviewRow = ({
+  url,
+  ...row
+}: Parameters<typeof Row>[0] & { url: string }) => {
+  const theme = useAppTheme();
+  const [open, setOpen] = useState(false);
+  return (
+    <View style={styles.preview}>
+      <View style={styles.previewRow}>
+        <View style={styles.previewMain}>
+          <Row {...row} />
+        </View>
+        <Pressable
+          accessibilityLabel={
+            open ? `Hide preview of ${row.title}` : `Preview ${row.title}`
+          }
+          accessibilityRole="button"
+          hitSlop={space.xs}
+          onPress={() => setOpen((current) => !current)}
+        >
+          <Ionicons
+            color={theme.accent.text}
+            name={open ? "close-circle-outline" : "play-circle-outline"}
+            size={28}
+          />
+        </Pressable>
+      </View>
+      {open ? <AudioCard label={row.title} url={url} /> : null}
+    </View>
+  );
+};
 
 const Row = ({
   imageUrl,
@@ -230,8 +262,9 @@ export const SongSheet = ({
             </Text>
           ) : (
             (library.data ?? []).map((song) => (
-              <Row
+              <PreviewRow
                 imageUrl={null}
+                url={song.url}
                 key={song.id}
                 onPress={() => pick(fromLibrary(song))}
                 subtitle={song.description}
@@ -269,6 +302,9 @@ export const SongSheet = ({
 };
 
 const styles = StyleSheet.create({
+  preview: { gap: space.xs },
+  previewMain: { flex: 1, minWidth: 0 },
+  previewRow: { alignItems: "center", flexDirection: "row", gap: space.sm },
   art: { borderRadius: radius.sm, height: 40, width: 40 },
   artFallback: { alignItems: "center", justifyContent: "center" },
   empty: {

@@ -14,6 +14,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ReactNode,
 } from "react";
 import {
   ActivityIndicator,
@@ -1124,6 +1125,41 @@ const ClipPage = ({
  * be, and no pencil — one way in, where the eye already is. The bin stays in
  * the row: deleting is not about the caption.
  */
+/** Web's limit, so a caption written there can be edited here. */
+const CAPTION_MAX = 1000;
+
+/**
+ * Web's `renderMarkdownLite`: `**bold**` and `*italic*`, and everything else as
+ * written. Bold may nest italic; an unmatched `*` stays a literal star.
+ */
+const markdownLite = (text: string): ReactNode[] => {
+  const nodes: ReactNode[] = [];
+  const re = /\*\*(.+?)\*\*|\*([^*\n]+?)\*/g;
+  let last = 0;
+  let key = 0;
+  let match = re.exec(text);
+  while (match !== null) {
+    if (match.index > last) nodes.push(text.slice(last, match.index));
+    if (match[1] !== undefined) {
+      nodes.push(
+        <Text key={key++} style={styles.captionStrong}>
+          {markdownLite(match[1])}
+        </Text>,
+      );
+    } else {
+      nodes.push(
+        <Text key={key++} style={styles.captionEmphasis}>
+          {match[2]}
+        </Text>,
+      );
+    }
+    last = re.lastIndex;
+    match = re.exec(text);
+  }
+  if (last < text.length) nodes.push(text.slice(last));
+  return nodes;
+};
+
 const CaptionBar = ({
   isOwner,
   meta,
@@ -1159,6 +1195,20 @@ const CaptionBar = ({
     type: "media",
   });
 
+  /** Web's B and I: the marker round the selection, or at the cursor. */
+  const selection = useRef({ end: 0, start: 0 });
+  const wrapSelection = (marker: string) =>
+    setDraft((text) => {
+      const { end, start } = selection.current;
+      const next =
+        text.slice(0, start) +
+        marker +
+        text.slice(start, end) +
+        marker +
+        text.slice(end);
+      return next.length <= CAPTION_MAX ? next : text;
+    });
+
   const save = async () => {
     if (saving) return;
     setSaving(true);
@@ -1179,15 +1229,37 @@ const CaptionBar = ({
         <View style={styles.captionEdit}>
           <TextInput
             autoFocus
-            maxLength={300}
+            maxLength={CAPTION_MAX}
             multiline
             onChangeText={setDraft}
+            onSelectionChange={({ nativeEvent }) => {
+              selection.current = nativeEvent.selection;
+            }}
             placeholder="Write a caption…"
             placeholderTextColor="rgba(255,255,255,0.5)"
             style={styles.captionInput}
             value={draft}
           />
           <View style={styles.captionActions}>
+            <Pressable
+              accessibilityLabel="Bold"
+              accessibilityRole="button"
+              hitSlop={space.xs}
+              onPress={() => wrapSelection("**")}
+              style={styles.captionButton}
+            >
+              <Text style={styles.captionBold}>B</Text>
+            </Pressable>
+            <Pressable
+              accessibilityLabel="Italic"
+              accessibilityRole="button"
+              hitSlop={space.xs}
+              onPress={() => wrapSelection("*")}
+              style={styles.captionButton}
+            >
+              <Text style={styles.captionItalic}>I</Text>
+            </Pressable>
+            <View style={styles.captionSpacer} />
             <Pressable
               accessibilityLabel="Cancel"
               accessibilityRole="button"
@@ -1233,7 +1305,7 @@ const CaptionBar = ({
                 numberOfLines={expanded ? undefined : 3}
                 style={styles.caption}
               >
-                {description}
+                {markdownLite(description)}
               </Text>
             </Pressable>
           ) : isOwner ? (
@@ -1319,6 +1391,11 @@ const CaptionBar = ({
 const MEDIA_DIM = `rgba(0,0,0,${SCRIM_ALPHA.dim})`;
 
 const styles = StyleSheet.create({
+  captionBold: { color: "#ffffff", fontSize: 15, fontWeight: "800" },
+  captionEmphasis: { fontStyle: "italic" },
+  captionItalic: { color: "#ffffff", fontSize: 15, fontStyle: "italic" },
+  captionSpacer: { flex: 1 },
+  captionStrong: { fontWeight: "700" },
   addCaption: {
     alignItems: "center",
     alignSelf: "flex-start",

@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { Muse } from "@nw/types";
 import { LinearGradient } from "expo-linear-gradient";
-import { createContext, memo, useContext, useMemo } from "react";
+import { createContext, memo, useContext, useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
@@ -82,6 +82,61 @@ const Badge = ({
  */
 export const InFandomGroup = createContext(false);
 
+/**
+ * Web's verse badges: one per verse, and the row shows whichever is chosen. A
+ * tap here belongs to the badge, not to the row it sits on.
+ */
+const VerseBadges = ({
+  active,
+  onPick,
+  verses,
+}: {
+  active: string | null;
+  onPick: (id: string) => void;
+  verses: Muse[];
+}) => {
+  const theme = useAppTheme();
+  return (
+    <View style={styles.verses}>
+      {verses.map((verse) => {
+        const selected = verse.id === active;
+        const number = verse.verseNumber ?? 1;
+        return (
+          <Pressable
+            accessibilityLabel={
+              selected ? `Verse ${number}, showing` : `Show verse ${number}`
+            }
+            accessibilityRole="button"
+            hitSlop={4}
+            key={verse.id}
+            onPress={() => verse.id && onPick(verse.id)}
+            style={[
+              styles.verse,
+              {
+                backgroundColor: selected
+                  ? theme.accent.solid
+                  : theme.material.fill,
+                borderColor: selected
+                  ? theme.accent.solid
+                  : theme.material.edge,
+              },
+            ]}
+          >
+            <Text
+              style={[
+                styles.verseLabel,
+                { color: selected ? "#ffffff" : theme.textGray },
+              ]}
+            >
+              {number}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+};
+
 const RowChips = ({ muse, verseCount }: { muse: Muse; verseCount: number }) => {
   const theme = useAppTheme();
   const showFandom = !useContext(InFandomGroup);
@@ -124,11 +179,12 @@ const RowChips = ({ muse, verseCount }: { muse: Muse; verseCount: number }) => {
 
 export const MuseListRow = memo(function MuseListRow({
   deleting = false,
-  muse,
+  muse: mainVerse,
   onDelete,
   onEdit,
   onOpen,
   verseCount,
+  verses,
 }: {
   /** The delete for this row is in flight. */
   deleting?: boolean;
@@ -139,8 +195,13 @@ export const MuseListRow = memo(function MuseListRow({
   onOpen: (museId: string) => void;
   /** The whole verse family, this one included; 1 when there are no others. */
   verseCount: number;
+  /** The family in verse order, when it has more than one. */
+  verses?: Muse[];
 }) {
   const theme = useAppTheme();
+  const [verseId, setVerseId] = useState(mainVerse.id);
+  // The row swaps in place, so the list stays put while a family is browsed.
+  const muse = verses?.find((verse) => verse.id === verseId) ?? mainVerse;
 
   const hasFandom = Boolean(
     muse.fandom?.name && muse.fandom.id !== "FANDOMLESS",
@@ -236,7 +297,10 @@ export const MuseListRow = memo(function MuseListRow({
           </Text>
         </View>
 
-        <RowChips muse={muse} verseCount={verseCount} />
+        <RowChips muse={muse} verseCount={verses ? 1 : verseCount} />
+        {verses ? (
+          <VerseBadges active={muse.id} onPick={setVerseId} verses={verses} />
+        ) : null}
       </View>
 
       <Ionicons
@@ -273,6 +337,16 @@ export const MuseListRow = memo(function MuseListRow({
 });
 
 const styles = StyleSheet.create({
+  verse: {
+    alignItems: "center",
+    borderRadius: 11,
+    borderWidth: StyleSheet.hairlineWidth,
+    height: 22,
+    justifyContent: "center",
+    minWidth: 22,
+  },
+  verseLabel: { fontSize: fontSize.meta, fontWeight: "700" },
+  verses: { flexDirection: "row", gap: space.xs, marginTop: space.xs },
   badge: {
     alignItems: "center",
     borderRadius: radius.full,

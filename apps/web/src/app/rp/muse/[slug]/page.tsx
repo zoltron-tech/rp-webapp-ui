@@ -1,6 +1,7 @@
-﻿"use client";
+"use client";
 
 import type { Muse, MuseAboutSection, Prompt } from "@nw/types";
+import { headcanonIdInUrl } from "@nw/types/headcanon";
 import type { ProfileSong } from "@nw/types/music";
 import type { ImageFilter, MuseNavItem, NWImage } from "@nw/types/novelist";
 import { clamp, toCropFilter } from "@nw/utils";
@@ -12,8 +13,14 @@ import {
   useRef,
   useState,
 } from "react";
+import type { IconType } from "react-icons";
 import { BiSolidConversation } from "react-icons/bi";
-import { FaHandshake, FaImagePortrait } from "react-icons/fa6";
+import { BsLightbulb } from "react-icons/bs";
+import {
+  FaHandshake,
+  FaImagePortrait,
+  FaRegAddressCard,
+} from "react-icons/fa6";
 import {
   FiCamera,
   FiChevronLeft,
@@ -60,9 +67,14 @@ import { BackStorySection } from "./sections/back-story-section";
 import { CardImageSection } from "./sections/card-image-section";
 import { ConnectionsSection } from "./sections/connections-section";
 import { GallerySection } from "./sections/gallery-section";
+import { HeadcanonsSection } from "./sections/headcanons-section";
 import { MoreSection } from "./sections/more-section";
 import { MuseInfoSection } from "./sections/muse-info-section";
 import { PromptsSection } from "./sections/prompts-section";
+import {
+  SectionSwitcher,
+  SectionSwitcherContext,
+} from "./sections/section-switcher";
 import { MissingMuse } from "./missing-muse";
 import * as S from "./styles";
 
@@ -71,9 +83,87 @@ type CARD_STATE =
   | "MUSE_INFO"
   | "CONNECTIONS"
   | "BACK_STORY"
+  | "HEADCANONS"
   | "PROMPTS"
   | "GALLERY"
   | "MORE";
+
+const ALL_CARD_STATES: CARD_STATE[] = [
+  "CARD_IMAGE",
+  "MUSE_INFO",
+  "CONNECTIONS",
+  "BACK_STORY",
+  "HEADCANONS",
+  "PROMPTS",
+  "GALLERY",
+  "MORE",
+];
+
+/** Where the side menu turns into a bar under the card (matches S.SideMenu). */
+const COMPACT_MENU_QUERY = "(max-width: 600px)";
+
+type MenuGroup = {
+  key: string;
+  label: string;
+  /** First = the one the group's button is registered under. */
+  states: CARD_STATE[];
+};
+
+const MENU_GROUPS: MenuGroup[] = [
+  { key: "CARD", label: "Card", states: ["CARD_IMAGE"] },
+  {
+    key: "ABOUT",
+    label: "About",
+    states: ["MUSE_INFO", "BACK_STORY", "HEADCANONS"],
+  },
+  { key: "SOCIAL", label: "Social", states: ["PROMPTS", "CONNECTIONS"] },
+  { key: "GALLERY", label: "Gallery", states: ["GALLERY"] },
+  { key: "MORE", label: "More", states: ["MORE"] },
+];
+
+const SECTION_LABEL: Record<CARD_STATE, string> = {
+  BACK_STORY: "Story",
+  CARD_IMAGE: "Card",
+  CONNECTIONS: "Peers",
+  GALLERY: "Gallery",
+  HEADCANONS: "Canon",
+  MORE: "More",
+  MUSE_INFO: "Info",
+  PROMPTS: "Posts",
+};
+
+const GROUP_ICON: Record<string, IconType> = {
+  ABOUT: FaRegAddressCard,
+  CARD: FaImagePortrait,
+  GALLERY: MdPhotoLibrary,
+  MORE: FiMoreVertical,
+  SOCIAL: BiSolidConversation,
+};
+
+/** The side menu's own icons, reused by the phone switcher. */
+const SECTION_ICON: Record<CARD_STATE, IconType> = {
+  BACK_STORY: GiBookCover,
+  CARD_IMAGE: FaImagePortrait,
+  CONNECTIONS: FaHandshake,
+  GALLERY: MdPhotoLibrary,
+  HEADCANONS: BsLightbulb,
+  MORE: FiMoreVertical,
+  MUSE_INFO: TiInfoLarge,
+  PROMPTS: BiSolidConversation,
+};
+
+const groupOf = (state: CARD_STATE) =>
+  MENU_GROUPS.find((g) => g.states.includes(state)) ?? null;
+
+/** Every section can be reached from every other one. */
+const CARD_TRANSITIONS = Object.fromEntries(
+  ALL_CARD_STATES.map((from) => [
+    from,
+    Object.fromEntries(
+      ALL_CARD_STATES.filter((to) => to !== from).map((to) => [to, true]),
+    ),
+  ]),
+) as Record<CARD_STATE, Partial<Record<CARD_STATE, true>>>;
 
 type NavDirection = "prev" | "next";
 
@@ -307,65 +397,20 @@ export default function MuseProfilePage({}) {
   }
   const { transition, is, state } = useStateMachine<CARD_STATE>({
     initial: "MUSE_INFO",
-    transitions: {
-      BACK_STORY: {
-        CARD_IMAGE: true,
-        CONNECTIONS: true,
-        GALLERY: true,
-        MORE: true,
-        MUSE_INFO: true,
-        PROMPTS: true,
-      },
-      CARD_IMAGE: {
-        BACK_STORY: true,
-        CONNECTIONS: true,
-        GALLERY: true,
-        MORE: true,
-        MUSE_INFO: true,
-        PROMPTS: true,
-      },
-      CONNECTIONS: {
-        BACK_STORY: true,
-        CARD_IMAGE: true,
-        GALLERY: true,
-        MORE: true,
-        MUSE_INFO: true,
-        PROMPTS: true,
-      },
-      GALLERY: {
-        BACK_STORY: true,
-        CARD_IMAGE: true,
-        CONNECTIONS: true,
-        MORE: true,
-        MUSE_INFO: true,
-        PROMPTS: true,
-      },
-      MORE: {
-        BACK_STORY: true,
-        CARD_IMAGE: true,
-        CONNECTIONS: true,
-        GALLERY: true,
-        MUSE_INFO: true,
-        PROMPTS: true,
-      },
-      MUSE_INFO: {
-        BACK_STORY: true,
-        CARD_IMAGE: true,
-        CONNECTIONS: true,
-        GALLERY: true,
-        MORE: true,
-        PROMPTS: true,
-      },
-      PROMPTS: {
-        BACK_STORY: true,
-        CARD_IMAGE: true,
-        CONNECTIONS: true,
-        GALLERY: true,
-        MORE: true,
-        MUSE_INFO: true,
-      },
-    },
+    transitions: CARD_TRANSITIONS,
   });
+
+  // A shared headcanon link (`?headcanon=<id>`) opens the Headcanons section
+  // on its card. Read once: switching sections afterwards is the reader's.
+  const [linkedHeadcanonId] = useState(() =>
+    typeof window === "undefined"
+      ? null
+      : headcanonIdInUrl(window.location.search),
+  );
+  useEffect(() => {
+    if (linkedHeadcanonId) transition("HEADCANONS");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [linkedHeadcanonId]);
 
   // Sliding "active section" pill in the SideMenu — measured off the actual
   // selected MenuButton's layout box, so the same code slides it vertically
@@ -387,8 +432,44 @@ export default function MuseProfilePage({}) {
     [],
   );
 
+  // Phones, where the menu sits under the card as a bar: four grouped tabs
+  // instead of eight (About = Info/Story/Canon, Social = Posts/Peers), with a
+  // switcher above the card and More on a ⋯ button. Wider screens keep the
+  // eight-item side rail.
+  const [compactMenu, setCompactMenu] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia(COMPACT_MENU_QUERY).matches,
+  );
+  useEffect(() => {
+    const query = window.matchMedia(COMPACT_MENU_QUERY);
+    const onChange = () => setCompactMenu(query.matches);
+    onChange();
+    query.addEventListener("change", onChange);
+    return () => query.removeEventListener("change", onChange);
+  }, []);
+
+  // Each group reopens on the section last read in it; ⋯ goes back to
+  // wherever the reader was before More.
+  const lastInGroup = useRef<Record<string, CARD_STATE>>({});
+  const currentGroup = groupOf(state);
+  // Read during render (the section shown before this one), updated after.
+  const previousState = useRef<CARD_STATE>(state);
+  useEffect(() => {
+    const group = groupOf(state);
+    if (group) lastInGroup.current[group.key] = state;
+    previousState.current = state;
+  }, [state]);
+
   const updateMenuHighlight = useCallback(() => {
-    const btn = menuButtonRefs.current[state];
+    // The compact bar has one button per group, registered under the
+    // group's first section.
+    const key = compactMenu ? (groupOf(state)?.states[0] ?? null) : state;
+    if (!key) {
+      setMenuHighlight(null);
+      return;
+    }
+    const btn = menuButtonRefs.current[key];
     // Skip while the button is display:none (e.g. CARD_IMAGE measured on
     // desktop right after a resize) rather than collapsing the pill to 0.
     if (!btn || !btn.offsetWidth || !btn.offsetHeight) return;
@@ -398,7 +479,7 @@ export default function MuseProfilePage({}) {
       top: btn.offsetTop,
       width: btn.offsetWidth,
     });
-  }, [state]);
+  }, [state, compactMenu]);
 
   useLayoutEffect(() => {
     updateMenuHighlight();
@@ -415,7 +496,8 @@ export default function MuseProfilePage({}) {
   // section switch and snap the user straight back to CARD_IMAGE.
   useEffect(() => {
     const isMobile = window.matchMedia("(max-width: 950px)").matches;
-    if (isMobile) {
+    // A shared headcanon link has already picked its section.
+    if (isMobile && !linkedHeadcanonId) {
       transition("CARD_IMAGE");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -744,6 +826,23 @@ export default function MuseProfilePage({}) {
     return <MissingMuse />;
   }
 
+  const sectionSwitcher =
+    compactMenu && currentGroup && currentGroup.states.length > 1 ? (
+      <SectionSwitcher
+        label={`${currentGroup.label} sections`}
+        options={currentGroup.states.map((section) => ({
+          icon: SECTION_ICON[section],
+          key: section,
+          label: SECTION_LABEL[section],
+        }))}
+        active={state}
+        // The section showing before this render; the pill slides from it.
+        from={previousState.current}
+        accent={accent}
+        onSelect={(key) => transition(key as CARD_STATE)}
+      />
+    ) : null;
+
   return (
     <S.MuseContainer>
       {bannerLayers.map((layer, i) => (
@@ -1042,6 +1141,7 @@ export default function MuseProfilePage({}) {
                   slim
                   block
                   accent={accent}
+                  reportable={!isOwnMuse}
                 />
                 {isOwnMuse && (
                   <S.MuseSongControls>
@@ -1126,54 +1226,62 @@ export default function MuseProfilePage({}) {
         )}
       </S.CardWrapper>
 
-      {/* Sections — always show the selected one */}
-      <ShouldRender if={is("CARD_IMAGE")}>
-        <CardImageSection
-          muse={muse}
-          cardBgSrc={cardBgSrc}
-          isOwnMuse={isOwnMuse}
-          cardBgSaving={cardBgSaving || cardBgImageUploading}
-          onEditCardBg={openExistingCardBgCropDialog}
-          onRemoveCardBg={() => setConfirmRemoveCardBg(true)}
-        />
-      </ShouldRender>
+      {/* Sections — always show the selected one. On phones, a tab holding
+          several sections gets its switcher inside the card, under the
+          header (SectionSwitcherSlot). */}
+      <SectionSwitcherContext.Provider value={sectionSwitcher}>
+        <ShouldRender if={is("CARD_IMAGE")}>
+          <CardImageSection
+            muse={muse}
+            cardBgSrc={cardBgSrc}
+            isOwnMuse={isOwnMuse}
+            cardBgSaving={cardBgSaving || cardBgImageUploading}
+            onEditCardBg={openExistingCardBgCropDialog}
+            onRemoveCardBg={() => setConfirmRemoveCardBg(true)}
+          />
+        </ShouldRender>
 
-      <ShouldRender if={is("MUSE_INFO")}>
-        <MuseInfoSection
-          muse={muse}
-          isOwnMuse={isOwnMuse}
-          onMuseUpdate={(updates) =>
-            setMuse((prev) => (prev ? { ...prev, ...updates } : prev))
-          }
-        />
-      </ShouldRender>
+        <ShouldRender if={is("MUSE_INFO")}>
+          <MuseInfoSection
+            muse={muse}
+            isOwnMuse={isOwnMuse}
+            onMuseUpdate={(updates) =>
+              setMuse((prev) => (prev ? { ...prev, ...updates } : prev))
+            }
+          />
+        </ShouldRender>
 
-      <ShouldRender if={is("CONNECTIONS")}>
-        <ConnectionsSection muse={muse} isOwnMuse={isOwnMuse} />
-      </ShouldRender>
+        <ShouldRender if={is("CONNECTIONS")}>
+          <ConnectionsSection muse={muse} isOwnMuse={isOwnMuse} />
+        </ShouldRender>
 
-      <ShouldRender if={is("BACK_STORY")}>
-        <BackStorySection
-          muse={muse}
-          aboutSections={aboutSections}
-          isOwnMuse={isOwnMuse}
-          onMuseUpdate={(updates) =>
-            setMuse((prev) => (prev ? { ...prev, ...updates } : prev))
-          }
-        />
-      </ShouldRender>
+        <ShouldRender if={is("BACK_STORY")}>
+          <BackStorySection
+            muse={muse}
+            aboutSections={aboutSections}
+            isOwnMuse={isOwnMuse}
+            onMuseUpdate={(updates) =>
+              setMuse((prev) => (prev ? { ...prev, ...updates } : prev))
+            }
+          />
+        </ShouldRender>
 
-      <ShouldRender if={is("PROMPTS")}>
-        <PromptsSection muse={muse} prompts={prompts} />
-      </ShouldRender>
+        <ShouldRender if={is("HEADCANONS")}>
+          <HeadcanonsSection muse={muse} openHeadcanonId={linkedHeadcanonId} />
+        </ShouldRender>
 
-      <ShouldRender if={is("GALLERY")}>
-        <GallerySection muse={muse} media={media} />
-      </ShouldRender>
+        <ShouldRender if={is("PROMPTS")}>
+          <PromptsSection muse={muse} prompts={prompts} />
+        </ShouldRender>
 
-      <ShouldRender if={is("MORE")}>
-        <MoreSection muse={muse} isOwnMuse={isOwnMuse} />
-      </ShouldRender>
+        <ShouldRender if={is("GALLERY")}>
+          <GallerySection muse={muse} media={media} />
+        </ShouldRender>
+
+        <ShouldRender if={is("MORE")}>
+          <MoreSection muse={muse} isOwnMuse={isOwnMuse} />
+        </ShouldRender>
+      </SectionSwitcherContext.Provider>
 
       {/* Section navigation */}
       <S.SideMenu
@@ -1190,97 +1298,140 @@ export default function MuseProfilePage({}) {
             width: menuHighlight?.width ?? 0,
           }}
         />
-        <S.MenuButton
-          ref={registerMenuButtonRef("CARD_IMAGE")}
-          type="button"
-          onClick={() => transition("CARD_IMAGE")}
-          className={`card-image-mobile-only ${is("CARD_IMAGE") ? "selected" : ""}`}
-          $textColor={sideMenuTextColor}
-          $accent={accent}
-        >
-          <S.MenuButtonIcon>
-            <FaImagePortrait size={14} />
-          </S.MenuButtonIcon>
-          <S.MenuText>CARD</S.MenuText>
-        </S.MenuButton>
-        <S.MenuButton
-          ref={registerMenuButtonRef("MUSE_INFO")}
-          type="button"
-          onClick={() => transition("MUSE_INFO")}
-          className={is("MUSE_INFO") ? "selected" : ""}
-          $textColor={sideMenuTextColor}
-          $accent={accent}
-        >
-          <S.MenuButtonIcon>
-            <TiInfoLarge size={20} />
-          </S.MenuButtonIcon>
-          <S.MenuText>INFO</S.MenuText>
-        </S.MenuButton>
-        <S.MenuButton
-          ref={registerMenuButtonRef("BACK_STORY")}
-          type="button"
-          onClick={() => transition("BACK_STORY")}
-          className={is("BACK_STORY") ? "selected" : ""}
-          $textColor={sideMenuTextColor}
-          $accent={accent}
-        >
-          <S.MenuButtonIcon>
-            <GiBookCover size={20} />
-          </S.MenuButtonIcon>
-          <S.MenuText>STORY</S.MenuText>
-        </S.MenuButton>
-        <S.MenuButton
-          ref={registerMenuButtonRef("PROMPTS")}
-          type="button"
-          onClick={() => transition("PROMPTS")}
-          className={is("PROMPTS") ? "selected" : ""}
-          $textColor={sideMenuTextColor}
-          $accent={accent}
-        >
-          <S.MenuButtonIcon>
-            <BiSolidConversation size={20} />
-          </S.MenuButtonIcon>
-          <S.MenuText>POSTS</S.MenuText>
-        </S.MenuButton>
-        <S.MenuButton
-          ref={registerMenuButtonRef("CONNECTIONS")}
-          type="button"
-          onClick={() => transition("CONNECTIONS")}
-          className={is("CONNECTIONS") ? "selected" : ""}
-          $textColor={sideMenuTextColor}
-          $accent={accent}
-        >
-          <S.MenuButtonIcon>
-            <FaHandshake size={20} />
-          </S.MenuButtonIcon>
-          <S.MenuText>PEERS</S.MenuText>
-        </S.MenuButton>
-        <S.MenuButton
-          ref={registerMenuButtonRef("GALLERY")}
-          type="button"
-          onClick={() => transition("GALLERY")}
-          className={is("GALLERY") ? "selected" : ""}
-          $textColor={sideMenuTextColor}
-          $accent={accent}
-        >
-          <S.MenuButtonIcon>
-            <MdPhotoLibrary size={20} />
-          </S.MenuButtonIcon>
-          <S.MenuText>GALLERY</S.MenuText>
-        </S.MenuButton>
-        <S.MenuButton
-          ref={registerMenuButtonRef("MORE")}
-          type="button"
-          onClick={() => transition("MORE")}
-          className={is("MORE") ? "selected" : ""}
-          $textColor={sideMenuTextColor}
-          $accent={accent}
-        >
-          <S.MenuButtonIcon>
-            <FiMoreVertical size={20} />
-          </S.MenuButtonIcon>
-          <S.MenuText>MORE</S.MenuText>
-        </S.MenuButton>
+        {compactMenu &&
+          MENU_GROUPS.map((group) => {
+            const Icon = GROUP_ICON[group.key];
+            const selected = currentGroup?.key === group.key;
+            return (
+              <S.MenuButton
+                key={group.key}
+                ref={registerMenuButtonRef(group.states[0])}
+                type="button"
+                onClick={() =>
+                  transition(lastInGroup.current[group.key] ?? group.states[0])
+                }
+                className={selected ? "selected" : ""}
+                aria-current={selected ? "page" : undefined}
+                $textColor={sideMenuTextColor}
+                $accent={accent}
+              >
+                <S.MenuButtonIcon>
+                  <Icon size={group.key === "CARD" ? 14 : 20} />
+                </S.MenuButtonIcon>
+                <S.MenuText>{group.label.toUpperCase()}</S.MenuText>
+              </S.MenuButton>
+            );
+          })}
+        {!compactMenu && (
+          <>
+            <S.MenuButton
+              ref={registerMenuButtonRef("CARD_IMAGE")}
+              type="button"
+              onClick={() => transition("CARD_IMAGE")}
+              className={`card-image-mobile-only ${is("CARD_IMAGE") ? "selected" : ""}`}
+              $textColor={sideMenuTextColor}
+              $accent={accent}
+            >
+              <S.MenuButtonIcon>
+                <FaImagePortrait size={14} />
+              </S.MenuButtonIcon>
+              <S.MenuText>CARD</S.MenuText>
+            </S.MenuButton>
+            <S.MenuButton
+              ref={registerMenuButtonRef("MUSE_INFO")}
+              type="button"
+              onClick={() => transition("MUSE_INFO")}
+              className={is("MUSE_INFO") ? "selected" : ""}
+              $textColor={sideMenuTextColor}
+              $accent={accent}
+            >
+              <S.MenuButtonIcon>
+                <TiInfoLarge size={20} />
+              </S.MenuButtonIcon>
+              <S.MenuText>INFO</S.MenuText>
+            </S.MenuButton>
+            <S.MenuButton
+              ref={registerMenuButtonRef("BACK_STORY")}
+              type="button"
+              onClick={() => transition("BACK_STORY")}
+              className={is("BACK_STORY") ? "selected" : ""}
+              $textColor={sideMenuTextColor}
+              $accent={accent}
+            >
+              <S.MenuButtonIcon>
+                <GiBookCover size={20} />
+              </S.MenuButtonIcon>
+              <S.MenuText>STORY</S.MenuText>
+            </S.MenuButton>
+            <S.MenuButton
+              ref={registerMenuButtonRef("HEADCANONS")}
+              type="button"
+              onClick={() => transition("HEADCANONS")}
+              className={is("HEADCANONS") ? "selected" : ""}
+              $textColor={sideMenuTextColor}
+              $accent={accent}
+              aria-label="Headcanons"
+              title="Headcanons"
+            >
+              <S.MenuButtonIcon>
+                <BsLightbulb size={18} />
+              </S.MenuButtonIcon>
+              <S.MenuText>CANON</S.MenuText>
+            </S.MenuButton>
+            <S.MenuButton
+              ref={registerMenuButtonRef("PROMPTS")}
+              type="button"
+              onClick={() => transition("PROMPTS")}
+              className={is("PROMPTS") ? "selected" : ""}
+              $textColor={sideMenuTextColor}
+              $accent={accent}
+            >
+              <S.MenuButtonIcon>
+                <BiSolidConversation size={20} />
+              </S.MenuButtonIcon>
+              <S.MenuText>POSTS</S.MenuText>
+            </S.MenuButton>
+            <S.MenuButton
+              ref={registerMenuButtonRef("CONNECTIONS")}
+              type="button"
+              onClick={() => transition("CONNECTIONS")}
+              className={is("CONNECTIONS") ? "selected" : ""}
+              $textColor={sideMenuTextColor}
+              $accent={accent}
+            >
+              <S.MenuButtonIcon>
+                <FaHandshake size={20} />
+              </S.MenuButtonIcon>
+              <S.MenuText>PEERS</S.MenuText>
+            </S.MenuButton>
+            <S.MenuButton
+              ref={registerMenuButtonRef("GALLERY")}
+              type="button"
+              onClick={() => transition("GALLERY")}
+              className={is("GALLERY") ? "selected" : ""}
+              $textColor={sideMenuTextColor}
+              $accent={accent}
+            >
+              <S.MenuButtonIcon>
+                <MdPhotoLibrary size={20} />
+              </S.MenuButtonIcon>
+              <S.MenuText>GALLERY</S.MenuText>
+            </S.MenuButton>
+            <S.MenuButton
+              ref={registerMenuButtonRef("MORE")}
+              type="button"
+              onClick={() => transition("MORE")}
+              className={is("MORE") ? "selected" : ""}
+              $textColor={sideMenuTextColor}
+              $accent={accent}
+            >
+              <S.MenuButtonIcon>
+                <FiMoreVertical size={20} />
+              </S.MenuButtonIcon>
+              <S.MenuText>MORE</S.MenuText>
+            </S.MenuButton>
+          </>
+        )}
       </S.SideMenu>
 
       {/* Card background — hidden file input */}
@@ -1349,7 +1500,7 @@ export default function MuseProfilePage({}) {
       {/* Character limit reached — verse creation blocked */}
       <AppAlertDialog
         heading="Character limit reached"
-        text={`You've reached your plan's limit of ${museLimit} characters (alternate verses count toward this too). Upgrade your tier or remove a character to add a new verse.`}
+        text={`You've reached your limit of ${museLimit} characters (alternate verses count toward this too). Remove a character to add a new verse.`}
         open={museLimitDialogOpen}
         onOpenChange={setMuseLimitDialogOpen}
         showConfirm={false}

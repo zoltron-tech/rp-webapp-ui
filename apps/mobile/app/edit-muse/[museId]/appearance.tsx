@@ -43,7 +43,12 @@ import { useMuseMedia } from "@/hooks/use-muse";
 import { useMuseEdit } from "@/hooks/use-muse-edit";
 import { type MuseFormChanges, useMuseForm } from "@/hooks/use-muse-form";
 import { asHex } from "@/lib/color";
-import { MAX_IMAGE_BYTES, pickImage, uploadFile } from "@/lib/media-upload";
+import {
+  alertMediaRejected,
+  MAX_IMAGE_BYTES,
+  pickImage,
+  uploadFile,
+} from "@/lib/media-upload";
 import { museLook } from "@/lib/muse-appearance";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
@@ -79,6 +84,7 @@ type Sheet =
   | { kind: "accent" }
   | { kind: "advanced"; key: AdvancedKey; label: string }
   | { kind: "avatar-menu" }
+  | { kind: "card-gallery" }
   | { kind: "card-menu" }
   | { kind: "privacy" }
   | { kind: "song" }
@@ -130,7 +136,11 @@ const Appearance = ({ muse }: { muse: Muse }) => {
     setFilters(muse.wallpaper?.filterValues ?? NEUTRAL);
   }, [muse.wallpaper?.filterValues]);
 
-  const media = useMuseMedia(id, sheet?.kind === "wallpaper-gallery");
+  const pickingCard = sheet?.kind === "card-gallery";
+  const media = useMuseMedia(
+    id,
+    pickingCard || sheet?.kind === "wallpaper-gallery",
+  );
   const galleryImages = (media.data ?? []).filter((url) => !isVideoUrl(url));
 
   const wallpaperSrc = muse.wallpaper?.src || muse.image || "";
@@ -178,10 +188,11 @@ const Appearance = ({ muse }: { muse: Muse }) => {
       return;
     }
     setBusy("wallpaper");
-    const url = await uploadFile(api, file, id);
+    const { rejected, url } = await uploadFile(api, file, id);
     setBusy(null);
     if (!url) {
-      Alert.alert("Upload failed", "Please try again.");
+      if (rejected) alertMediaRejected();
+      else Alert.alert("Upload failed", "Please try again.");
       return;
     }
     const ok = await setWallpaper(url);
@@ -255,6 +266,11 @@ const Appearance = ({ muse }: { muse: Muse }) => {
         close();
         cardFlow.open(muse.cardBackground);
       },
+    },
+    {
+      icon: "grid-outline",
+      label: "Choose from gallery",
+      onPress: () => setSheet({ kind: "card-gallery" }),
     },
     {
       icon: "images-outline",
@@ -695,7 +711,7 @@ const Appearance = ({ muse }: { muse: Muse }) => {
         <SettingsGroup title="Character song">
           {muse.featuredSong ? (
             <View style={styles.songBlock}>
-              <ProfileSongPill song={muse.featuredSong} />
+              <ProfileSongPill accent={look.accent} song={muse.featuredSong} />
             </View>
           ) : (
             <SettingsRow
@@ -760,8 +776,8 @@ const Appearance = ({ muse }: { muse: Muse }) => {
         maxHeightRatio={0.8}
         onClose={close}
         subtitle="Pictures already in this character's gallery."
-        title="Choose a wallpaper"
-        visible={sheet?.kind === "wallpaper-gallery"}
+        title={pickingCard ? "Choose a card image" : "Choose a wallpaper"}
+        visible={pickingCard || sheet?.kind === "wallpaper-gallery"}
       >
         {media.isPending ? (
           <ActivityIndicator color={theme.primary} style={styles.spinner} />
@@ -780,16 +796,21 @@ const Appearance = ({ muse }: { muse: Muse }) => {
         ) : (
           <ScrollView contentContainerStyle={styles.grid}>
             {galleryImages.map((url) => {
-              const selected = muse.wallpaper?.src === url;
+              const selected =
+                (pickingCard ? muse.cardBackground?.src : muse.wallpaper?.src) ===
+                url;
               return (
                 <Pressable
-                  accessibilityLabel="Use as wallpaper"
+                  accessibilityLabel={
+                    pickingCard ? "Use as card image" : "Use as wallpaper"
+                  }
                   accessibilityRole="imagebutton"
                   accessibilityState={{ selected }}
                   key={url}
                   onPress={() => {
                     close();
-                    void setWallpaper(url);
+                    if (pickingCard) cardFlow.openUrl(url);
+                    else void setWallpaper(url);
                   }}
                   style={[
                     styles.tile,

@@ -104,6 +104,9 @@ export const useAttachments = (conversationId: string | undefined) => {
       );
 
       if (result.status < 200 || result.status >= 300) return null;
+      // No NSFW screening here, deliberately: private messages are exempt by
+      // owner decision (APP_STORE_REVIEW_PLAN.md H1), and the service skips
+      // chat-media/ keys even if asked.
       return presigned.fileUrl;
     },
     [api, conversationId],

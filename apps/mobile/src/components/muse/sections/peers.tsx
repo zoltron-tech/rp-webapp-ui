@@ -170,22 +170,28 @@ export const MusePeersSection = ({
 
   return (
     <>
-      <MusePanel accent={accent} hideBackground={look.hideExpandedBackground}>
-        <MiniHeader look={look} muse={muse} />
-        <Divider accent={accent} />
-        <SectionLabel
-          trailing={
-            signedIn && muse && connections && connections.length > 0 ? (
-              <AddButton
-                label={isOwnMuse ? "Add" : "Request"}
-                onPress={() => setEditor({ connection: null })}
-              />
-            ) : undefined
-          }
-        >
-          Connections
-        </SectionLabel>
-
+      <MusePanel
+        accent={accent}
+        hideBackground={look.hideExpandedBackground}
+        header={
+          <>
+            <MiniHeader look={look} muse={muse} />
+            <Divider accent={accent} />
+            <SectionLabel
+              trailing={
+                signedIn && muse && connections && connections.length > 0 ? (
+                  <AddButton
+                    label={isOwnMuse ? "Add" : "Request"}
+                    onPress={() => setEditor({ connection: null })}
+                  />
+                ) : undefined
+              }
+            >
+              Connections
+            </SectionLabel>
+          </>
+        }
+      >
         {!connections ? (
           <View style={styles.list}>
             <Shimmer height={64} />
@@ -626,7 +632,11 @@ const styles = StyleSheet.create({
     marginLeft: -8,
     width: FACE,
   },
-  overflowLabel: { color: "#ffffff", fontSize: fontSize.meta, fontWeight: "700" },
+  overflowLabel: {
+    color: "#ffffff",
+    fontSize: fontSize.meta,
+    fontWeight: "700",
+  },
   pill: {
     alignItems: "center",
     backgroundColor: "rgba(255,255,255,0.08)",
@@ -642,7 +652,11 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(229,72,77,0.12)",
     borderColor: "rgba(229,72,77,0.4)",
   },
-  pillLabel: { color: PANEL.secondary, fontSize: fontSize.caption, fontWeight: "600" },
+  pillLabel: {
+    color: PANEL.secondary,
+    fontSize: fontSize.caption,
+    fontWeight: "600",
+  },
   react: {
     alignItems: "center",
     borderRadius: 15,

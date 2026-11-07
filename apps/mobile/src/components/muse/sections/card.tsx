@@ -209,8 +209,10 @@ const styles = StyleSheet.create({
     textShadowOffset: { height: 1, width: 0 },
     textShadowRadius: 3,
   },
+  // No fill of its own: a card image with a transparent background shows
+  // the stage behind it, as on web, rather than a dark wash. The loading
+  // and no-image states draw their own fills.
   card: {
-    backgroundColor: "rgba(0,0,0,0.3)",
     borderRadius: radius.md,
     flex: 1,
     overflow: "hidden",

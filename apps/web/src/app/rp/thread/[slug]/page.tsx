@@ -1,5 +1,6 @@
 "use client";
 
+import { REPORT_SENT_TOAST } from "@/utils/report";
 import { Flex } from "@novelist-world/ui";
 import type { Comment, PromptSource, Reply } from "@nw/types";
 import { useParams } from "@/lib/navigation";
@@ -667,7 +668,7 @@ export default function ThreadPage({}) {
     const response = await reportAction(comment?.prompt?.id, "", "PROMPT");
     if (response?.message === API_MESSAGE.Success) {
       setShowReportPromptAlert(false);
-      successToast(`Reported successfully`);
+      successToast(REPORT_SENT_TOAST);
     } else {
       errorToast("There was an issue while reporting this prompt.");
     }
@@ -680,7 +681,7 @@ export default function ThreadPage({}) {
     if (response?.message === API_MESSAGE.Success) {
       setShowReportAlert(false);
       setSelectedReplyId("");
-      successToast(`Reported successfully`);
+      successToast(REPORT_SENT_TOAST);
     } else {
       errorToast("There was an issue while reporting this prompt.");
     }
@@ -730,7 +731,7 @@ export default function ThreadPage({}) {
     const response = await reportAction(comment?.id, "", "COMMENT");
     if (response?.message === API_MESSAGE.Success) {
       setShowReportCommentAlert(false);
-      successToast(`Reported successfully`);
+      successToast(REPORT_SENT_TOAST);
     } else {
       errorToast("There was an issue while reporting this comment.");
     }

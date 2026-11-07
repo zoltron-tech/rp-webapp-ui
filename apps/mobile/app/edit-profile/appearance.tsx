@@ -18,6 +18,7 @@ import {
 import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SongSheet } from "@/components/compose/song-sheet";
+import { AppIconPicker } from "@/components/edit-profile/app-icon-picker";
 import { ProfileHeaderEditor } from "@/components/edit-profile/profile-header-editor";
 import { ProfileSongPill } from "@/components/profile-song";
 import { BottomSheet } from "@/components/sheet";
@@ -28,6 +29,7 @@ import {
 } from "@/components/settings";
 import { useProfileEdit } from "@/hooks/use-profile-edit";
 import { useProfileSong } from "@/hooks/use-profile-song";
+import { followPalette } from "@/lib/app-icon";
 import { setPalettePreview, usePalettePreview } from "@/lib/palette-preview";
 import {
   accentFromPalette,
@@ -39,29 +41,29 @@ import {
 
 /**
  * Web's `AppearanceSection`: the profile header (cover, photo, note), the
- * theme colour and the profile song.
+ * theme colour and the profile song — plus, on this client only, the app icon.
  *
  * Each control saves when it is confirmed rather than behind a page-wide
  * button — the crop editor's tick, the note sheet's tick, a tap on a swatch —
  * which is how every other editor on this client already behaves.
  */
 
+/** Every palette, in palette order — the "More colors" sheet lists them all. */
+const ALL_ACCENTS = Object.keys(ACCENT_MAP).map(Number) as Accent[];
+
 /**
  * One theme swatch: ring when selected, spinner while that colour is being
- * applied. Shared by the basic row and the "More colors" sheet.
+ * applied. Shared by the five in the group and the "More colors" sheet.
  */
 const PaletteSwatch = ({
   applying,
   onPress,
   palette,
-  row = false,
   selected,
 }: {
   applying: boolean;
   onPress: () => void;
   palette: Accent;
-  /** In the five-wide basic row rather than the sheet's four-wide grid. */
-  row?: boolean;
   selected: boolean;
 }) => {
   const theme = useAppTheme();
@@ -73,7 +75,7 @@ const PaletteSwatch = ({
       accessibilityRole="radio"
       accessibilityState={{ busy: applying, selected }}
       onPress={onPress}
-      style={[styles.palette, row && styles.paletteRow]}
+      style={styles.palette}
     >
       <View
         style={[
@@ -155,7 +157,8 @@ export default function AppearanceScreen() {
       if (mine !== applySeq.current) return;
       setApplying(null);
       setPalettePreview(null);
-      if (!ok) Alert.alert("Not saved", "The theme color could not be saved.");
+      if (ok) followPalette(next);
+      else Alert.alert("Not saved", "The theme color could not be saved.");
     },
     [setApplying],
   );
@@ -166,7 +169,10 @@ export default function AppearanceScreen() {
       const pending = applyingRef.current;
       if (!applyTimer.current || pending === null) return;
       clearTimeout(applyTimer.current);
-      void setPaletteRef.current(pending).then(() => setPalettePreview(null));
+      void setPaletteRef.current(pending).then((ok) => {
+        setPalettePreview(null);
+        if (ok) followPalette(pending);
+      });
     },
     [],
   );
@@ -212,18 +218,18 @@ export default function AppearanceScreen() {
           title="Theme color"
         >
           <View style={styles.palettes}>
-            {/* The basic four, plus the current colour when it came from the
-                sheet, so it is always visible. */}
-            {(moreSelected
-              ? [...BASIC_ACCENTS, shownPalette]
-              : BASIC_ACCENTS
-            ).map((key) => (
+            {/* Always five: the basic four, then the current colour when it
+                came from the sheet (so it is always visible), else the first
+                of the rest. */}
+            {[
+              ...BASIC_ACCENTS,
+              moreSelected ? shownPalette : MORE_ACCENTS[0],
+            ].map((key) => (
               <PaletteSwatch
                 applying={applying === key}
                 key={key}
                 onPress={() => pickPalette(key)}
                 palette={key}
-                row
                 selected={shownPalette === key}
               />
             ))}
@@ -237,6 +243,8 @@ export default function AppearanceScreen() {
             />
           </View>
         </SettingsGroup>
+
+        <AppIconPicker palette={palette} />
 
         <SettingsGroup title="Profile song">
           {song ? (
@@ -282,7 +290,7 @@ export default function AppearanceScreen() {
         visible={moreOpen}
       >
         <View style={styles.palettes}>
-          {MORE_ACCENTS.map((key) => (
+          {ALL_ACCENTS.map((key) => (
             <PaletteSwatch
               applying={applying === key}
               key={key}
@@ -326,12 +334,14 @@ const styles = StyleSheet.create({
     paddingBottom: space.md,
     paddingHorizontal: space.md,
   },
-  palette: { alignItems: "center", gap: space.xs, width: "25%" },
-  paletteRow: { width: "20%" },
+  // Five to a row, in the group and in the sheet alike.
+  palette: { alignItems: "center", gap: space.xs, width: "20%" },
   paletteName: { fontSize: fontSize.meta, textTransform: "capitalize" },
   palettes: {
     flexDirection: "row",
     flexWrap: "wrap",
+    // A short last row sits in the middle rather than at the left.
+    justifyContent: "center",
     paddingHorizontal: space.sm,
     paddingVertical: space.md,
     rowGap: space.md,

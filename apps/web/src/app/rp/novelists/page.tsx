@@ -229,8 +229,8 @@ export default function NovelistsPage() {
                     <FiCheck size={11} />
                   </S.PointTick>
                   <span>
-                    <b>Private messages, end-to-end encrypted.</b> Plot the
-                    twist where nobody else can read it.
+                    <b>Private messages, encrypted in transit and at rest.</b>{" "}
+                    Plot the twist away from the public feed.
                   </span>
                 </S.FeaturePoint>
               </S.FeaturePoints>

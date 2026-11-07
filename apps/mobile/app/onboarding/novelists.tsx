@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Button } from "@/components/button";
-import { useFriendSuggestions } from "@/components/home/novelist-rail";
+import { useFriendSuggestions } from "@/components/home/use-novelist-suggestions";
 import { NovelistRowSkeleton, SkeletonRows } from "@/components/list-skeletons";
 import { ListStatus } from "@/components/list-status";
 import { NovelistRow } from "@/components/novelist-row";

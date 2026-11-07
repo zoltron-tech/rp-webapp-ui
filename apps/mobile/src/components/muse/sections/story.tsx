@@ -7,12 +7,15 @@ import { useState } from "react";
 import { Alert, Pressable, StyleSheet, View } from "react-native";
 import { Text } from "@/components/text";
 import { type ActionItem, ActionMenu } from "@/components/action-menu";
+import { getAttachmentKind } from "@nw/chat";
+import { AudioCard } from "@/components/chat/audio-card";
 import { FeedMedia } from "@/components/feed/feed-media";
 import { NoteSheet } from "@/components/muse/edit/note-sheet";
 import { StorySectionEditor } from "@/components/muse/edit/story-section-editor";
 import { MiniHeader } from "@/components/muse/mini-header";
 import {
   Divider,
+  glassCard,
   MusePanel,
   PANEL,
   SectionEmpty,
@@ -24,7 +27,7 @@ import { RichText } from "@/components/rich-text";
 import { useMuseAboutSections } from "@/hooks/use-muse";
 import type { MuseEdit } from "@/hooks/use-muse-edit";
 import type { MuseLook } from "@/lib/muse-appearance";
-import { fontSize, space } from "@/theme";
+import { border, fontSize, radius, space } from "@/theme";
 
 /**
  * Web's `BackStorySection`: the favourite quote, then the story in sections.
@@ -119,16 +122,13 @@ export const MuseStorySection = ({
     {
       icon: "create-outline",
       label: "Edit quote",
-      onPress: () => {
-        setNoteMenu(false);
-        setNoteOpen(true);
-      },
+      onSelect: () => setNoteOpen(true),
     },
     { separator: true },
     {
       icon: "trash-outline",
       label: "Remove quote",
-      onPress: removeNote,
+      onSelect: removeNote,
       variant: "danger",
     },
   ];
@@ -137,38 +137,41 @@ export const MuseStorySection = ({
     {
       icon: "create-outline",
       label: "Edit section",
-      onPress: () => {
-        setSectionMenu(null);
-        setEditor({ section });
-      },
+      onSelect: () => setEditor({ section }),
     },
     { separator: true },
     {
       icon: "trash-outline",
       label: "Delete section",
-      onPress: () => removeSection(section),
+      onSelect: () => removeSection(section),
       variant: "danger",
     },
   ];
 
   return (
     <>
-      <MusePanel accent={accent} hideBackground={look.hideExpandedBackground}>
-        <MiniHeader look={look} muse={muse} />
-        <Divider accent={accent} />
-        <SectionLabel
-          trailing={
-            isOwnMuse && sections && sections.length > 0 ? (
-              <AddButton
-                label="Add section"
-                onPress={() => setEditor({ section: null })}
-              />
-            ) : undefined
-          }
-        >
-          Story
-        </SectionLabel>
-
+      <MusePanel
+        accent={accent}
+        hideBackground={look.hideExpandedBackground}
+        header={
+          <>
+            <MiniHeader look={look} muse={muse} />
+            <Divider accent={accent} />
+            <SectionLabel
+              trailing={
+                isOwnMuse && sections && sections.length > 0 ? (
+                  <AddButton
+                    label="Add section"
+                    onPress={() => setEditor({ section: null })}
+                  />
+                ) : undefined
+              }
+            >
+              Story
+            </SectionLabel>
+          </>
+        }
+      >
         {!sections ? (
           <View style={styles.shimmer}>
             <Shimmer height={12} />
@@ -190,6 +193,7 @@ export const MuseStorySection = ({
                 onPress={() => setNoteMenu(true)}
                 style={({ pressed }) => [
                   styles.note,
+                  glassCard(accent),
                   { opacity: pressed ? 0.7 : 1 },
                 ]}
               >
@@ -225,7 +229,7 @@ export const MuseStorySection = ({
               sections.map((section, index) => (
                 <View
                   key={section.id ?? `about-${index}`}
-                  style={styles.section}
+                  style={[styles.section, glassCard(accent)]}
                 >
                   {isOwnMuse ? (
                     <Pressable
@@ -242,7 +246,13 @@ export const MuseStorySection = ({
                       />
                     </Pressable>
                   ) : null}
-                  {section.image ? <FeedMedia url={section.image} /> : null}
+                  {section.image ? (
+                    getAttachmentKind(section.image) === "audio" ? (
+                      <AudioCard url={section.image} />
+                    ) : (
+                      <FeedMedia url={section.image} />
+                    )
+                  ) : null}
                   <RichText html={section.text} />
                 </View>
               ))
@@ -286,14 +296,17 @@ export const MuseStorySection = ({
 };
 
 const styles = StyleSheet.create({
+  // The quote and each story block sit on the items' 70% fill (`glassCard`),
+  // as the details, connections and posts do.
   note: {
     alignItems: "center",
+    borderRadius: radius.md,
+    borderWidth: border.edge,
     flexDirection: "row",
     gap: space.sm,
     justifyContent: "center",
-    paddingBottom: space.md,
-    paddingHorizontal: space.sm,
-    paddingTop: space.xs,
+    marginBottom: space.m,
+    padding: space.m,
   },
   noteAdd: { alignItems: "center", paddingBottom: space.md },
   quote: {
@@ -305,7 +318,14 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     textAlign: "left",
   },
-  section: { gap: space.sm, paddingBottom: space.md, position: "relative" },
+  section: {
+    borderRadius: radius.md,
+    borderWidth: border.edge,
+    gap: space.sm,
+    marginBottom: space.m,
+    padding: space.m,
+    position: "relative",
+  },
   sectionMore: {
     alignSelf: "flex-end",
     paddingBottom: space.xxs,

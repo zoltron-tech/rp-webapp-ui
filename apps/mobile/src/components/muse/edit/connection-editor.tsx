@@ -14,12 +14,17 @@ import {
   ActivityIndicator,
   Alert,
   type TextInput as NativeTextInput,
+  Keyboard,
   Pressable,
   ScrollView,
   StyleSheet,
   View,
 } from "react-native";
 import { Avatar } from "@/components/avatar";
+import {
+  MediaTrayInline,
+  type TrayTab,
+} from "@/components/chat/media-tray-inline";
 import {
   RichTextEditor,
   type RichTextEditorHandle,
@@ -30,8 +35,20 @@ import { SearchField } from "@/components/search-field";
 import { Text } from "@/components/text";
 import { TextField } from "@/components/text-field";
 import { useKeyboardHeight } from "@/hooks/use-keyboard-height";
-import { MAX_IMAGE_BYTES, pickImage, uploadFile } from "@/lib/media-upload";
-import { border, fontSize, radius, space, useAppTheme } from "@/theme";
+import {
+  alertMediaRejected,
+  MAX_IMAGE_BYTES,
+  pickImage,
+  uploadFile,
+} from "@/lib/media-upload";
+import {
+  AccentProvider,
+  border,
+  fontSize,
+  radius,
+  space,
+  useAppTheme,
+} from "@/theme";
 
 /**
  * Web's `MuseConnectionForm`: a titled, described bond between characters.
@@ -60,13 +77,7 @@ export interface PickedMuse {
   pennedBy?: { username: string; image: string | null } | null;
 }
 
-export const ConnectionEditor = ({
-  connection,
-  initialMuse,
-  onClose,
-  onSaved,
-  visible,
-}: {
+interface ConnectionEditorProps {
   /** An existing connection to edit; omitted to create one. */
   connection: MuseConnectionGroup | null;
   /** Pre-selected when creating — the character whose page this is. */
@@ -74,7 +85,28 @@ export const ConnectionEditor = ({
   onClose: () => void;
   onSaved: (connection: MuseConnectionGroup, created: boolean) => void;
   visible: boolean;
-}) => {
+}
+
+/**
+ * In the viewer's own accent, whoever's muse it opens from. `EditorModal`
+ * resets the accent only for what it renders; this component reads the theme
+ * itself, one level above it, so on someone else's muse (painted in their
+ * palette) the "My characters / Friends' characters" switch and the picked
+ * rows took the author's accent rather than the viewer's.
+ */
+export const ConnectionEditor = (props: ConnectionEditorProps) => (
+  <AccentProvider palette={undefined}>
+    <ConnectionEditorView {...props} />
+  </AccentProvider>
+);
+
+const ConnectionEditorView = ({
+  connection,
+  initialMuse,
+  onClose,
+  onSaved,
+  visible,
+}: ConnectionEditorProps) => {
   const theme = useAppTheme();
   const api = useApi();
   const session = useSession();
@@ -116,6 +148,10 @@ export const ConnectionEditor = ({
   const scroll = useRef<ScrollView>(null);
   const describing = useRef(false);
   const keyboardHeight = useKeyboardHeight();
+  const [trayTab, setTrayTab] = useState<TrayTab | null>(null);
+  /** The last keyboard height, for the drawer to open at. */
+  const lastKeyboardHeight = useRef(0);
+  if (keyboardHeight > 0) lastKeyboardHeight.current = keyboardHeight;
 
   const showDescription = useCallback(() => {
     if (!describing.current) return;
@@ -223,7 +259,7 @@ export const ConnectionEditor = ({
     const local = file.uri;
     setUploading((current) => new Set(current).add(local));
     editor.current?.insertImage(local);
-    const url = await uploadFile(api, file, "muse-connection");
+    const { rejected, url } = await uploadFile(api, file, "muse-connection");
     setUploading((current) => {
       const next = new Set(current);
       next.delete(local);
@@ -231,7 +267,8 @@ export const ConnectionEditor = ({
     });
     if (!url) {
       editor.current?.removeImageBySrc(local);
-      Alert.alert("Upload failed", "Please try again.");
+      if (rejected) alertMediaRejected();
+      else Alert.alert("Upload failed", "Please try again.");
       return;
     }
     editor.current?.replaceImageSrc(local, url);
@@ -287,6 +324,23 @@ export const ConnectionEditor = ({
       onClose={onClose}
       onConfirm={() => void save()}
       title={isEdit ? "Edit connection" : "New character connection"}
+      tray={
+        <MediaTrayInline
+          keyboardHeight={lastKeyboardHeight.current}
+          onClose={() => setTrayTab(null)}
+          onRequestKeyboard={() => {
+            setTrayTab(null);
+            editor.current?.focus();
+          }}
+          onSelect={(url) => {
+            setTrayTab(null);
+            editor.current?.insertImage(url);
+          }}
+          onTabChange={setTrayTab}
+          tab={trayTab}
+        />
+      }
+      trayOpen={trayTab !== null}
       visible={visible}
     >
       <ScrollView
@@ -502,15 +556,29 @@ export const ConnectionEditor = ({
             <Text style={[styles.label, { color: theme.textGray }]}>
               Description
             </Text>
-            <IconButton
-              accessibilityLabel="Add a picture"
-              hitSlop={space.xs}
-              icon="image-outline"
-              iconSize={16}
-              onPress={() => void attachImage()}
-              size={30}
-              tone="surface"
-            />
+            <View style={styles.labelActions}>
+              <IconButton
+                accessibilityLabel="Add a picture"
+                hitSlop={space.xs}
+                icon="image-outline"
+                iconSize={16}
+                onPress={() => void attachImage()}
+                size={30}
+                tone="surface"
+              />
+              <IconButton
+                accessibilityLabel="Insert a GIF"
+                hitSlop={space.xs}
+                icon="film-outline"
+                iconSize={16}
+                onPress={() => {
+                  Keyboard.dismiss();
+                  setTrayTab("gif");
+                }}
+                size={30}
+                tone="surface"
+              />
+            </View>
           </View>
           <View
             style={[
@@ -586,6 +654,7 @@ const ResultRow = ({
 };
 
 const styles = StyleSheet.create({
+  labelActions: { alignItems: "center", flexDirection: "row", gap: space.sm },
   block: { gap: space.sm },
   chip: {
     alignItems: "center",

@@ -294,3 +294,165 @@ export const useCommentsReveal = (
 
   return { mounted, style };
 };
+
+// ─── 6. Fold reveal ─────────────────────────────────────────────────────────
+
+/**
+ * Where a fold is: resting shut, on its way open, resting open, on its way
+ * shut. Only the two resting phases are what `open` says; the moving ones
+ * are what the box looks like while it travels.
+ */
+type FoldPhase = "folded" | "opening" | "open" | "closing";
+
+/**
+ * Long rich text growing to its full height and shrinking back to the fold,
+ * as web's `ContentWrapper` transitions `max-height`.
+ *
+ * ## A height, so the JS driver
+ *
+ * The rest of this file is transform and opacity on the native driver. A fold
+ * changes how much room the text takes — the card grows, the feed below it
+ * moves — and only layout can do that, so the cap is driven from JS for the
+ * 400ms it travels. The fade over the fold's foot is opacity, and stays native.
+ *
+ * ## Opening needs the full height first
+ *
+ * A folded document may be drawn only in part (`maxBlocks`), so how tall it
+ * is open is unknown until the whole of it is laid out. Opening therefore
+ * draws everything at once under the old cap (`full`), waits for `natural` to
+ * report the whole document, and only then lets the cap travel. Shutting runs
+ * the other way: the cap travels down first, and the document is cut back to
+ * its first blocks once it is out of sight.
+ *
+ * ## Only a tap animates
+ *
+ * Feeds recycle cells, and a recycled cell is handed another post and that
+ * post's open state at once. That must not play as a fold. `arm` is called by
+ * the tap; a change of `open` without it — or a new `resetKey`, which is the
+ * document — jumps straight to the resting phase. Off, or under Reduce Motion,
+ * every change jumps.
+ */
+export const useFoldReveal = ({
+  collapsedHeight,
+  natural,
+  open,
+  resetKey,
+}: {
+  collapsedHeight: number;
+  /** The whole document's laid-out height, once known. */
+  natural: number | null;
+  open: boolean;
+  /** What is being folded; a new one is never animated into. */
+  resetKey: unknown;
+}): {
+  arm: () => void;
+  /** The box that clips the text: no cap at all once resting open. */
+  clipStyle: { maxHeight?: number | Animated.Value; overflow?: "hidden" };
+  /** The fade over the fold's foot. Native driver. */
+  fadeOpacity: Animated.Value;
+  /** Draw the whole document, not only the blocks a fold shows. */
+  full: boolean;
+  /** Whether the fade is drawn at all. */
+  showFade: boolean;
+} => {
+  const { reduceMotion } = useA11ySettings();
+  const instant = !EFFECTS.foldReveal || reduceMotion;
+  const height = useRef(new Animated.Value(collapsedHeight)).current;
+  const fadeOpacity = useRef(new Animated.Value(open ? 0 : 1)).current;
+  const [phase, setPhase] = useState<FoldPhase>(open ? "open" : "folded");
+  const phaseRef = useRef(phase);
+  phaseRef.current = phase;
+  const naturalRef = useRef(natural);
+  naturalRef.current = natural;
+  const armed = useRef(false);
+  /** The opening travel has begun; later measurements do not restart it. */
+  const growing = useRef(false);
+  const last = useRef({ open, resetKey });
+
+  const arm = useCallback(() => {
+    armed.current = true;
+  }, []);
+
+  // Stopped, not left running, when the cell goes away.
+  useEffect(
+    () => () => {
+      height.stopAnimation();
+      fadeOpacity.stopAnimation();
+    },
+    [fadeOpacity, height],
+  );
+
+  // A change of `open` either starts a fold (armed) or jumps to rest.
+  useEffect(() => {
+    const prev = last.current;
+    last.current = { open, resetKey };
+    if (prev.open === open && prev.resetKey === resetKey) return;
+
+    const animate = armed.current && !instant && prev.resetKey === resetKey;
+    armed.current = false;
+    // A second tap mid-travel turns the fold round where it stands.
+    const from = phaseRef.current;
+    height.stopAnimation();
+    fadeOpacity.stopAnimation();
+
+    if (!animate) {
+      height.setValue(collapsedHeight);
+      fadeOpacity.setValue(open ? 0 : 1);
+      setPhase(open ? "open" : "folded");
+      return;
+    }
+
+    if (open) {
+      growing.current = false;
+      if (from === "folded") height.setValue(collapsedHeight);
+      setPhase("opening");
+      return;
+    }
+
+    // Shutting: travel down from where the document stands, then cut it
+    // back to its first blocks once that is out of sight.
+    if (from === "open") {
+      height.setValue(
+        Math.max(naturalRef.current ?? collapsedHeight, collapsedHeight),
+      );
+    }
+    setPhase("closing");
+    Animated.timing(height, {
+      ...MOTION.fold,
+      toValue: collapsedHeight,
+      useNativeDriver: false,
+    }).start(({ finished }) => {
+      if (finished) setPhase("folded");
+    });
+    timeTo(fadeOpacity, 1, MOTION.fold).start();
+  }, [collapsedHeight, fadeOpacity, height, instant, open, resetKey]);
+
+  // Opening: travel once the whole document has said how tall it is.
+  useEffect(() => {
+    if (phase !== "opening" || natural === null || growing.current) return;
+    growing.current = true;
+    Animated.timing(height, {
+      ...MOTION.fold,
+      toValue: Math.max(natural, collapsedHeight),
+      useNativeDriver: false,
+    }).start(({ finished }) => {
+      if (finished) setPhase("open");
+    });
+    timeTo(fadeOpacity, 0, MOTION.fade).start();
+  }, [collapsedHeight, fadeOpacity, height, natural, phase]);
+
+  const clipStyle =
+    phase === "open"
+      ? {}
+      : phase === "folded"
+        ? { maxHeight: collapsedHeight, overflow: "hidden" as const }
+        : { maxHeight: height, overflow: "hidden" as const };
+
+  return {
+    arm,
+    clipStyle,
+    fadeOpacity,
+    full: phase !== "folded",
+    showFade: phase !== "open",
+  };
+};

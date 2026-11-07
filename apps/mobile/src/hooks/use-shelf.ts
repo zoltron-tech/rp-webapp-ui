@@ -4,13 +4,15 @@ import type {
   BookStatus,
   ShelfEntry,
   ShelfPage,
+  ShelfSort,
   ShelfSummary,
 } from "@nw/types/books";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
 /**
- * A novelist's bookshelf, read-only (BOOKSHELF_PLAN.md §5, phase 1).
+ * Reading a novelist's bookshelf (BOOKSHELF_PLAN.md §5). The writes are
+ * `use-shelf-actions.ts`.
  *
  * Two public reads keyed by the novelist's id, both answering 404 when the
  * owner's privacy hides the shelf from the viewer — `@nw/api` hands that back
@@ -25,7 +27,16 @@ import { useMemo } from "react";
 /** Web's page size for the Books tab grid. */
 export const SHELF_PAGE_SIZE = 24;
 
-const shelfKey = (novelistId: string) => ["shelf", novelistId] as const;
+/** One tab of the Books screen: a status, or the whole shelf. */
+export type ShelfTab = BookStatus | "ALL";
+
+/** Every shelf in the cache, for a write to refresh. */
+export const SHELF_ROOT = ["shelf"] as const;
+
+const shelfKey = (novelistId: string) => [...SHELF_ROOT, novelistId] as const;
+
+export const shelfSummaryKey = (novelistId: string) =>
+  [...shelfKey(novelistId), "summary"] as const;
 
 /** `undefined` while loading, `null` when hidden from the viewer. */
 export const useShelfSummary = (novelistId: string | undefined) => {
@@ -39,7 +50,7 @@ export const useShelfSummary = (novelistId: string | undefined) => {
       if ("message" in result) throw new Error(String(result.message));
       return result;
     },
-    queryKey: [...shelfKey(novelistId ?? ""), "summary"],
+    queryKey: shelfSummaryKey(novelistId ?? ""),
     // A shelf changes when its owner shelves a book, not while someone else
     // is reading their profile.
     staleTime: 5 * 60_000,
@@ -47,14 +58,13 @@ export const useShelfSummary = (novelistId: string | undefined) => {
 };
 
 /**
- * One status of the shelf, paged — the Books screen's grid.
- *
- * Sort is pinned to "shelved" (newest first) until the sort control lands.
- * The server's pages are zero-based.
+ * One tab of the shelf, paged — the Books screen's grid. The server's pages
+ * are zero-based.
  */
 export const useShelfPage = (
   novelistId: string | undefined,
-  status: BookStatus,
+  status: ShelfTab,
+  sort: ShelfSort,
 ) => {
   const api = useApi();
 
@@ -70,7 +80,7 @@ export const useShelfPage = (
         api,
         novelistId ?? "",
         status,
-        "shelved",
+        sort,
         pageParam,
         SHELF_PAGE_SIZE,
       );
@@ -78,7 +88,7 @@ export const useShelfPage = (
       if ("message" in result) throw new Error(String(result.message));
       return result;
     },
-    queryKey: [...shelfKey(novelistId ?? ""), status, "shelved"],
+    queryKey: [...shelfKey(novelistId ?? ""), status, sort],
     staleTime: 5 * 60_000,
   });
 

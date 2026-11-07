@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { DiscordShareResult } from "@nw/api/endpoints/community";
+import { useSession } from "@nw/features";
 import * as Clipboard from "expo-clipboard";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import {
@@ -10,6 +11,8 @@ import {
   StyleSheet,
   View,
 } from "react-native";
+import { ConversationSendList } from "@/components/chat/conversation-send-list";
+import { IconButton } from "@/components/icon-button";
 import { BottomSheet } from "@/components/sheet";
 import { Text } from "@/components/text";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
@@ -33,6 +36,12 @@ import { border, fontSize, radius, space, useAppTheme } from "@/theme";
  *
  * The link is always the web one: a profile or a muse opens in a browser from
  * Discord or a message, and that is where the link has to land.
+ *
+ * "Send in a chat" (web's `SendToChatPanel`) turns the tray into a list of
+ * your conversations — `ConversationSendList`, the forward sheet's — and
+ * sends the link into the ones you pick, as you. The chat unfurls the link
+ * into the thing's card, so the link is the whole message. The back button
+ * in the header returns to the share options.
  */
 
 export type ShareState =
@@ -84,8 +93,11 @@ export const ShareSheet = ({
   visible: boolean;
 }) => {
   const theme = useAppTheme();
+  const { novelist } = useSession();
   const [copied, setCopied] = useState(false);
   const [state, setState] = useState<ShareState>({ status: "idle" });
+  /** The conversation list, in place of the share options. */
+  const [chatOpen, setChatOpen] = useState(false);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Transient state is reset each time the sheet opens.
@@ -93,6 +105,7 @@ export const ShareSheet = ({
     if (visible) {
       setState({ status: "idle" });
       setCopied(false);
+      setChatOpen(false);
     }
   }, [visible]);
 
@@ -133,12 +146,33 @@ export const ShareSheet = ({
 
   return (
     <BottomSheet
-      maxHeightRatio={0.8}
+      // The list fills the tray, as the forward sheet's does, so the search
+      // field does not walk up and down as results come and go.
+      fill={chatOpen}
+      headerAction={
+        chatOpen ? (
+          <IconButton
+            accessibilityLabel="Back to share options"
+            icon="chevron-back"
+            onPress={() => setChatOpen(false)}
+            size={32}
+            tone="material"
+          />
+        ) : undefined
+      }
+      maxHeightRatio={chatOpen ? 0.88 : 0.8}
       onClose={onClose}
-      subtitle={subtitle}
-      title={title}
+      subtitle={
+        chatOpen
+          ? "Sent from you; it opens as a card."
+          : subtitle
+      }
+      title={chatOpen ? "Send in a chat" : title}
       visible={visible}
     >
+      {chatOpen ? (
+        <ConversationSendList detail="who" failTitle="Not sent" text={url} />
+      ) : (
       <View style={styles.body}>
         {state.status === "success" ? (
           <View style={styles.result}>
@@ -259,6 +293,32 @@ export const ShareSheet = ({
               </Pressable>
             </View>
 
+            {novelist ? (
+              <Pressable
+                accessibilityRole="button"
+                disabled={!url}
+                onPress={() => setChatOpen(true)}
+                style={({ pressed }) => [
+                  styles.button,
+                  {
+                    backgroundColor: pressed
+                      ? theme.accent.fillPressed
+                      : theme.accent.fill,
+                    borderColor: theme.accent.fill,
+                  },
+                ]}
+              >
+                <Ionicons
+                  color="#ffffff"
+                  name="chatbubble-ellipses-outline"
+                  size={18}
+                />
+                <Text style={[styles.buttonLabel, styles.onAccent]}>
+                  Send in a chat
+                </Text>
+              </Pressable>
+            ) : null}
+
             <Pressable
               accessibilityRole="button"
               disabled={state.status === "sharing"}
@@ -318,6 +378,7 @@ export const ShareSheet = ({
           </>
         )}
       </View>
+      )}
     </BottomSheet>
   );
 };

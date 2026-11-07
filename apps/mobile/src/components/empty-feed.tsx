@@ -1,4 +1,5 @@
 import { useIsFocused } from "@react-navigation/native";
+import type { ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 import { SceneArt, type SceneName } from "@/components/scene-art";
 import { Text } from "@/components/text";
@@ -33,11 +34,14 @@ import { fontSize, space, useAppTheme } from "@/theme";
  * and this screen is the one in front.
  */
 export const EmptyScene = ({
+  action,
   aside,
   scene,
   subtitle,
   title,
 }: {
+  /** A way out of the empty state, under the words. */
+  action?: ReactNode;
   /** A quieter second sentence: web's "(Or the link is wrong…)". */
   aside?: string;
   scene: SceneName;
@@ -58,6 +62,7 @@ export const EmptyScene = ({
       {aside ? (
         <Text style={[styles.aside, { color: theme.textGray }]}>{aside}</Text>
       ) : null}
+      {action ? <View style={styles.action}>{action}</View> : null}
     </View>
   );
 };
@@ -97,6 +102,7 @@ export const EmptyFeed = ({
 );
 
 const styles = StyleSheet.create({
+  action: { marginTop: space.md },
   aside: {
     fontSize: fontSize.caption,
     fontStyle: "italic",

@@ -41,9 +41,9 @@ const RATIO = 1.75;
 /**
  * From this width the card is drawn with the wide type. Under the rail's
  * share of the screen on the smallest phone (375pt), so the type does not
- * change with the device.
+ * change with the device: the rail's 0.42 share is 157pt there.
  */
-const WIDE_FROM = 165;
+const WIDE_FROM = 155;
 /** Web's `padding: 2px` frame round the picture. */
 const FRAME = 2;
 

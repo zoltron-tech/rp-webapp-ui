@@ -3,7 +3,7 @@ import { useNovelistFriends } from "@nw/features";
 import type { Friend } from "@nw/types";
 import { FlashList } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
-import { useCallback } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Text } from "@/components/text";
 import { EndOfList } from "@/components/end-of-list";
@@ -11,9 +11,10 @@ import { NovelistRowSkeleton, SkeletonRows } from "@/components/list-skeletons";
 import { EmptyScene } from "@/components/empty-feed";
 import { ListStatus } from "@/components/list-status";
 import { NovelistRow, ROW_HEIGHT } from "@/components/novelist-row";
+import { SearchField } from "@/components/search-field";
 import { useTrackOnline } from "@/context/socket";
 import { useTabBarContentStyle, useTabBarScroll } from "@/context/tab-bar";
-import { space, useAppTheme } from "@/theme";
+import { fontSize, space, useAppTheme } from "@/theme";
 import { LoadMore, RowSeparator } from "@/components/list-parts";
 
 /**
@@ -29,10 +30,9 @@ import { LoadMore, RowSeparator } from "@/components/list-parts";
  * of the list from a short page is exactly the kind of rule that goes subtly
  * wrong when two clients each work it out for themselves.
  *
- * Web also has a client-side search box over the pages it has loaded. Left out
- * here deliberately: searching only what happens to be loaded is confusing on a
- * phone, where far fewer rows are on screen, and the endpoint has no search of
- * its own to call instead.
+ * The search box is web's: it filters the pages already loaded, because the
+ * endpoint has no search of its own. Load more stays on offer while searching,
+ * since the person being looked for may be on a page not fetched yet.
  *
  * Paging is a **button as well as** an `onEndReached`. The scroll trigger alone
  * is unreliable here: a page often does not fill a tall screen, so there is
@@ -101,6 +101,17 @@ export const FriendsList = ({ username }: { username: string }) => {
   // Whose list this is decides what the empty state says.
   const own = useGlobalState("novelist")?.username === username;
 
+  const [search, setSearch] = useState("");
+  const shown = useMemo(() => {
+    const needle = search.trim().toLowerCase();
+    if (!needle) return friends;
+    return friends.filter((friend) =>
+      `${friend.firstName ?? ""} ${friend.lastName ?? ""} ${friend.username}`
+        .toLowerCase()
+        .includes(needle),
+    );
+  }, [friends, search]);
+
   // The server answers only about usernames it has been asked for, so a face
   // that is not registered here renders offline whether or not it is.
   useTrackOnline(trackedUsernames);
@@ -132,33 +143,55 @@ export const FriendsList = ({ username }: { username: string }) => {
       <FlashList
         {...tabBarScroll}
         contentContainerStyle={contentStyle}
-        data={friends}
+        data={shown}
         drawDistance={DRAW_DISTANCE}
         // `contentContainerStyle` has no `gap` in FlashList — the space between
         // rows is a separator, which is also what keeps `ROW_HEIGHT` the whole
         // truth about a cell.
         ItemSeparatorComponent={RowSeparator}
         keyExtractor={keyExtractor}
-        ListEmptyComponent={
-          <ListStatus
-            empty={
-              <EmptyScene
-                scene="no-friends"
-                subtitle={
-                  own
-                    ? "Novelists you connect with will show up here."
-                    : `${username} hasn't connected with anyone yet.`
-                }
-                title="No friends yet"
+        keyboardDismissMode="on-drag"
+        keyboardShouldPersistTaps="handled"
+        ListHeaderComponent={
+          friends.length > 0 ? (
+            <View style={styles.search}>
+              <SearchField
+                onChangeText={setSearch}
+                placeholder="Search friends"
+                value={search}
               />
-            }
-            error={error}
-            loading={isPending}
-            onRetry={refetch}
-            skeleton={
-              <SkeletonRows count={8} render={() => <NovelistRowSkeleton />} />
-            }
-          />
+            </View>
+          ) : null
+        }
+        ListEmptyComponent={
+          search.trim() ? (
+            <Text style={[styles.noMatch, { color: theme.textGray }]}>
+              No friend by that name among those loaded.
+            </Text>
+          ) : (
+            <ListStatus
+              empty={
+                <EmptyScene
+                  scene="no-friends"
+                  subtitle={
+                    own
+                      ? "Novelists you connect with will show up here."
+                      : `${username} hasn't connected with anyone yet.`
+                  }
+                  title="No friends yet"
+                />
+              }
+              error={error}
+              loading={isPending}
+              onRetry={refetch}
+              skeleton={
+                <SkeletonRows
+                  count={8}
+                  render={() => <NovelistRowSkeleton />}
+                />
+              }
+            />
+          )
         }
         ListFooterComponent={
           hasNextPage ? (
@@ -183,6 +216,8 @@ export const FriendsList = ({ username }: { username: string }) => {
 const keyExtractor = (item: Friend) => item.id;
 
 const styles = StyleSheet.create({
+  noMatch: { fontSize: fontSize.body, padding: space.lg, textAlign: "center" },
+  search: { paddingBottom: space.sm },
   content: { padding: space.md },
   fill: { flex: 1 },
 });

@@ -21,12 +21,15 @@ import { fontSize, radius, space, type, useAppTheme } from "@/theme";
 export const HighlightSheet = ({
   active,
   onClose,
+  onDismissed,
   onSelect,
   visible,
 }: {
   /** The swatch (hex) of the current highlight, or null. */
   active: string | null;
   onClose: () => void;
+  /** Once the sheet has fully gone — when a focus can land again. */
+  onDismissed?: () => void;
   /** `null` removes the highlight. */
   onSelect: (value: string | null) => void;
   visible: boolean;
@@ -63,6 +66,7 @@ export const HighlightSheet = ({
       ignoreKeyboard
       maxHeightRatio={0.7}
       onClose={onClose}
+      onDismissed={onDismissed}
       subtitle="Behind the selected words"
       title="Highlight"
       visible={visible}

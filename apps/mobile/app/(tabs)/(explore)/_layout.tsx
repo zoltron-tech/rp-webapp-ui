@@ -1,7 +1,6 @@
 import { Stack, useRouter } from "expo-router";
 import { ambientScreenLayout } from "@/components/ambient-background";
-import { TabHeaderTitle } from "@/components/header-title";
-import { MenuButton } from "@/components/menu-button";
+import { HeaderActions } from "@/components/header-actions";
 import { tabStackBack } from "@/components/stack-back-button";
 import { useAppTheme } from "@/theme";
 import { glassHeaderOptions } from "@/theme/header";
@@ -33,7 +32,7 @@ export default function ExploreStackLayout() {
       screenLayout={ambientScreenLayout}
       screenOptions={(screen) => ({
         contentStyle: { backgroundColor: theme.background },
-        headerRight: () => <MenuButton />,
+        headerRight: () => <HeaderActions />,
         ...glassHeaderOptions(theme),
         // A page that arrived first in this stack (a link from another tab,
         // from a chat, from a story) still needs a way back on iOS.
@@ -48,7 +47,9 @@ export default function ExploreStackLayout() {
       <Stack.Screen
         name="index"
         options={{
-          headerTitle: () => <TabHeaderTitle title="Explore" />,
+          // Drawn by the screen (`CollapsingHeader`), so it can slide away
+          // with the tab bar on scroll.
+          headerShown: false,
           title: "Explore",
         }}
       />

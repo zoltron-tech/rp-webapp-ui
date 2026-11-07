@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useLocation } from "react-router";
 import { PromoShell } from "./_demo/shell";
 
 /**
@@ -12,13 +13,15 @@ import { PromoShell } from "./_demo/shell";
  * /promo/ instead.
  */
 export default function PromoLayout({ children }: { children: ReactNode }) {
+  // /promo/screen/* are captured as phone screens: keep the app's real look.
+  const screen = useLocation().pathname.startsWith("/promo/screen/");
   return (
     // `dark jade` is what scopes the theme's CSS custom properties (see
     // globals.css); `app/rp/layout.tsx` puts the same pair on its page
     // container. Without them every var() in the components falls back to
     // nothing.
     <div className="dark jade">
-      <PromoShell>{children}</PromoShell>
+      <PromoShell screen={screen}>{children}</PromoShell>
     </div>
   );
-}
+}

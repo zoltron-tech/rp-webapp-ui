@@ -1,9 +1,15 @@
 import { useCallback } from "react";
-import { getPresignedFileUploadObject } from "@/app/rp/profile/actions";
+import {
+  getPresignedFileUploadObject,
+  moderateUpload,
+} from "@/app/rp/profile/actions";
 import { API_MESSAGE } from "@/utils/constants";
 import { Logger } from "@/utils/services";
 import { prepareUploadFile } from "@/utils/upload-media";
 import { useUIContext } from "./use-ui-context";
+
+const MEDIA_REJECTED_TOAST =
+  "This image appears to contain sexual content, which isn't allowed on Novelist World.";
 
 /**
  * The presigned upload path: the browser asks the service for a signed URL and
@@ -44,6 +50,20 @@ export const useUploadMedia = () => {
 
       if (!s3Res.ok) {
         Logger.error("Failed to upload to S3", s3Res.status, s3Res.statusText);
+        return API_MESSAGE.MediaError;
+      }
+
+      // The PUT went straight to S3, so the service screens it now; a refused
+      // image is already deleted. The gallery's in-browser nsfwjs check still
+      // runs first, as the fast path. Private-message media is never screened
+      // (owner decision, APP_STORE_REVIEW_PLAN.md H1).
+      const isChat = formData.get("mediaBucket") === "CHAT_MEDIA";
+      if (
+        !isChat &&
+        contentType.startsWith("image/") &&
+        !(await moderateUpload(fileUrl))
+      ) {
+        errorToast?.(MEDIA_REJECTED_TOAST);
         return API_MESSAGE.MediaError;
       }
 

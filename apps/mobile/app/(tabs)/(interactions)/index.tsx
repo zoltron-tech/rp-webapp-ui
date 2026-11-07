@@ -7,6 +7,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useCallback, useMemo } from "react";
 import { StyleSheet, View } from "react-native";
+import { Button } from "@/components/button";
 import { Text } from "@/components/text";
 import { EndOfList } from "@/components/end-of-list";
 import {
@@ -18,6 +19,7 @@ import { ListStatus } from "@/components/list-status";
 import { OutgoingThreadCard } from "@/components/outgoing-thread-card";
 import { useTabBarContentStyle, useTabBarScroll } from "@/context/tab-bar";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
+import { useUnreadReplyCount } from "@/hooks/use-unread-reply-count";
 import { fontSize, space, type, useAppTheme } from "@/theme";
 import { FeedSeparator, LoadMore } from "@/components/list-parts";
 
@@ -31,14 +33,12 @@ import { FeedSeparator, LoadMore } from "@/components/list-parts";
  *
  * ## What is tappable
  *
- * Each card's "View thread" button, and nothing else — it pushes
+ * The card, with any links in its quote still their own — it pushes
  * `/threads/:parentId` inside this tab's own stack, so the tab bar stays put
  * and Interactions stays lit while the thread is read.
  *
- * The empty state keeps web's words and still drops its "Explore open
- * interactions" button: that one goes to the discovery feed, which does not
- * exist on native yet and would be the dead end this screen used to be full
- * of.
+ * The empty state keeps web's words, and its "Explore open interactions"
+ * button goes to the Explore tab.
  *
  * ## Why the fetch is local rather than in `@nw/features`
  *
@@ -127,18 +127,17 @@ export default function InteractionsScreen() {
   const contentStyle = useTabBarContentStyle(styles.content);
 
   /** Web's `headerSubtitle`, including its counting. */
-  /** Whether anything here is waiting on a reply from you. */
-  const waiting = threads.some((t) => t.replyCount > 0);
+  // The server's count, not the loaded page's: five cards say nothing about
+  // the threads further down.
+  const active = useUnreadReplyCount();
 
   const subtitle = query.isPending
     ? "Loading your threads…"
     : threads.length === 0
       ? "You're all caught up"
-      : (() => {
-          const active = threads.filter((t) => t.replyCount > 0).length;
-          if (active === 0) return "No new replies right now";
-          return `${active} active ${pluralize("thread", active)} with new replies`;
-        })();
+      : active === 0
+        ? "No new replies right now"
+        : `${active} active ${pluralize("thread", active)} with new replies`;
 
   /*
    * The header and footer are held rather than written inline. Both are plain
@@ -170,14 +169,14 @@ export default function InteractionsScreen() {
         <Text
           style={[
             styles.headerSubtitle,
-            { color: waiting ? theme.text : theme.textGray },
+            { color: active > 0 ? theme.text : theme.textGray },
           ]}
         >
           {subtitle}
         </Text>
       </View>
     ),
-    [subtitle, theme, waiting],
+    [active, subtitle, theme],
   );
 
   const { fetchNextPage, hasNextPage, isFetchingNextPage } = query;
@@ -223,6 +222,13 @@ export default function InteractionsScreen() {
             />
           ) : (
             <EmptyScene
+              action={
+                <Button
+                  label="Explore open interactions"
+                  onPress={() => router.navigate("/(tabs)/(explore)")}
+                  variant="primary"
+                />
+              }
               scene="no-interactions"
               subtitle="Nothing is running right now. Find a starter someone else has posted and reply to spark one."
               title="No active interactions"

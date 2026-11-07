@@ -2,11 +2,10 @@
 
 import { API_MESSAGE } from "@nw/types";
 import {
+  BOOK_STATUS_LABEL,
   type BookStatus,
-  FAVORITES_CAP,
   type OpenLibraryBook,
-  SHELF_CAP,
-  SHELF_ERROR,
+  SHELF_REASON_COPY,
   type ShelfEntry,
   toShelfSnapshot,
 } from "@nw/types/books";
@@ -35,20 +34,7 @@ export const failed = <T>(
     "message" in result &&
     (result as ErrorType).message === API_MESSAGE.Error);
 
-const REASON_COPY: Record<string, string> = {
-  [SHELF_ERROR.FavoritesFull]: `Favorites are full (${FAVORITES_CAP}). Unfavorite one first.`,
-  [SHELF_ERROR.NotFavoritable]:
-    "Only books you've read or are reading can be favorites.",
-  [SHELF_ERROR.ShelfFull]: `Your shelf is full (${SHELF_CAP.toLocaleString()}). Remove a book first.`,
-  [SHELF_ERROR.UpstreamUnavailable]:
-    "Open Library is busy. Try again in a moment.",
-};
-
-export const STATUS_LABEL: Record<BookStatus, string> = {
-  READ: "Read",
-  READING: "Reading",
-  WANT_TO_READ: "Want to read",
-};
+export const STATUS_LABEL = BOOK_STATUS_LABEL;
 
 /**
  * The four shelf writes, each returning the new row (or null once removed)
@@ -61,7 +47,7 @@ export function useShelfActions() {
 
   const explain = useCallback(
     (result: ErrorType | null | undefined, fallback: string) => {
-      const copy = result?.reason && REASON_COPY[result.reason];
+      const copy = result?.reason && SHELF_REASON_COPY[result.reason];
       if (copy) warningToast(copy);
       else errorToast(fallback);
     },

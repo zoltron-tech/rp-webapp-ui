@@ -56,7 +56,7 @@ export const FandomSheet = ({
   }, [visible]);
 
   const results = useQuery({
-    enabled: visible && debounced.length > 0,
+    enabled: visible,
     queryFn: async (): Promise<Fandom[]> => {
       const result = await searchFandoms(api, debounced);
       return Array.isArray(result) ? result : [];
@@ -111,13 +111,10 @@ export const FandomSheet = ({
           <Text style={[styles.hint, { color: theme.textGray }]}>
             No fandom matches “{debounced}”.
           </Text>
-        ) : !debounced ? (
-          <Text style={[styles.hint, { color: theme.textGray }]}>
-            Start typing to search.
-          </Text>
         ) : (
           results.data?.map((fandom) => {
-            const color = asColor(fandom.color) ?? theme.material.edgeTranslucent;
+            const color =
+              asColor(fandom.color) ?? theme.material.edgeTranslucent;
             const selected = fandom.id === current?.id;
             return (
               <Pressable

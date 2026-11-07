@@ -37,7 +37,8 @@ type EditView =
   | "information"
   | "story"
   | "gallery"
-  | "connections";
+  | "connections"
+  | "headcanons";
 
 type Props = {
   onBack: () => void;
@@ -536,19 +537,23 @@ export function LandingSection({ onBack, onSelect }: Props) {
           </S.LandingCardChips>
         </S.LandingCard>
 
-        {/* Headcanons — coming soon */}
-        <S.LandingCard type="button" disabled>
+        {/* Headcanons */}
+        <S.LandingCard
+          type="button"
+          onClick={() => guardNav(() => onSelect("headcanons"))}
+        >
           <S.LandingCardIconArea $hue="headcanons">
             <BsLightbulb className="section-icon" />
           </S.LandingCardIconArea>
           <S.LandingCardBody>
             <S.LandingCardTitle>Headcanons</S.LandingCardTitle>
             <S.LandingCardDesc>
-              Personal interpretations &amp; lore outside the source
+              Traits, quick facts &amp; the little truths canon never told
             </S.LandingCardDesc>
           </S.LandingCardBody>
           <S.LandingCardChips>
-            <S.LandingCardComingSoon>Coming Soon</S.LandingCardComingSoon>
+            <S.LandingCardChip $active={false}>Traits</S.LandingCardChip>
+            <S.LandingCardChip $active={false}>Quick facts</S.LandingCardChip>
           </S.LandingCardChips>
         </S.LandingCard>
       </S.LandingGrid>

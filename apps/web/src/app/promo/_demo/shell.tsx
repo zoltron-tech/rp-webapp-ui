@@ -102,11 +102,19 @@ const INITIAL_STATE: StoreState = {
   user: null,
 };
 
-export const PromoShell: FC<{ children: ReactNode }> = ({ children }) => (
+/**
+ * `screen` keeps the app's own look for scenes captured as a phone screen
+ * (promo/screen/*): an opaque page with real shadows and sheet scrims, so the
+ * transparent-GIF overrides above stay off.
+ */
+export const PromoShell: FC<{ children: ReactNode; screen?: boolean }> = ({
+  children,
+  screen,
+}) => (
   <ThemeProvider theme={{ ...THEME_DARK, ...DefaultTheme }}>
-    <PromoGlobalStyle />
+    {!screen && <PromoGlobalStyle />}
     <StoreProvider<StoreState> storeId="global-store" initial={INITIAL_STATE}>
       <UIContextProvider>{children}</UIContextProvider>
     </StoreProvider>
   </ThemeProvider>
-);
+);

@@ -4,7 +4,7 @@ import { queryKeys, useApi, useSession } from "@nw/features";
 import type { Prompt } from "@nw/types";
 import type { Activity } from "@nw/types/activity";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useMemo, useRef, useState } from "react";
 import { FlatList, StyleSheet, View } from "react-native";
 import { ActivityBox } from "@/components/activity/box";
 import { EndOfList } from "@/components/end-of-list";
@@ -13,24 +13,27 @@ import { MuseRail } from "@/components/home/muse-rail";
 import { NovelistRail } from "@/components/home/novelist-rail";
 import { SectionHeader } from "@/components/home/section-header";
 import { StoryRail } from "@/components/home/story-rail";
+import { BookmarkCard } from "@/components/story/bookmark-card";
+import { useBookmarks } from "@/hooks/use-bookmarks";
 import { ListStatus } from "@/components/list-status";
 import { MediaViewer } from "@/components/muse/media-viewer";
 import { FeedCardSkeleton } from "@/components/skeleton";
 import { useTabBarContentStyle, useTabBarScroll } from "@/context/tab-bar";
+import { useActivityShare } from "@/components/activity/use-activity-share";
 import { usePromptFeedActions } from "@/hooks/use-prompt-feed-actions";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import { useTabTop } from "@/hooks/use-tab-top";
 import { useOffline } from "@/lib/connectivity";
 import { dedupeById, interleave } from "@/lib/feed";
-import { space, useAppTheme } from "@/theme";
+import { space } from "@/theme";
 import { EmptyState, FeedSeparator } from "@/components/list-parts";
 import { ComposeTrigger } from "@/components/compose/compose-trigger";
+import { CollapsingHeader } from "@/components/collapsing-header";
 
 /**
  * Home — the news feed.
  *
- * The native counterpart to `apps/web/src/app/rp/home`, minus the friends
- * strip and the search it puts above everything (both still to come). What is
+ * The native counterpart to `apps/web/src/app/rp/home`. What is
  * here is the rest of that page: your friends' characters, the strangers the
  * server thinks you should meet, the public characters out there, and the
  * feed — your friends' activity, new in-character prompts and out-of-character
@@ -38,15 +41,13 @@ import { ComposeTrigger } from "@/components/compose/compose-trigger";
  *
  * ## Rails inside the feed, not stacked above it
  *
- * Web puts three horizontal rails between the top of the page and the first
- * post. On a 667pt screen that is three screens of scrolling before the feed
- * begins, which is the wrong shape for a phone: Instagram and the rest put
- * "suggested for you" *between* posts, a few cards down, where it reads as
- * part of the stream. So the friends' characters — the rail a friend-driven
- * feed is most about — stay at the head, and the friend suggestions, web's
- * "Dive into the Stories" and the public characters are items *in* the feed,
- * after the third, fifth and seventh posts. A reader with an empty feed sees
- * them stacked, as on web.
+ * The head of the page is only the way in: search, the post trigger, and the
+ * chapter you were reading. The feed starts straight after it, on a prompt.
+ * The four rails — your friends' characters, friend suggestions, "Dive into
+ * the Stories" and the public characters — are items *in* the feed, before
+ * the 4th, 7th, 10th and 13th posts (`RAIL_SLOTS`), the way Instagram puts
+ * "suggested for you" between posts. Web deals them at the same places. A
+ * reader with a short feed gets the rest at the end, stacked.
  *
  * ## One list, three sources, stable order
  *
@@ -76,10 +77,35 @@ import { ComposeTrigger } from "@/components/compose/compose-trigger";
 /** Web's `FEED_PAGE_SIZES` and `ACTIVITIES_PAGE_SIZE`. */
 const PAGE = { activities: 10, posts: 8, prompts: 5 } as const;
 
-/** Where the rails sit in the stream, as an index into the feed. */
-const SUGGESTIONS_AT = 3;
-const STORIES_AT = 5;
-const STRANGERS_AT = 7;
+type RailKind = "friends-muses" | "suggestions" | "stories" | "public-muses";
+
+/**
+ * Where the rails sit in the stream: each before the feed item at its index.
+ * Web's Home (`apps/web/src/app/rp/home/page.tsx`) uses the same slots.
+ */
+const RAIL_SLOTS: readonly { at: number; rail: FeedItem }[] = (
+  [
+    [3, "friends-muses"],
+    [6, "suggestions"],
+    [9, "stories"],
+    [12, "public-muses"],
+  ] as const
+).map(([at, rail]) => ({ at, rail: { key: `rail-${rail}`, kind: "rail", rail } }));
+
+/**
+ * The rows with each rail placed before the row at its index, and any rail
+ * the feed is too short to reach at the end.
+ */
+const dealRails = (rows: readonly FeedItem[]): FeedItem[] => {
+  const out: FeedItem[] = [];
+  rows.forEach((row, index) => {
+    for (const slot of RAIL_SLOTS) if (slot.at === index) out.push(slot.rail);
+    out.push(row);
+  });
+  for (const slot of RAIL_SLOTS)
+    if (slot.at >= rows.length) out.push(slot.rail);
+  return out;
+};
 
 /** Fetch the next pages a screen and a half early; see `explore.tsx`. */
 const END_REACHED_THRESHOLD = 1.5;
@@ -101,28 +127,8 @@ const WINDOW_SCREENS = 5;
 type FeedItem =
   | { kind: "activity"; key: string; data: Activity }
   | { kind: "prompt"; key: string; data: Prompt }
-  | {
-      kind: "rail";
-      key: string;
-      rail: "suggestions" | "stories" | "strangers";
-    }
+  | { kind: "rail"; key: string; rail: RailKind }
   | { kind: "skeleton"; key: string; variant: "prompt" | "activity" };
-
-const RAIL_SUGGESTIONS: FeedItem = {
-  key: "rail-suggestions",
-  kind: "rail",
-  rail: "suggestions",
-};
-const RAIL_STORIES: FeedItem = {
-  key: "rail-stories",
-  kind: "rail",
-  rail: "stories",
-};
-const RAIL_STRANGERS: FeedItem = {
-  key: "rail-strangers",
-  kind: "rail",
-  rail: "strangers",
-};
 
 /**
  * The page before the feed has answered.
@@ -135,21 +141,13 @@ const RAIL_STRANGERS: FeedItem = {
  * the list swaps the ghosts out around them without remounting a rail.
  */
 const GHOST_POSTS = 7;
-const SKELETON_ITEMS: FeedItem[] = (() => {
-  const out: FeedItem[] = [];
-  for (let index = 0; index < GHOST_POSTS; index += 1) {
-    if (index === SUGGESTIONS_AT) out.push(RAIL_SUGGESTIONS);
-    if (index === STORIES_AT) out.push(RAIL_STORIES);
-    if (index === STRANGERS_AT) out.push(RAIL_STRANGERS);
-    out.push({
-      key: `ghost-${index}`,
-      kind: "skeleton",
-      variant: index % 3 === 1 ? "activity" : "prompt",
-    });
-  }
-  if (STRANGERS_AT >= GHOST_POSTS) out.push(RAIL_STRANGERS);
-  return out;
-})();
+const SKELETON_ITEMS: FeedItem[] = dealRails(
+  Array.from({ length: GHOST_POSTS }, (_, index) => ({
+    key: `ghost-${index}`,
+    kind: "skeleton" as const,
+    variant: index % 3 === 1 ? ("activity" as const) : ("prompt" as const),
+  })),
+);
 
 const keyExtractor = (item: FeedItem) => item.key;
 /** A `null` page is a 404 — nothing there; a `message` is a real failure. */
@@ -167,7 +165,6 @@ const nextPage =
 const STALE = 5 * 60 * 1000;
 
 export const HomeScreen = () => {
-  const theme = useAppTheme();
   const api = useApi();
   const queryClient = useQueryClient();
   const { status } = useSession();
@@ -204,6 +201,7 @@ export const HomeScreen = () => {
   });
 
   const actions = usePromptFeedActions();
+  const { share: shareActivity, sheets: shareSheets } = useActivityShare();
   const {
     canAct,
     cardProps,
@@ -223,19 +221,35 @@ export const HomeScreen = () => {
     const a = activities.data?.pages ?? [];
     const p = prompts.data?.pages ?? [];
     const o = posts.data?.pages ?? [];
-    const queuedPrompts = queued.filter((item) => item.source.sourceType === "MUSE");
-    const queuedPosts = queued.filter((item) => item.source.sourceType !== "MUSE");
+    const queuedPrompts = queued.filter(
+      (item) => item.source.sourceType === "MUSE",
+    );
+    const queuedPosts = queued.filter(
+      (item) => item.source.sourceType !== "MUSE",
+    );
 
     // Every prompt on the page, so an activity about one is not a second card.
     const promptIds = new Set<string>();
     for (const page of [...p, ...o])
       for (const item of page) promptIds.add(item.id);
 
-    const depth = Math.max(a.length, p.length, o.length, queued.length > 0 ? 1 : 0);
+    const depth = Math.max(
+      a.length,
+      p.length,
+      o.length,
+      queued.length > 0 ? 1 : 0,
+    );
     const feed: FeedItem[] = [];
     for (let i = 0; i < depth; i += 1) {
+      // Prompt, then update, then post: the feed opens on a prompt — the
+      // thing a writer can answer — as web's does.
       feed.push(
         ...interleave<FeedItem>(
+          [...(i === 0 ? queuedPrompts : []), ...(p[i] ?? [])].map((item) => ({
+            data: item,
+            key: `prompt-${item.id}`,
+            kind: "prompt" as const,
+          })),
           (a[i] ?? [])
             .filter((item) => !promptIds.has(item.target?.id ?? ""))
             .map((item) => ({
@@ -243,11 +257,6 @@ export const HomeScreen = () => {
               key: `activity-${item.id}`,
               kind: "activity" as const,
             })),
-          [...(i === 0 ? queuedPrompts : []), ...(p[i] ?? [])].map((item) => ({
-            data: item,
-            key: `prompt-${item.id}`,
-            kind: "prompt" as const,
-          })),
           [...(i === 0 ? queuedPosts : []), ...(o[i] ?? [])].map((item) => ({
             data: item,
             key: `post-${item.id}`,
@@ -261,29 +270,7 @@ export const HomeScreen = () => {
     ]) as (FeedItem & { id: string })[];
 
     // The rails, dealt in at their places — or at the end of a short feed.
-    const out: FeedItem[] = [];
-    let placedSuggestions = false;
-    let placedStories = false;
-    let placedStrangers = false;
-    unique.forEach((item, index) => {
-      if (index === SUGGESTIONS_AT) {
-        out.push(RAIL_SUGGESTIONS);
-        placedSuggestions = true;
-      }
-      if (index === STORIES_AT) {
-        out.push(RAIL_STORIES);
-        placedStories = true;
-      }
-      if (index === STRANGERS_AT) {
-        out.push(RAIL_STRANGERS);
-        placedStrangers = true;
-      }
-      out.push(item);
-    });
-    if (!placedSuggestions) out.push(RAIL_SUGGESTIONS);
-    if (!placedStories) out.push(RAIL_STORIES);
-    if (!placedStrangers) out.push(RAIL_STRANGERS);
-    return out;
+    return dealRails(unique);
   }, [activities.data, prompts.data, posts.data, queued]);
 
   const sources = [activities, prompts, posts];
@@ -313,6 +300,7 @@ export const HomeScreen = () => {
   const refreshAll = () =>
     Promise.all([
       queryClient.invalidateQueries({ queryKey: ["home"] }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.bookmarks() }),
       prompts.refetch(),
       posts.refetch(),
     ]);
@@ -332,6 +320,7 @@ export const HomeScreen = () => {
             <ActivityBox
               activity={item.data}
               onOpenMedia={setViewing}
+              onShare={shareActivity}
               onShowLikers={showLikers}
             />
           );
@@ -349,7 +338,9 @@ export const HomeScreen = () => {
         case "rail":
           return (
             <View style={styles.rail}>
-              {item.rail === "suggestions" ? (
+              {item.rail === "friends-muses" ? (
+                <MuseRail title="Characters by your friends" type="friends" />
+              ) : item.rail === "suggestions" ? (
                 <NovelistRail />
               ) : item.rail === "stories" ? (
                 <StoryRail />
@@ -376,6 +367,8 @@ export const HomeScreen = () => {
           had it and Home did not, so the first thing the app offered a
           returning writer was other people's work and no pen.
         */}
+        {/* Search lives in the header now: the magnifier beside the bell
+            (`HeaderActions search`) opens `screens/global-search`. */}
         {canAct ? (
           <View style={styles.compose}>
             <ComposeTrigger
@@ -385,13 +378,16 @@ export const HomeScreen = () => {
             />
           </View>
         ) : null}
-        <MuseRail title="Characters by your friends" type="friends" />
-        {feedPending || postCount > 0 ? (
-          <SectionHeader title="Updates from your friends" />
-        ) : null}
+        <ContinueReading />
       </View>
     ),
-    [canAct, feedPending, me?.avatar?.src, me?.firstName, me?.image, openCompose, postCount],
+    [
+      canAct,
+      me?.avatar?.src,
+      me?.firstName,
+      me?.image,
+      openCompose,
+    ],
   );
 
   const footer = useMemo(() => {
@@ -417,51 +413,55 @@ export const HomeScreen = () => {
 
   return (
     <View style={styles.fill}>
-      <FlatList
-        {...tabBarScroll}
-        ref={listRef}
-        contentContainerStyle={contentStyle}
-        // Ghosts while pending; nothing at all when every source failed or
-        // the phone is offline with nothing saved, so the status below is
-        // shown instead of three rails over an empty feed.
-        data={
-          feedPending && !feedOffline && queued.length === 0
-            ? SKELETON_ITEMS
-            : feedError || feedOffline
-              ? []
-              : items
-        }
-        ItemSeparatorComponent={FeedSeparator}
-        keyExtractor={keyExtractor}
-        ListEmptyComponent={
-          feedError || feedOffline ? (
-            <ListStatus
-              error={feedError ?? undefined}
-              loading={feedOffline}
-              offlineWhat="feed"
-              onRetry={refresh}
-            />
-          ) : (
-            <EmptyState
-              body="When your friends write, their updates land here. Find some novelists to follow along."
-              icon="home-outline"
-              title="Nothing here yet"
-            />
-          )
-        }
-        ListFooterComponent={footer}
-        ListHeaderComponent={header}
-        onEndReached={loadMore}
-        onEndReachedThreshold={END_REACHED_THRESHOLD}
-        onRefresh={refresh}
-        refreshing={refreshing}
-        renderItem={renderItem}
-        initialNumToRender={INITIAL_ROWS}
-        maxToRenderPerBatch={BATCH_ROWS}
-        windowSize={WINDOW_SCREENS}
-      />
+      {/* The header leaves with the tab bar on scroll; see `CollapsingHeader`. */}
+      <CollapsingHeader search>
+        <FlatList
+          {...tabBarScroll}
+          ref={listRef}
+          contentContainerStyle={contentStyle}
+          // Ghosts while pending; nothing at all when every source failed or
+          // the phone is offline with nothing saved, so the status below is
+          // shown instead of three rails over an empty feed.
+          data={
+            feedPending && !feedOffline && queued.length === 0
+              ? SKELETON_ITEMS
+              : feedError || feedOffline
+                ? []
+                : items
+          }
+          ItemSeparatorComponent={FeedSeparator}
+          keyExtractor={keyExtractor}
+          ListEmptyComponent={
+            feedError || feedOffline ? (
+              <ListStatus
+                error={feedError ?? undefined}
+                loading={feedOffline}
+                offlineWhat="feed"
+                onRetry={refresh}
+              />
+            ) : (
+              <EmptyState
+                body="When your friends write, their updates land here. Find some novelists to follow along."
+                icon="home-outline"
+                title="Nothing here yet"
+              />
+            )
+          }
+          ListFooterComponent={footer}
+          ListHeaderComponent={header}
+          onEndReached={loadMore}
+          onEndReachedThreshold={END_REACHED_THRESHOLD}
+          onRefresh={refresh}
+          refreshing={refreshing}
+          renderItem={renderItem}
+          initialNumToRender={INITIAL_ROWS}
+          maxToRenderPerBatch={BATCH_ROWS}
+          windowSize={WINDOW_SCREENS}
+        />
+      </CollapsingHeader>
 
       {actions.sheets}
+      {shareSheets}
 
       {/* One picture, read-only: no captions, no owner tools. */}
       <MediaViewer
@@ -480,6 +480,21 @@ export const HomeScreen = () => {
 
 const EMPTY_META = new Map();
 
+/** Web's Continue Reading: the chapter you touched last. */
+const ContinueReading = memo(function ContinueReading() {
+  const { bookmarks } = useBookmarks();
+  const latest = bookmarks[0];
+  if (!latest) return null;
+  return (
+    <>
+      <SectionHeader title="Continue Reading" />
+      <View style={styles.continue}>
+        <BookmarkCard bookmarked={latest} />
+      </View>
+    </>
+  );
+});
+
 const styles = StyleSheet.create({
   // The feed's gutter. Posts sit inside it; rails and the header bleed back
   // out with `rail`/`header` and carry their own.
@@ -491,6 +506,7 @@ const styles = StyleSheet.create({
   fill: { flex: 1 },
   footerGhost: { paddingTop: space.ms },
   compose: { paddingBottom: space.m, paddingHorizontal: space.md },
+  continue: { paddingBottom: space.m, paddingHorizontal: space.md },
   header: { gap: space.xs, marginHorizontal: -space.md },
   // A rail runs edge to edge inside the padded feed; it carries its own
   // gutters, so the card row can bleed past the posts' margins.

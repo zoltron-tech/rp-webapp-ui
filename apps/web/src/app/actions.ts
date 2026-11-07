@@ -202,9 +202,13 @@ export const loginViaProviderAction = async (provider: LoginOAuthProvider) => {
   const query = referralUser
     ? `?referralUser=${encodeURIComponent(referralUser)}`
     : "";
-  navigateHard(
-    `${env.RP_SERVICE_URL}/rp/user/oauth2/authorization/${provider}${query}`,
-  );
+  // Apple has its own door: its callback is a cross-site form post, which
+  // Spring's session-held OAuth2 state does not survive (AppleSignInService).
+  const start =
+    provider === "apple"
+      ? "/rp/user/account/oauth/apple/start"
+      : `/rp/user/oauth2/authorization/${provider}`;
+  navigateHard(`${env.RP_SERVICE_URL}${start}${query}`);
 };
 
 /**

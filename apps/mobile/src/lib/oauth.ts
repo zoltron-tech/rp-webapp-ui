@@ -1,6 +1,13 @@
 import { sha256 } from "@noble/hashes/sha256";
-import { exchangeNativeOAuthCode } from "@nw/api/endpoints/account";
+import { bytesToHex } from "@noble/hashes/utils";
+import {
+  exchangeNativeOAuthCode,
+  issueNativeLinkTicket,
+  signInWithAppleNative,
+} from "@nw/api/endpoints/account";
 import { toBase64, utf8Bytes } from "@nw/chat";
+import type { LinkProvider } from "@nw/types";
+import * as AppleAuthentication from "expo-apple-authentication";
 import * as AuthSession from "expo-auth-session";
 import { getRandomBytes } from "expo-crypto";
 import * as Linking from "expo-linking";
@@ -8,6 +15,7 @@ import * as WebBrowser from "expo-web-browser";
 import { Platform } from "react-native";
 import { api, markSessionEstablished } from "@/lib/api";
 import { env } from "@/lib/env";
+import { readReferral } from "@/lib/referral";
 import { saveSession } from "@/lib/session-store";
 
 /**
@@ -53,6 +61,20 @@ import { saveSession } from "@/lib/session-store";
  * the app is not installed (`ProviderAppRedirectStrategy`). The round trip
  * still begins and ends in the browser tab opened here, which is what holds
  * the server's session; only the consent in the middle moves.
+ *
+ * ## Linking Discord or Spotify to a signed-in account
+ *
+ * The web's "Connect" is a top-level navigation to
+ * `/rp/user/account/{provider}/link/start`, authenticated by the session
+ * cookie and finishing on the settings page. The sheet opened here carries
+ * no cookie and has no use for that page, so `linkAccount` first asks for a
+ * **link ticket** over the ordinary bearer-authenticated API — naming the
+ * redirect URI above and a random `state` — and opens the same start URL with
+ * `?ticket=`. user-service redeems it (once, within a minute), runs the usual
+ * `{provider}-link` round trip, and ends on
+ * `novelistworld://oauth?link={provider}&status=linked|already_linked&state=…`
+ * or `…&error=…`. Nothing secret is on that redirect: the app re-reads the
+ * connection over the API. Server side: `NativeLinkService`.
  */
 
 // Required so the auth session is dismissed when the browser redirects back.
@@ -99,6 +121,9 @@ export const oauthRedirectUri = () =>
   });
 
 export const startOAuth = async (provider: OAuthProvider): Promise<void> => {
+  // Carried on the URL: user-service keeps it in the session across the
+  // provider round trip (`ReferralCarryFilter`) and credits a new account.
+  const referralUser = await readReferral();
   const redirectUri = oauthRedirectUri();
   const codeVerifier = randomSecret();
   const state = randomSecret();
@@ -110,6 +135,7 @@ export const startOAuth = async (provider: OAuthProvider): Promise<void> => {
       code_challenge: pkceChallenge(codeVerifier),
       code_challenge_method: "S256",
       redirect_uri: redirectUri,
+      ...(referralUser ? { referralUser } : {}),
       state,
       // See "Discord, in the Discord app". A server that does not know the
       // parameter ignores it and sends the web page, as before.
@@ -161,4 +187,162 @@ export const startOAuth = async (provider: OAuthProvider): Promise<void> => {
     refreshToken: session.refreshToken,
   });
   markSessionEstablished();
+};
+
+// ─── Sign in with Apple (iOS) ────────────────────────────────────────────────
+
+/**
+ * Whether this device can show the native Apple sheet. iOS only: App Review
+ * requires Apple next to Google and Discord there (Guideline 4.8); Android has
+ * no native sheet and is not offered it.
+ */
+export const appleSignInAvailable = async (): Promise<boolean> =>
+  Platform.OS === "ios" && AppleAuthentication.isAvailableAsync();
+
+const APPLE_FAILURE_MESSAGES: Record<string, string> = {
+  ...FAILURE_MESSAGES,
+  already_linked:
+    "That email address belongs to an account already linked to a different Apple ID.",
+  apple_unavailable:
+    "Sign in with Apple is not available right now. Try another way to sign in.",
+  unverified_email:
+    "Apple has not confirmed that email address. Try another way to sign in.",
+};
+
+/**
+ * The native sheet, then user-service. No browser, no redirect: Apple hands
+ * the app an identity token and a one-time authorization code, and
+ * user-service checks the first and redeems the second at Apple
+ * (`AppleSignInService`).
+ *
+ * The nonce ties the token to this request: the sheet gets SHA-256(nonce) in
+ * hex, the token echoes it, and only this function knows the raw value it
+ * sends to the server.
+ *
+ * Apple shares the person's name once, on the very first authorization; it is
+ * sent along so a new account's username can start from it.
+ */
+export const startAppleSignIn = async (): Promise<void> => {
+  const nonce = randomSecret();
+
+  let credential: AppleAuthentication.AppleAuthenticationCredential;
+  try {
+    credential = await AppleAuthentication.signInAsync({
+      nonce: bytesToHex(sha256(utf8Bytes(nonce))),
+      requestedScopes: [
+        AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+        AppleAuthentication.AppleAuthenticationScope.EMAIL,
+      ],
+    });
+  } catch (cause) {
+    if ((cause as { code?: string })?.code === "ERR_REQUEST_CANCELED") {
+      throw new Error("Sign-in was cancelled");
+    }
+    throw new Error(GENERIC_FAILURE);
+  }
+
+  const { authorizationCode, identityToken, fullName } = credential;
+  if (!identityToken || !authorizationCode) {
+    throw new Error(GENERIC_FAILURE);
+  }
+
+  const referralUser = await readReferral();
+  const session = await signInWithAppleNative(api, {
+    authorizationCode,
+    identityToken,
+    nonce,
+    ...(fullName?.givenName ? { givenName: fullName.givenName } : {}),
+    ...(fullName?.familyName ? { familyName: fullName.familyName } : {}),
+    ...(referralUser ? { referralUser } : {}),
+  }).catch(() => null);
+
+  if (!session?.accessToken || !session.refreshToken) {
+    throw new Error(
+      (session?.reason && APPLE_FAILURE_MESSAGES[session.reason]) ??
+        GENERIC_FAILURE,
+    );
+  }
+
+  await saveSession({
+    accessToken: session.accessToken,
+    refreshToken: session.refreshToken,
+  });
+  markSessionEstablished();
+};
+
+// ─── Account linking ─────────────────────────────────────────────────────────
+
+/**
+ * How a link round trip ended. `cancelled` covers both closing the sheet and
+ * refusing the provider's consent — neither is news to the person who did it.
+ */
+export type LinkOutcome = "linked" | "already_linked" | "cancelled";
+
+const LINK_LABELS: Record<LinkProvider, string> = {
+  discord: "Discord",
+  spotify: "Spotify",
+};
+
+/** Reasons user-service may put on a refused link redirect, in words a person can act on. */
+const LINK_FAILURE_MESSAGES: Record<string, string> = {
+  invalid_scope:
+    "The provider refused the permissions we asked for. Try again in a moment.",
+};
+
+const linkFailure = (provider: LinkProvider): string =>
+  `Could not link ${LINK_LABELS[provider]}. Try again.`;
+
+export const linkAccount = async (
+  provider: LinkProvider,
+): Promise<LinkOutcome> => {
+  const redirectUri = oauthRedirectUri();
+  const state = randomSecret();
+
+  const ticket = await issueNativeLinkTicket(api, provider, {
+    redirectUri,
+    state,
+  });
+  if (!ticket) {
+    throw new Error(linkFailure(provider));
+  }
+
+  const startUrl =
+    `${env.RP_SERVICE_URL}/rp/user/account/${provider}/link/start?` +
+    query({
+      ticket,
+      // See "Discord, in the Discord app": the same consent hand-off applies.
+      ...(provider === "discord" && Platform.OS === "android"
+        ? { provider_app: "android" }
+        : {}),
+    });
+
+  const result = await WebBrowser.openAuthSessionAsync(startUrl, redirectUri);
+
+  if (result.type !== "success") {
+    return "cancelled";
+  }
+
+  const { queryParams } = Linking.parse(result.url);
+
+  // Before anything else on the URL is believed — errors included. A redirect
+  // this link did not produce is not one to act on.
+  if (
+    !queryParams ||
+    queryParams.state !== state ||
+    queryParams.link !== provider
+  ) {
+    throw new Error(linkFailure(provider));
+  }
+
+  const error = queryParams.error;
+  if (typeof error === "string") {
+    if (error === "access_denied") return "cancelled";
+    throw new Error(LINK_FAILURE_MESSAGES[error] ?? linkFailure(provider));
+  }
+
+  const status = queryParams.status;
+  if (status === "linked" || status === "already_linked") {
+    return status;
+  }
+  throw new Error(linkFailure(provider));
 };

@@ -17,6 +17,8 @@ import { border, font, fontSize, radius, space, useAppTheme } from "@/theme";
  *
  * `compact` is the same control under a post — web's comment trigger inside
  * `PromptThreads` — without a card of its own round it: the post is the card.
+ * It holds one line. Several are on screen at once, and a field fading under
+ * every post is motion around the words being read.
  */
 
 export const DEFAULT_PLACEHOLDERS = [
@@ -84,8 +86,8 @@ export const ComposeTrigger = ({
   const { reduceMotion } = useA11ySettings();
 
   useEffect(() => {
-    // Reduce Motion: one placeholder, no repeating fade.
-    if (reduceMotion) return;
+    // Reduce Motion: one placeholder, no repeating fade. Under a post, likewise.
+    if (reduceMotion || compact) return;
     const timer = setInterval(() => {
       Animated.timing(opacity, {
         duration: FADE_MS,
@@ -102,7 +104,7 @@ export const ComposeTrigger = ({
       });
     }, ROTATE_MS);
     return () => clearInterval(timer);
-  }, [opacity, placeholders.length, reduceMotion]);
+  }, [compact, opacity, placeholders.length, reduceMotion]);
 
   return (
     <Pressable

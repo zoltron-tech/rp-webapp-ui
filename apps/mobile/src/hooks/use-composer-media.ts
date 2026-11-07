@@ -1,9 +1,10 @@
-import { deleteMedia, uploadMedia } from "@nw/api/endpoints/profile";
+import { deleteMedia, uploadMediaScreened } from "@nw/api/endpoints/profile";
 import { useApi } from "@nw/features";
 import { API_MESSAGE } from "@nw/types";
 import * as ImagePicker from "expo-image-picker";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert } from "react-native";
+import { alertMediaRejected } from "@/lib/media-upload";
 
 /**
  * Pictures into the post, and one video alongside it — web's
@@ -92,11 +93,18 @@ export const useComposerMedia = ({
   const callbacks = useRef({ onImageFailed, onImageInserted, onImageUploaded });
   callbacks.current = { onImageFailed, onImageInserted, onImageUploaded };
 
+  /**
+   * The storage URL, `null` on a failure, or `MediaRejected` when the
+   * service's NSFW check refused the picture before storing it.
+   */
   const upload = useCallback(
-    async (uri: string, type: string): Promise<string | null> => {
+    async (
+      uri: string,
+      type: string,
+    ): Promise<string | API_MESSAGE.MediaRejected | null> => {
       const form = new FormData();
       form.append("file", filePart(uri, type));
-      const result = await uploadMedia(api, form).catch(
+      const result = await uploadMediaScreened(api, form).catch(
         () => API_MESSAGE.MediaError,
       );
       return result === API_MESSAGE.MediaError ? null : result;
@@ -134,9 +142,10 @@ export const useComposerMedia = ({
       return next;
     });
 
-    if (!url) {
+    if (!url || url === API_MESSAGE.MediaRejected) {
       callbacks.current.onImageFailed(local);
-      Alert.alert("Upload failed", "Please try again.");
+      if (url) alertMediaRejected();
+      else Alert.alert("Upload failed", "Please try again.");
       return;
     }
     tracked.current.add(url);
@@ -162,7 +171,10 @@ export const useComposerMedia = ({
     };
     setAttachment(entry);
 
-    const url = await upload(entry.localUri, entry.contentType);
+    // Videos are not screened, so this is never `MediaRejected`; the check is
+    // for the type's sake.
+    const uploaded = await upload(entry.localUri, entry.contentType);
+    const url = uploaded === API_MESSAGE.MediaRejected ? null : uploaded;
     setAttachment((current) =>
       current?.localUri === entry.localUri
         ? { ...current, failed: !url, uploading: false, url }

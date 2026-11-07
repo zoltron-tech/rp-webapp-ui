@@ -1,11 +1,11 @@
-import { Ionicons } from "@expo/vector-icons";
 import { type StickerItem, searchStickers } from "@nw/api/endpoints/community";
 import { HELLO_STICKER_QUERIES, helloNoticeFor, pickNotice } from "@nw/chat";
 import { useApi } from "@nw/features";
 import { useEffect, useMemo, useState } from "react";
-import { Image, Pressable, StyleSheet, View } from "react-native";
+import { Image, StyleSheet, View } from "react-native";
+import { Button } from "@/components/button";
 import { Text } from "@/components/text";
-import { border, fontSize, radius, space, useAppTheme } from "@/theme";
+import { fontSize, space, useAppTheme } from "@/theme";
 
 /**
  * What an empty conversation offers instead of "No messages yet".
@@ -16,6 +16,11 @@ import { border, fontSize, radius, space, useAppTheme } from "@/theme";
  * a waving sticker, and one tap to send it. Web does exactly this, and the copy
  * and the search terms are shared (`@nw/chat/notices`) so the two clients open
  * the same empty room the same way.
+ *
+ * Mobile draws it on the wallpaper rather than in a card: a frame under the
+ * retention notice's frame was two boxes in a room with nothing in it. Only the
+ * button sends. The whole card used to, and a stray tap on an empty screen is a
+ * message somebody receives.
  *
  * ## The sticker is fetched here, not globally
  *
@@ -80,80 +85,38 @@ export const HelloState = ({
 
   return (
     <View style={styles.root}>
-      <Pressable
-        accessibilityHint="Sends a waving sticker"
-        accessibilityLabel="Say hello"
-        accessibilityRole="button"
-        disabled={disabled || !sticker}
-        onPress={() => sticker && onSend(sticker.stickerUrl)}
-        style={({ pressed }) => [
-          styles.card,
-          {
-            backgroundColor: theme.material.fillPressed,
-            borderColor: theme.material.edge,
-            opacity: pressed ? 0.7 : 1,
-          },
-        ]}
-      >
-        <Text style={[styles.line1, { color: theme.text }]}>
-          {notice.line1}
-        </Text>
-        <Text style={[styles.line2, { color: theme.textGray }]}>
-          {notice.line2}
-        </Text>
+      <Text style={[styles.line1, { color: theme.text }]}>{notice.line1}</Text>
+      <Text style={[styles.line2, { color: theme.textGray }]}>
+        {notice.line2}
+      </Text>
 
-        {sticker ? (
-          <>
-            <Image
-              // The preview, not the full sticker: this is a thumbnail-sized
-              // slot and the preview is what the picker's grid draws too.
-              resizeMode="contain"
-              source={{ uri: sticker.previewUrl }}
-              style={styles.sticker}
-            />
-            <View
-              style={[
-                styles.cta,
-                {
-                  backgroundColor: theme.accent.surface,
-                  borderColor: theme.accent.surfaceHover,
-                },
-              ]}
-            >
-              <Ionicons color={theme.accent.text} name="hand-left" size={14} />
-              <Text style={[styles.ctaLabel, { color: theme.accent.text }]}>
-                Tap here to say hello
-              </Text>
-            </View>
-          </>
-        ) : null}
-      </Pressable>
+      {sticker ? (
+        <>
+          <Image
+            // The preview, not the full sticker: this is a thumbnail-sized
+            // slot and the preview is what the picker's grid draws too.
+            resizeMode="contain"
+            source={{ uri: sticker.previewUrl }}
+            style={styles.sticker}
+          />
+          <Button
+            accessibilityLabel="Say hello with a waving sticker"
+            disabled={disabled}
+            icon="hand-left"
+            label="Say hello"
+            onPress={() => onSend(sticker.stickerUrl)}
+            size="sm"
+            variant="primary"
+          />
+        </>
+      ) : null}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  card: {
-    alignItems: "center",
-    borderRadius: radius.lg,
-    borderWidth: border.edge,
-    gap: space.xs,
-    maxWidth: 320,
-    padding: space.lg,
-  },
-  cta: {
-    alignItems: "center",
-    borderRadius: radius.full,
-    borderWidth: border.edge,
-    flexDirection: "row",
-    gap: space.xs,
-    marginTop: space.xs,
-    paddingHorizontal: space.md,
-    paddingVertical: space.s,
-  },
-  ctaLabel: { fontSize: fontSize.caption, fontWeight: "700" },
   line1: { fontSize: fontSize.body, fontWeight: "700", textAlign: "center" },
   line2: { fontSize: fontSize.caption, textAlign: "center" },
-  root: { alignItems: "center", padding: space.lg },
-  sticker: { height: 140, marginTop: space.sm, width: 140 },
+  root: { alignItems: "center", gap: space.xs, padding: space.lg },
+  sticker: { height: 104, marginVertical: space.sm, width: 104 },
 });

@@ -36,6 +36,7 @@ export default function StoryLayout() {
       />
       <Stack.Screen name="[storyId]/timeline" options={{ title: "Timelines" }} />
       <Stack.Screen name="[storyId]/map" options={{ title: "Map" }} />
+      <Stack.Screen name="[storyId]/notes" options={{ title: "Notes" }} />
       <Stack.Screen name="chapter/[eventId]" options={{ title: "Chapter" }} />
     </Stack>
   );

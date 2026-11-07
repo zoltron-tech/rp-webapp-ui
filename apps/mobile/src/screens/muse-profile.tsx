@@ -18,14 +18,28 @@ import { EmptyScene } from "@/components/empty-feed";
 import { Image } from "@/components/image";
 import { ListStatus } from "@/components/list-status";
 import { Byline } from "@/components/muse/byline";
+import { MuseHeaderContext } from "@/components/muse/header-tools";
 import { MuseNavTabs } from "@/components/muse/nav-tabs";
 import {
   type MuseBackdrop,
   MuseBackdropProvider,
 } from "@/components/muse/panel";
-import { type MuseSection, SectionMenu } from "@/components/muse/section-menu";
+import {
+  groupOf,
+  MENU_GROUPS,
+  type MuseGroupKey,
+  type MuseSection,
+  SECTION_ICON,
+  SECTION_LABEL,
+  SectionMenu,
+} from "@/components/muse/section-menu";
+import {
+  SectionSwitcher,
+  SectionSwitcherContext,
+} from "@/components/muse/section-switcher";
 import { MuseCardSection } from "@/components/muse/sections/card";
 import { MuseGallerySection } from "@/components/muse/sections/gallery";
+import { MuseHeadcanonsSection } from "@/components/muse/sections/headcanons";
 import { MuseInfoSection } from "@/components/muse/sections/info";
 import { MuseMoreSection } from "@/components/muse/sections/more";
 import { MusePeersSection } from "@/components/muse/sections/peers";
@@ -140,8 +154,12 @@ const pennedByOf = (value: MuseSeed | null) =>
   value && "pennedBy" in value ? ((value as Muse).pennedBy ?? null) : null;
 
 export const MuseProfileScreen = () => {
-  const { museId } = useLocalSearchParams<{ museId: string }>();
+  const { headcanon, museId } = useLocalSearchParams<{
+    headcanon?: string;
+    museId: string;
+  }>();
   const queryClient = useQueryClient();
+  const session = useSession();
   const query = useMuse(museId);
   const muse = query.data ?? null;
 
@@ -156,15 +174,21 @@ export const MuseProfileScreen = () => {
     [museId, queryClient],
   );
 
+  const author = muse?.pennedBy ?? pennedByOf(seed);
+  const ownMuse = Boolean(author?.id) && author?.id === session.novelist?.id;
+  const authorPalette = author?.palette;
+
   return (
     /*
      * The author's palette, not the viewer's, for the chrome round the page —
      * the header and the base colour under the wallpaper. The muse's own accent
      * (a single hex, not a palette) paints everything on the page itself.
+     *
+     * Your own muse takes your own accent: `pennedBy.palette` is the novelist
+     * row's, the picker writes the account's, and the two can disagree. Reading
+     * the novelist's here painted people's own characters jade.
      */
-    <AccentProvider
-      palette={muse?.pennedBy?.palette ?? pennedByOf(seed)?.palette}
-    >
+    <AccentProvider palette={ownMuse ? undefined : authorPalette}>
       {/* The author's light, over the viewer's the stack drew. */}
       <AmbientBackground />
       <NovelistHeader
@@ -176,6 +200,7 @@ export const MuseProfileScreen = () => {
         muse={muse}
         museId={museId ?? ""}
         onRetry={() => void query.refetch()}
+        openHeadcanonId={headcanon ?? null}
         seed={seed}
       />
     </AccentProvider>
@@ -188,6 +213,7 @@ const MuseProfileBody = ({
   muse,
   museId,
   onRetry,
+  openHeadcanonId,
   seed,
 }: {
   error: unknown;
@@ -195,6 +221,8 @@ const MuseProfileBody = ({
   muse: Muse | null;
   museId: string;
   onRetry: () => void;
+  /** A shared headcanon link (`?headcanon=`): open Canon onto that card. */
+  openHeadcanonId: string | null;
   /** A cached copy to draw while `muse` loads. See `findCachedMuse`. */
   seed: MuseSeed | null;
 }) => {
@@ -206,8 +234,9 @@ const MuseProfileBody = ({
   // section menu stands where it was. Restored when the screen unmounts.
   useHideTabBar();
 
-  // Web opens on the card on a phone and on INFO on a desktop.
-  const [section, setSection] = useState<MuseSection>("CARD");
+  // Web opens on the card on a phone — or on Canon, for a headcanon link.
+  const first: MuseSection = openHeadcanonId ? "HEADCANONS" : "CARD";
+  const [section, setSection] = useState<MuseSection>(first);
 
   /*
    * Which sections have been opened at all. A section's fetch is switched on
@@ -215,12 +244,41 @@ const MuseProfileBody = ({
    * read — exactly web's "fetched once" refs.
    */
   const [visited, setVisited] = useState<ReadonlySet<MuseSection>>(
-    () => new Set<MuseSection>(["CARD"]),
+    () => new Set<MuseSection>([first]),
   );
+
+  /*
+   * The section showing before the current one, for the in-card switcher: it
+   * mounts with its pill there and slides across. And each group's last
+   * section, so About reopens on Canon if Canon was where you were.
+   */
+  const previous = useRef<MuseSection | null>(null);
+  const lastInGroup = useRef<Partial<Record<MuseGroupKey, MuseSection>>>({
+    [groupOf(first).key]: first,
+  });
+
   const choose = useCallback((next: MuseSection) => {
-    setSection(next);
+    setSection((current) => {
+      if (current !== next) previous.current = current;
+      return next;
+    });
+    lastInGroup.current[groupOf(next).key] = next;
     setVisited((open) => (open.has(next) ? open : new Set(open).add(next)));
   }, []);
+
+  const chooseGroup = useCallback(
+    (key: MuseGroupKey) => {
+      const group = MENU_GROUPS.find((g) => g.key === key);
+      if (!group) return;
+      choose(lastInGroup.current[key] ?? group.sections[0]);
+    },
+    [choose],
+  );
+
+  // A headcanon link followed while this screen is already up.
+  useEffect(() => {
+    if (openHeadcanonId) choose("HEADCANONS");
+  }, [choose, openHeadcanonId]);
 
   /*
    * Kept across a switch to a neighbour or a verse, as web keeps `nav` and
@@ -229,14 +287,17 @@ const MuseProfileBody = ({
    * and down under the reader's thumb.
    */
   const [nav, setNav] = useState<{
+    /** A muse has answered once; the verse row has something to say. */
+    loaded: boolean;
     next: MuseNavItem | null;
     prev: MuseNavItem | null;
     verses: MuseNavItem[];
-  }>({ next: null, prev: null, verses: [] });
+  }>({ loaded: false, next: null, prev: null, verses: [] });
 
   useEffect(() => {
     if (!muse) return;
     setNav({
+      loaded: true,
       next: muse.next ?? null,
       prev: muse.prev ?? null,
       verses: muse.verses ?? [],
@@ -258,7 +319,8 @@ const MuseProfileBody = ({
     (target: MuseNavItem) => {
       if (target.id === museId || switching) return;
       setPreview(target);
-      router.setParams({ museId: target.id });
+      // A headcanon link belongs to the character it was opened on.
+      router.setParams({ headcanon: undefined, museId: target.id });
     },
     [museId, router, switching],
   );
@@ -275,11 +337,14 @@ const MuseProfileBody = ({
 
   // The owner's writes, each patching `queryKeys.muse(id)` when it lands.
   const edit = useMuseEdit(muse?.id);
+  // Every section's header carries the privacy mark and, for the owner, the
+  // avatar camera (`header-tools.tsx`).
+  const headerTools = useMemo(() => ({ edit, isOwnMuse }), [edit, isOwnMuse]);
 
   /*
    * Creating a verse is the new-character form with `originalVerseId` set
    * (`app/edit-muse/new`), behind web's tier check: verses count toward the
-   * plan's character limit, so at the limit the "+" says so instead.
+   * character limit, so at the limit the "+" says so instead.
    */
   const museLimit = session.novelist?.tier?.museLimit ?? 0;
   const atMuseLimit = (session.novelist?.museCount ?? 0) >= museLimit;
@@ -288,7 +353,7 @@ const MuseProfileBody = ({
     if (atMuseLimit) {
       Alert.alert(
         "Character limit reached",
-        `You've reached your plan's limit of ${museLimit} characters (alternate verses count toward this too). Upgrade your tier or remove a character to add a new verse.`,
+        `You've reached your limit of ${museLimit} characters (alternate verses count toward this too). Remove a character to add a new verse.`,
       );
       return;
     }
@@ -346,6 +411,25 @@ const MuseProfileBody = ({
     if (muse?.pennedBy?.username) setAuthor(muse.pennedBy);
   }, [muse]);
 
+  // Inside a grouped tab, the switcher each of its sections draws under
+  // the name (web's phone layout).
+  const group = groupOf(section);
+  const switcher =
+    group.sections.length > 1 ? (
+      <SectionSwitcher
+        accent={look.accent}
+        active={section}
+        from={previous.current}
+        label={group.label}
+        onSelect={(key) => choose(key as MuseSection)}
+        options={group.sections.map((key) => ({
+          icon: SECTION_ICON[key],
+          key,
+          label: SECTION_LABEL[key],
+        }))}
+      />
+    ) : null;
+
   if (error && !muse) {
     return (
       <View style={styles.root}>
@@ -372,39 +456,39 @@ const MuseProfileBody = ({
       <Wallpaper look={look} onFrame={setWallpaperFrame} />
 
       <MuseBackdropProvider value={backdrop}>
+        <MuseHeaderContext.Provider value={headerTools}>
         <View style={styles.column}>
           {/*
-            The three rows above the stage are always mounted, each at a
+            The two rows above the stage are always mounted, each at a
             height that does not depend on what it holds. Going from one muse
             to the next, `muse` is null until the neighbour has loaded, and
             any row that waited for it collapsed for that moment: the stage
             and its spinner drew a row's height too high, then dropped into
             place when the answer came. So the byline draws its rules without
-            a signature until the author is known, the verse row draws a lone
-            "1" until the verses are, and the song slot is empty until the
-            song is — all at full height, so nothing under them moves.
+            a signature until the author is known, and the song slot is empty
+            until the song is — all at full height, so nothing under them
+            moves. The verses take their own row under the byline, as on
+            web's phone layout, drawn empty until the first muse answers.
           */}
           <Byline
             accent={look.accent}
             author={author?.username ? author : null}
             textColor={look.pennedByColor}
           />
+          <View style={styles.verses}>
+            {nav.loaded ? (
+              <VerseBar
+                accent={look.accent}
+                busy={switching}
+                currentId={muse?.id ?? preview?.id ?? null}
+                onCreate={isOwnMuse ? createVerse : undefined}
+                onSelect={goTo}
+                verses={nav.verses}
+              />
+            ) : null}
+          </View>
 
-          <VerseBar
-            accent={look.accent}
-            busy={switching}
-            currentId={muse?.id ?? preview?.id ?? null}
-            onCreate={isOwnMuse ? createVerse : undefined}
-            onSelect={goTo}
-            verses={nav.verses}
-          />
-
-          <SongBar
-            edit={edit}
-            isOwnMuse={isOwnMuse}
-            look={look}
-            muse={muse}
-          />
+          <SongBar edit={edit} isOwnMuse={isOwnMuse} look={look} muse={muse} />
 
           <MuseStage
             tabs={
@@ -416,8 +500,9 @@ const MuseProfileBody = ({
               />
             }
           >
-            {() =>
-              section === "CARD" ? (
+            {() => (
+              <SectionSwitcherContext.Provider value={switcher}>
+              {section === "CARD" ? (
                 <MuseCardSection
                   edit={edit}
                   isOwnMuse={isOwnMuse}
@@ -441,6 +526,14 @@ const MuseProfileBody = ({
                   look={look}
                   motion={motion}
                   muse={muse}
+                />
+              ) : section === "HEADCANONS" ? (
+                <MuseHeadcanonsSection
+                  active={visited.has("HEADCANONS")}
+                  look={look}
+                  motion={motion}
+                  muse={muse}
+                  openHeadcanonId={openHeadcanonId}
                 />
               ) : section === "POSTS" ? (
                 <MusePostsSection
@@ -471,12 +564,14 @@ const MuseProfileBody = ({
                   look={look}
                   muse={muse}
                 />
-              )
-            }
+              )}
+              </SectionSwitcherContext.Provider>
+            )}
           </MuseStage>
 
-          <SectionMenu look={look} onChange={choose} section={section} />
+          <SectionMenu look={look} onChange={chooseGroup} section={section} />
         </View>
+        </MuseHeaderContext.Provider>
       </MuseBackdropProvider>
     </View>
   );
@@ -552,7 +647,11 @@ const SongBar = ({
       {song ? (
         <View style={styles.songRow}>
           <View style={styles.songPill}>
-            <ProfileSongPill song={song} />
+            <ProfileSongPill
+              accent={look.accent}
+              reportable={!isOwnMuse}
+              song={song}
+            />
           </View>
           {isOwnMuse ? (
             <View style={[styles.songControls, { borderColor: tone }]}>
@@ -633,8 +732,10 @@ const SongBar = ({
  *
  * Blur is `expo-image`'s own. Brightness is a black wash at `1 − brightness`,
  * which is what a `brightness()` filter under 100% amounts to on a picture
- * that is already blurred to a smear. Greyscale has no counterpart without a
- * shader; on a picture this soft the difference is a tint, and it is dropped.
+ * that is already blurred to a smear. Greyscale is a grey layer blended in
+ * `saturation` mode, which takes the colour out of what is under it, faded to
+ * the muse's value. It blends with the picture alone: `isolation` keeps it from
+ * reaching past this view.
  */
 /** The black wash a `brightness()` under 100% amounts to, capped at 90%. */
 const wallpaperDim = (brightness: number) =>
@@ -661,7 +762,7 @@ const Wallpaper = ({
       }
       pointerEvents="none"
       ref={ref}
-      style={StyleSheet.absoluteFill}
+      style={[StyleSheet.absoluteFill, styles.wallpaperStack]}
     >
       {uri ? (
         <Image
@@ -672,6 +773,15 @@ const Wallpaper = ({
           source={{ uri }}
           style={StyleSheet.absoluteFill}
           transition={300}
+        />
+      ) : null}
+      {uri && filters.greyscale > 0 ? (
+        <View
+          style={[
+            StyleSheet.absoluteFill,
+            styles.wallpaperGrey,
+            { opacity: Math.min(filters.greyscale, 100) / 100 },
+          ]}
         />
       ) : null}
       <View
@@ -685,6 +795,10 @@ const Wallpaper = ({
 };
 
 const styles = StyleSheet.create({
+  /** The active circle's 31pt, its 3pt of track padding each side, and web's 10px foot. */
+  verses: { minHeight: 47 },
+  wallpaperGrey: { backgroundColor: "#808080", mixBlendMode: "saturation" },
+  wallpaperStack: { isolation: "isolate" },
   column: { flex: 1 },
   root: { flex: 1 },
   song: {

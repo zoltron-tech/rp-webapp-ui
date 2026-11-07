@@ -1,5 +1,6 @@
 "use client";
 
+import { REPORT_SENT_TOAST } from "@/utils/report";
 import { Flex, ShouldRender } from "@novelist-world/ui";
 import { type FC, useCallback, useState } from "react";
 import { BsThreeDots } from "react-icons/bs";
@@ -68,7 +69,7 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
     const response = await reportAction(promptId, "", "PROMPT");
     if (response?.message === API_MESSAGE.Success) {
       setPromptState({ promptAlert: null });
-      successToast(`Reported successfully`);
+      successToast(REPORT_SENT_TOAST);
     } else {
       errorToast("There was an issue while reporting this prompt.");
     }

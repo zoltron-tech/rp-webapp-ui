@@ -21,7 +21,7 @@ export const SheetOverlay = styled.div`
   animation: ${overlayFadeIn} 0.2s ease both;
 `;
 
-export const Sheet = styled.div<{ $wide?: boolean }>`
+export const Sheet = styled.div<{ $wide?: boolean; $fixed?: boolean }>`
   position: fixed;
   z-index: 301;
   display: flex;
@@ -33,6 +33,9 @@ export const Sheet = styled.div<{ $wide?: boolean }>`
   transform: translate(-50%, -50%);
   width: ${(p) => (p.$wide ? "min(94vw, 560px)" : "min(92vw, 420px)")};
   max-height: 85vh;
+  /* Fixed: one height whatever the content, so the dialog never jumps as
+     rows come and go. */
+  height: ${(p) => (p.$fixed ? "min(85vh, 640px)" : "auto")};
   animation: ${popIn} 0.16s cubic-bezier(0.16, 1, 0.3, 1) both;
 
   /* Mobile: slide up as a bottom sheet — it has to fit and scroll inside a
@@ -45,6 +48,7 @@ export const Sheet = styled.div<{ $wide?: boolean }>`
     width: auto;
     transform: none;
     max-height: 88svh;
+    height: ${(p) => (p.$fixed ? "82svh" : "auto")};
     border-radius: 22px 22px 0 0;
     border-bottom: none;
     animation: ${slideInUp} 0.3s cubic-bezier(0.4, 0, 0.2, 1) both;
@@ -116,6 +120,16 @@ export const SheetBody = styled.div`
   flex-direction: column;
   gap: 0.85rem;
   padding: 0.9rem;
+`;
+
+/** Pinned under the body; never scrolls away. */
+export const SheetFooter = styled.div`
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.75rem 0.9rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--glass-edge, var(--bg-4));
 `;
 
 // ── Form primitives ────────────────────────────────────────────────────────

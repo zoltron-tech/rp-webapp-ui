@@ -1,18 +1,20 @@
 import { Ionicons } from "@expo/vector-icons";
-import { mixColors } from "@nw/theme";
-import type { Muse, Prompt } from "@nw/types";
+import type { Friend, Muse, Prompt } from "@nw/types";
 import { toFormattedDate } from "@nw/utils";
+import { useRouter } from "expo-router";
 import { memo, useMemo, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { Text } from "@/components/text";
 import { CollapsibleRichText } from "@/components/collapsible-rich-text";
 import { FeedMedia } from "@/components/feed/feed-media";
 import { LikersSheet } from "@/components/feed/likers-sheet";
 import { PRIVACY_ICON, PRIVACY_LABEL } from "@/components/feed/privacy";
+import { SharedWithSheet } from "@/components/feed/shared-with-sheet";
 import { HeartButton } from "@/components/heart-button";
 import { MiniHeader } from "@/components/muse/mini-header";
 import {
   Divider,
+  itemFill,
   MusePanel,
   PANEL,
   SectionEmpty,
@@ -33,8 +35,7 @@ import { border, fontSize, radius, space } from "@/theme";
  * date and the privacy chip, the text, the picture, then the comment count
  * and the hearts — and so does this. The heart is live (`useToggleReaction`,
  * the same hook the feed uses) and its count opens the same likers tray; the
- * comment count is a count, because the prompt page it links to on web has no
- * counterpart on this client yet.
+ * comment count opens the prompt page.
  */
 export const MusePostsSection = ({
   active,
@@ -51,14 +52,21 @@ export const MusePostsSection = ({
   const query = useMusePrompts(muse?.id ?? undefined, active);
   const prompts = query.data;
   const [likers, setLikers] = useState<Prompt | null>(null);
+  const [sharedWith, setSharedWith] = useState<Friend[] | null>(null);
 
   return (
     <>
-      <MusePanel accent={accent} hideBackground={look.hideExpandedBackground}>
-        <MiniHeader look={look} muse={muse} />
-        <Divider accent={accent} />
-        <SectionLabel>Interactions</SectionLabel>
-
+      <MusePanel
+        accent={accent}
+        hideBackground={look.hideExpandedBackground}
+        header={
+          <>
+            <MiniHeader look={look} muse={muse} />
+            <Divider accent={accent} />
+            <SectionLabel>Interactions</SectionLabel>
+          </>
+        }
+      >
         {!prompts ? (
           <View style={styles.list}>
             <Shimmer height={120} />
@@ -78,7 +86,9 @@ export const MusePostsSection = ({
               <MusePromptCard
                 accent={accent}
                 key={prompt.id}
+                menuText={look.menuText}
                 onShowLikers={setLikers}
+                onShowSharedWith={setSharedWith}
                 prompt={prompt}
               />
             ))}
@@ -90,6 +100,11 @@ export const MusePostsSection = ({
         count={likers?.reactions ?? 0}
         onClose={() => setLikers(null)}
         targetId={likers?.id ?? null}
+      />
+
+      <SharedWithSheet
+        friends={sharedWith}
+        onClose={() => setSharedWith(null)}
       />
     </>
   );
@@ -103,13 +118,19 @@ const commentsLabel = (count: number) =>
 /** Web's `PromptCard` on the muse page — the compact one, not the feed's. */
 const MusePromptCard = memo(function MusePromptCard({
   accent,
+  menuText,
   onShowLikers,
+  onShowSharedWith,
   prompt,
 }: {
   accent?: string;
+  /** The side menu's text colour, which the date and comment count share. */
+  menuText?: string;
   onShowLikers: (prompt: Prompt) => void;
+  onShowSharedWith: (friends: Friend[]) => void;
   prompt: Prompt;
 }) {
+  const router = useRouter();
   const reaction = useToggleReaction({
     id: prompt.id,
     reacted: prompt.reacted,
@@ -122,9 +143,16 @@ const MusePromptCard = memo(function MusePromptCard({
     [prompt.createdOn],
   );
 
-  // A solid hex, because the fold's fade has to dissolve into *something*.
-  const surface = accent ? mixColors(accent, 0.14, "#0a0a0e") : "#141418";
-  const tint = accent ?? PANEL.secondary;
+  const sharedWith =
+    prompt.privacy === "CUSTOM" ? (prompt.sharedWith ?? []) : [];
+
+  // The items' shared 70% fill. The fold's fade dissolves into the same
+  // colour, so where it ends the card reads as one surface.
+  const surface = itemFill(accent);
+  // The date and the comment count read in the side menu's ink (its
+  // resting text: the muse's menu text colour at 70%, else soft white) —
+  // quiet metadata, where the accent is kept for what can be tapped.
+  const tint = menuText ? withAlpha(menuText, 0.7) : "rgba(255,255,255,0.6)";
 
   return (
     <View
@@ -138,7 +166,11 @@ const MusePromptCard = memo(function MusePromptCard({
     >
       <View style={styles.topRow}>
         <Text style={[styles.date, { color: tint }]}>{when}</Text>
-        <View
+        <Pressable
+          accessibilityRole={sharedWith.length > 0 ? "button" : undefined}
+          disabled={sharedWith.length === 0}
+          hitSlop={space.xs}
+          onPress={() => onShowSharedWith(sharedWith)}
           style={[
             styles.privacy,
             {
@@ -153,11 +185,11 @@ const MusePromptCard = memo(function MusePromptCard({
             size={10}
           />
           <Text style={styles.privacyLabel}>
-            {prompt.privacy === "CUSTOM" && prompt.sharedWith?.length
-              ? `Shared with ${prompt.sharedWith.length}`
+            {sharedWith.length > 0
+              ? `Shared with ${sharedWith.length}`
               : (PRIVACY_LABEL[prompt.privacy] ?? prompt.privacy)}
           </Text>
-        </View>
+        </Pressable>
       </View>
 
       {prompt.text ? (
@@ -172,12 +204,25 @@ const MusePromptCard = memo(function MusePromptCard({
       {prompt.media ? <FeedMedia url={prompt.media} /> : null}
 
       <View style={styles.footer}>
-        <View style={styles.comments}>
+        <Pressable
+          accessibilityRole="link"
+          hitSlop={space.sm}
+          onPress={() =>
+            router.push({
+              params: { promptId: prompt.id },
+              pathname: "/prompt/[promptId]",
+            })
+          }
+          style={({ pressed }) => [
+            styles.comments,
+            { opacity: pressed ? 0.6 : 1 },
+          ]}
+        >
           <Ionicons color={tint} name="chatbubble-outline" size={12} />
           <Text style={[styles.commentsLabel, { color: tint }]}>
             {commentsLabel(prompt.commentCount ?? 0)}
           </Text>
-        </View>
+        </Pressable>
         <HeartButton
           compact
           liked={reaction.reacted}

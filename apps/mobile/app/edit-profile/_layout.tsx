@@ -56,6 +56,8 @@ const EditProfileStack = () => {
       <Stack.Screen name="account" options={{ title: "Account" }} />
       <Stack.Screen name="devices" options={{ title: "Devices" }} />
       <Stack.Screen name="notifications" options={{ title: "Notifications" }} />
+      <Stack.Screen name="privacy" options={{ title: "Profile privacy" }} />
+      <Stack.Screen name="referrals" options={{ title: "Your circle" }} />
     </Stack>
   );
 };

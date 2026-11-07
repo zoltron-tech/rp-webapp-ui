@@ -1,5 +1,6 @@
 "use client";
 
+import { REPORT_SENT_TOAST } from "@/utils/report";
 import { Flex } from "@novelist-world/ui";
 import { isSupportNovelist } from "@nw/chat";
 import type { Fandom, Novelist, NWImage, Prompt, StoryBoard } from "@nw/types";
@@ -243,6 +244,11 @@ const useGetActivities = (username: string) => {
     fetchActivities();
   }, [fetchActivities]);
 
+  /** Drops one activity the owner just deleted; the server has already forgotten it. */
+  const removeActivity = useCallback((id: string) => {
+    setActivities((prev) => prev?.filter((activity) => activity.id !== id));
+  }, []);
+
   return {
     activities,
     error,
@@ -250,6 +256,7 @@ const useGetActivities = (username: string) => {
     loadingMore,
     loadMore,
     refetch: fetchActivities,
+    removeActivity,
     stopPageLoading,
   };
 };
@@ -295,6 +302,7 @@ export default function UserProfilePage({}) {
     hasMore: hasMoreActivities,
     loadingMore: loadingMoreActivities,
     loadMore: loadMoreActivities,
+    removeActivity,
   } = useGetActivities(username);
   const { width } = useWindowDimensions();
   const isMobile = (width ?? 0) <= 800;
@@ -578,7 +586,7 @@ export default function UserProfilePage({}) {
     const response = await reportProfile(novelist.id, "");
     if (response?.message === API_MESSAGE.Success) {
       setShowReportAlert(false);
-      successToast(`Reported ${novelist.username}`);
+      successToast(REPORT_SENT_TOAST);
     } else {
       errorToast("There was an issue while reporting this profile.");
     }
@@ -1170,27 +1178,6 @@ export default function UserProfilePage({}) {
               <S.NameMobile>
                 {novelist?.firstName} {novelist?.lastName}
               </S.NameMobile>
-              {/* <S.ExtendedBadge
-                tier={novelist?.tier.name || "standard"}
-                className={`badge-${novelist?.tier.name?.toLowerCase()}`}
-                onClick={toTiersPage}
-              >
-                {novelist?.tier.name === "STANDARD" && (
-                  <TbSquareRoundedLetterSFilled />
-                )}
-                {novelist?.tier.name === "SILVER" && <GiCircleClaws />}
-                {novelist?.tier.name === "SILVER" && (
-                  <TbCircleLetterS className="letter" />
-                )}
-                {novelist?.tier.name === "GOLD" && <GiGoldShell />}
-                {novelist?.tier.name === "GOLD" && (
-                  <TbCircleLetterG className="letter" />
-                )}
-                {novelist?.tier.name === "PREMIUM" && <GiStarSwirl />}
-                {novelist?.tier.name === "PREMIUM" && (
-                  <TbCircleLetterP className="letter" />
-                )}
-              </S.ExtendedBadge> */}
             </Flex>
             <S.UsernameContainer>
               <Username username={username} primary />{" "}
@@ -1267,6 +1254,7 @@ export default function UserProfilePage({}) {
                     song={profileSong}
                     block
                     flushBottom={hasAbout}
+                    reportable={!isCurrentUser}
                   />
                 )}
                 <ShouldRender if={hasAbout}>
@@ -1309,7 +1297,7 @@ export default function UserProfilePage({}) {
                 </S.FandomChipRow>
               </S.FandomSection>
             )}
-            {novelist?.id && (
+            {novelist?.id && !isSupportNovelist(username) && (
               <ShelfTeaser
                 novelistId={novelist.id}
                 username={username}
@@ -1458,7 +1446,11 @@ export default function UserProfilePage({}) {
                   <>
                     <S.ActivitiesContainer>
                       {activities.map((activity) => (
-                        <ActivityBox key={activity?.id} activity={activity} />
+                        <ActivityBox
+                          key={activity?.id}
+                          activity={activity}
+                          onDeleted={removeActivity}
+                        />
                       ))}
                     </S.ActivitiesContainer>
                     <LoadMore

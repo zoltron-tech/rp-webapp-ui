@@ -9,14 +9,177 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
+      "icon": "./assets/app-icons/jade.png",
+      "splash": {
+        "image": "./assets/splash-mark.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#0e5f4d",
+        "dark": {
+          "image": "./assets/splash-mark.png",
+          "backgroundColor": "#0e5f4d"
+        }
+      },
       "supportsTablet": true,
       "bundleIdentifier": "world.novelist.app",
+      "usesAppleSignIn": true,
+      "associatedDomains": [
+        "applinks:www.novelist.world",
+        "applinks:novelist.world"
+      ],
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
+      },
+      "privacyManifests": {
+        "NSPrivacyTracking": false,
+        "NSPrivacyTrackingDomains": [],
+        "NSPrivacyCollectedDataTypes": [
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeEmailAddress",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeName",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeUserID",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeDeviceID",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypePhotosorVideos",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeAudioData",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeEmailsOrTextMessages",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeOtherUserContent",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          },
+          {
+            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeCustomerSupport",
+            "NSPrivacyCollectedDataTypeLinked": true,
+            "NSPrivacyCollectedDataTypeTracking": false,
+            "NSPrivacyCollectedDataTypePurposes": [
+              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
+            ]
+          }
+        ],
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": ["CA92.1"]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryFileTimestamp",
+            "NSPrivacyAccessedAPITypeReasons": ["C617.1", "0A2A.1", "3B52.1"]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategorySystemBootTime",
+            "NSPrivacyAccessedAPITypeReasons": ["35F9.1"]
+          },
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryDiskSpace",
+            "NSPrivacyAccessedAPITypeReasons": ["E174.1", "85F4.1"]
+          }
+        ]
       }
     },
     "android": {
       "package": "world.novelist.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ],
+          "data": [
+            {
+              "host": "www.novelist.world",
+              "pathPrefix": "/rp/story/",
+              "scheme": "https"
+            },
+            {
+              "host": "www.novelist.world",
+              "path": "/rp/reset-password",
+              "scheme": "https"
+            },
+            {
+              "host": "www.novelist.world",
+              "path": "/rp/verify-email",
+              "scheme": "https"
+            },
+            {
+              "host": "www.novelist.world",
+              "path": "/rp/login",
+              "scheme": "https"
+            },
+            {
+              "host": "novelist.world",
+              "pathPrefix": "/rp/story/",
+              "scheme": "https"
+            },
+            {
+              "host": "novelist.world",
+              "path": "/rp/reset-password",
+              "scheme": "https"
+            },
+            {
+              "host": "novelist.world",
+              "path": "/rp/verify-email",
+              "scheme": "https"
+            },
+            {
+              "host": "novelist.world",
+              "path": "/rp/login",
+              "scheme": "https"
+            }
+          ]
+        }
+      ],
       "edgeToEdgeEnabled": true,
       "allowBackup": false,
       "blockedPermissions": [
@@ -24,14 +187,21 @@
         "android.permission.SYSTEM_ALERT_WINDOW"
       ],
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/app-icons/jade-foreground.png",
+        "backgroundImage": "./assets/app-icons/jade-background.png",
+        "monochromeImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0e5f4d"
       },
       "googleServicesFile": "./google-services.json"
     },
     "plugins": [
       "expo-router",
-      "expo-secure-store",
+      [
+        "expo-secure-store",
+        {
+          "faceIDPermission": false
+        }
+      ],
       [
         "expo-notifications",
         {
@@ -43,8 +213,8 @@
       [
         "expo-image-picker",
         {
-          "cameraPermission": "Novelist World uses the camera when you take a photo to send in a conversation.",
-          "photosPermission": "Novelist World uses your photos so you can send pictures and videos in a conversation.",
+          "cameraPermission": "Novelist World uses the camera when you choose to take a photo to send in a conversation.",
+          "photosPermission": "Novelist World uses the photos and videos you choose for your profile picture and banner, your characters' images and galleries, your stories and maps, and the posts and messages you send.",
           "microphonePermission": false
         }
       ],
@@ -52,6 +222,7 @@
       "./plugins/with-animated-webp",
       "./plugins/with-windows-ninja",
       "./plugins/with-pod-deployment-target",
+      "./plugins/with-app-icons",
       [
         "expo-sqlite",
         {
@@ -69,6 +240,14 @@
         "projectId": "d6f2fae2-e08b-4302-8b75-57a24ad14bb4"
       }
     },
-    "owner": "zoltron-tech"
+    "owner": "zoltron-tech",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "checkAutomatically": "ON_ERROR_RECOVERY",
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/d6f2fae2-e08b-4302-8b75-57a24ad14bb4"
+    }
   }
 }

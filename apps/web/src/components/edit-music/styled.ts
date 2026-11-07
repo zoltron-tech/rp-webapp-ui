@@ -321,6 +321,14 @@ export const Button = styled.button<{ $variant?: "primary" | "secondary" }>`
   }
 `;
 
+/** The upload rights notice under the file picker (APP_STORE_REVIEW_PLAN.md M12). */
+export const RightsNotice = styled.p`
+  color: var(--text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.45;
+  margin: 8px 0 0;
+`;
+
 export const ErrorMessage = styled.div`
   color: var(--error);
   font-size: var(--font-size-small);

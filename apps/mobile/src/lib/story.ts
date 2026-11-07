@@ -449,6 +449,9 @@ const CODEX_ICONS: Record<string, string> = {
   trees: "pine-tree",
 };
 
+/** Web's `CODEX_ICON_KEYS`: what a category or an entry may wear. */
+export const CODEX_ICON_KEYS = Object.keys(CODEX_ICONS);
+
 export const codexIcon = (key: string | null | undefined): string =>
   CODEX_ICONS[key ?? ""] ?? CODEX_ICONS.sparkles;
 

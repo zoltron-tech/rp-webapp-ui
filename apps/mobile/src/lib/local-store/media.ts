@@ -1,6 +1,7 @@
 import { reverseWsrvUrl } from "@nw/utils";
 import { Image as ExpoImage } from "expo-image";
 import { Directory, File, Paths } from "expo-file-system";
+import { readDirectoryAsync } from "expo-file-system/legacy";
 import { useSyncExternalStore } from "react";
 import { getStore, type LocalStore } from "./db";
 import { readMeta } from "./meta";
@@ -14,8 +15,10 @@ import { readMeta } from "./meta";
  * The bytes live under `Paths.cache/nw-media/<novelistId>/`, one file per
  * URL, named by a hash of the URL. Caches, not Documents: Apple's
  * data-storage guidelines keep re-downloadable data out of what iCloud backs
- * up, and the OS may reclaim it under storage pressure — `loadMediaIndex`
- * notices the directory gone and starts the index over. The index — which URL is which file, how
+ * up, and the OS may reclaim it under storage pressure, the whole directory
+ * or file by file. `loadMediaIndex` checks the index against the disk, and
+ * the `Image` wrapper calls `evictMissingMedia` when a file goes while the app
+ * is running. The index — which URL is which file, how
  * big, what kind, when last shown — is the `media` table in the encrypted
  * store, and a copy of it is held in memory so a render can answer "is this
  * cached?" synchronously. `expo-image` keeps its own memory/disk cache on top
@@ -132,16 +135,26 @@ export const loadMediaIndex = async (store: LocalStore): Promise<void> => {
     path: string;
     url: string;
   }>("SELECT url, path, bytes, kind, last_used_at, expires_at FROM media");
+  const root = mediaRoot(store.userId);
+  // Before the index empties: a render in the wait would download everything.
+  const onDisk = rows.length > 0 && root.exists ? await filesIn(root) : null;
   index.clear();
   // The OS may have reclaimed the cache directory while the app was away. An
   // index of files that are not there would draw nothing; start over.
-  if (rows.length > 0 && !mediaRoot(store.userId).exists) {
+  if (rows.length > 0 && !root.exists) {
     await store.write(() => store.db.runAsync("DELETE FROM media"));
     indexedFor = store.userId;
     notify();
     return;
   }
+  // Or only some of it: the directory stays and files inside it go. A path is
+  // compared whole, because iOS moves the app's container on an update.
+  const missing: string[] = [];
   for (const row of rows) {
+    if (onDisk && !onDisk.has(row.path)) {
+      missing.push(row.url);
+      continue;
+    }
     if (row.kind === "chat") chatOrigins.add(originOf(row.url));
     index.set(row.url, {
       bytes: row.bytes,
@@ -151,6 +164,13 @@ export const loadMediaIndex = async (store: LocalStore): Promise<void> => {
       kind: row.kind,
       lastUsedAt: row.last_used_at,
       path: row.path,
+    });
+  }
+  if (missing.length > 0) {
+    await store.write(async () => {
+      for (const url of missing) {
+        await store.db.runAsync("DELETE FROM media WHERE url = ?", url);
+      }
     });
   }
   indexedFor = store.userId;
@@ -170,6 +190,19 @@ export const clearMediaIndex = () => {
 
 const mediaRoot = (userId: string) =>
   new Directory(Paths.cache, "nw-media", userId);
+
+/**
+ * The URI of every file in `root`, or null if it could not be read. Listed off
+ * the JS thread: this runs during launch, over thousands of files.
+ */
+const filesIn = async (root: Directory): Promise<Set<string> | null> => {
+  try {
+    const names = await readDirectoryAsync(root.uri);
+    return new Set(names.map((name) => new File(root, name).uri));
+  } catch {
+    return null;
+  }
+};
 
 /** URLs tried and refused this session (too large, not a file), not retried. */
 const refused = new Set<string>();
@@ -241,6 +274,39 @@ export const resolveMediaUri = (
 };
 
 export const isMediaCached = (url: string) => index.has(url);
+
+/** How often each URL's file has gone missing. See `mediaEvictions`. */
+const evictions = new Map<string, number>();
+
+/** Changes when `url` stops resolving to a file, so a drawn source can follow. */
+export const mediaEvictions = (url: string | null | undefined): number =>
+  (url && evictions.get(url)) || 0;
+
+/**
+ * A picture failed to draw from its file: if the file is gone, forgets it and
+ * answers true, and `url` resolves to the network again. Answers false for any
+ * other failure, which is the picture's own. A file that is there and will not
+ * decode stays: downloading it again would only fail the same way, forever.
+ */
+export const evictMissingMedia = (url: string | null | undefined): boolean => {
+  const entry = url ? index.get(url) : undefined;
+  if (!url || !entry) return false;
+  try {
+    if (new File(entry.path).exists) return false;
+  } catch {
+    // A path that cannot be read is as gone as one that is not there.
+  }
+  index.delete(url);
+  evictions.set(url, mediaEvictions(url) + 1);
+  const open = store();
+  if (open) {
+    void open
+      .write(() => open.db.runAsync("DELETE FROM media WHERE url = ?", url))
+      .catch(() => {});
+  }
+  notify();
+  return true;
+};
 
 /**
  * `resolveMediaUri` as a hook. The snapshot is this URL's path, so only the
@@ -337,7 +403,9 @@ const pump = async () => {
 };
 
 const chatRetentionMs = async (open: LocalStore): Promise<number> => {
-  const override = Number((await readMeta(open, CHAT_RETENTION_META).catch(() => null)) ?? 0);
+  const override = Number(
+    (await readMeta(open, CHAT_RETENTION_META).catch(() => null)) ?? 0,
+  );
   return override > 0 ? override : CHAT_MEDIA_RETENTION_MS;
 };
 
@@ -372,7 +440,8 @@ const download = async (url: string): Promise<void> => {
     kind: "general" as MediaKind,
   };
   const now = Date.now();
-  const expiresAt = kind === "chat" ? now + (await chatRetentionMs(still)) : null;
+  const expiresAt =
+    kind === "chat" ? now + (await chatRetentionMs(still)) : null;
   const entry: Entry = {
     bytes,
     explicit,
@@ -514,7 +583,12 @@ export const wipeStrayFiles = (): void => {
 
 export const mediaStats = async (
   open: LocalStore,
-): Promise<{ bytes: number; chat: number; general: number; queued: number }> => {
+): Promise<{
+  bytes: number;
+  chat: number;
+  general: number;
+  queued: number;
+}> => {
   const row = await open.db.getFirstAsync<{
     bytes: number | null;
     chat: number;

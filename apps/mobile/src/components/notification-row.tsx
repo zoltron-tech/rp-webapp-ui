@@ -4,14 +4,16 @@ import {
   notificationHue,
   notificationKicker,
   queryKeys,
+  useApi,
   useNotificationReadState,
 } from "@nw/features";
 import { mixColors } from "@nw/theme";
-import type { NovelistWorldNotification } from "@nw/types";
+import { API_MESSAGE, type NovelistWorldNotification } from "@nw/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { memo } from "react";
+import { memo, useState } from "react";
 import { Alert, Pressable, StyleSheet, View } from "react-native";
+import { reactToMuseConnection } from "@nw/api/endpoints/muse-connection";
 import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { useConnectionAction } from "@/hooks/use-connection";
@@ -29,17 +31,18 @@ import { Button } from "@/components/button";
  * sentence is the server's, shown as it comes, with the name in the text
  * colour and the action in the secondary one.
  *
- * Unread is a faint wash of that same colour and a dot at the end, over the
- * group's panel. The accent wash this replaces made three unread rows louder
- * than the rest of the screen put together; a wash in the row's own hue, at a
- * tenth, reads as a highlight on the row rather than an alarm.
+ * Unread is the dot beside the time and brighter text. A coloured wash said the
+ * same thing a third time, in a different hue on every row, and made the list the
+ * loudest thing in the app. The time shares the kicker's line, so a row is two
+ * lines where it was three.
  *
  * ## Where it goes
  *
  * `notificationHref` owns that, and returns `null` for the kinds this client
  * has no screen for yet (storyboards). A row with nowhere to go is drawn
- * without press feedback and without the chevron, rather than being a tap that
- * does nothing.
+ * without press feedback, rather than being a tap that does nothing. There are
+ * no chevrons: Apple keeps them for the next level of a hierarchy, and these rows
+ * jump to many places.
  *
  * ## The one row that does something in place
  *
@@ -101,6 +104,11 @@ const NotificationRowView = ({
   const href = notificationHref(notification);
   const hue = notificationHue(notification);
   const isRequest = notification.type === "FRIEND_REQUEST";
+  const isMuseRequest = notification.type === "MUSE_CONNECTION_REQUEST";
+  const api = useApi();
+  const [museAnswer, setMuseAnswer] = useState<"accept" | "reject" | null>(
+    null,
+  );
   // The latest performer is the row's source; a second face shows it is a crowd.
   const second = (notification.actors ?? []).find(
     (actor) => actor.id !== source?.id,
@@ -110,10 +118,26 @@ const NotificationRowView = ({
   // The kind's colour, mixed toward the theme's text so the kicker stays
   // readable on a light page and a dark one alike.
   const kickerColor = mixColors(hue, 0.62, theme.text);
-  const wash = mixColors(hue, 0.12, panel);
 
   const busy = action.isPending;
   const running = busy ? action.variables?.action : undefined;
+
+  /** A character connection: web's `answerMuse`. Keyed by the notification. */
+  const answerMuse = async (name: "accept" | "reject") => {
+    if (museAnswer) return;
+    setMuseAnswer(name);
+    const result = await reactToMuseConnection(
+      api,
+      notification.id,
+      name === "accept",
+    ).catch(() => null);
+    setMuseAnswer(null);
+    if (result?.message !== API_MESSAGE.Success) {
+      Alert.alert("Not saved", "Could not update the connection. Try again.");
+      return;
+    }
+    onAnswered?.(notification.id);
+  };
 
   const answer = (name: "accept" | "reject", what: string) => {
     if (busy || !source?.id) return;
@@ -130,7 +154,7 @@ const NotificationRowView = ({
 
   return (
     <Pressable
-      accessibilityLabel={`${notificationKicker(notification)}. ${source?.title ?? "Someone"} ${notification.notificationText}`}
+      accessibilityLabel={`${notification.isRead ? "" : "Unread. "}${notificationKicker(notification)}. ${source?.title ?? "Someone"} ${notification.notificationText}`}
       accessibilityRole={href ? "button" : "text"}
       disabled={!href}
       onPress={() => {
@@ -151,12 +175,7 @@ const NotificationRowView = ({
         (place === "first" || place === "only") && styles.rowTop,
         (place === "last" || place === "only") && styles.rowBottom,
         {
-          backgroundColor:
-            pressed && href
-              ? theme.material.fillPressed
-              : notification.isRead
-                ? panel
-                : wash,
+          backgroundColor: pressed && href ? theme.material.fillPressed : panel,
           borderColor: theme.material.edge,
         },
       ]}
@@ -197,9 +216,20 @@ const NotificationRowView = ({
       </View>
 
       <View style={styles.body}>
-        <Text numberOfLines={1} style={[styles.kicker, { color: kickerColor }]}>
-          {notificationKicker(notification)}
-        </Text>
+        <View style={styles.kickerRow}>
+          <Text
+            numberOfLines={1}
+            style={[styles.kicker, { color: kickerColor }]}
+          >
+            {notificationKicker(notification)}
+          </Text>
+          <Text style={[styles.when, { color: theme.textGray }]}>
+            {relativeTime(notification.date)}
+          </Text>
+          {notification.isRead ? null : (
+            <View style={[styles.dot, { backgroundColor: hue }]} />
+          )}
+        </View>
 
         <Text
           numberOfLines={3}
@@ -217,45 +247,35 @@ const NotificationRowView = ({
           {notification.notificationText}
         </Text>
 
-        <Text style={[styles.when, { color: theme.textGray }]}>
-          {relativeTime(notification.date)}
-        </Text>
-
-        {isRequest ? (
+        {isRequest || isMuseRequest ? (
           <View style={styles.actions}>
             <Button
-              busy={running === "accept"}
+              busy={running === "accept" || museAnswer === "accept"}
               icon="checkmark"
               label="Accept"
-              onPress={() => answer("accept", "Accepting")}
+              onPress={() =>
+                isRequest
+                  ? answer("accept", "Accepting")
+                  : void answerMuse("accept")
+              }
               hitSlop={space.xs}
               size="xs"
               variant="positive"
             />
             <Button
-              busy={running === "reject"}
+              busy={running === "reject" || museAnswer === "reject"}
               icon="close"
               label="Decline"
-              onPress={() => answer("reject", "Declining")}
+              onPress={() =>
+                isRequest
+                  ? answer("reject", "Declining")
+                  : void answerMuse("reject")
+              }
               hitSlop={space.xs}
               size="xs"
               variant="quiet"
             />
           </View>
-        ) : null}
-      </View>
-
-      <View style={styles.tail}>
-        {notification.isRead ? null : (
-          <View style={[styles.dot, { backgroundColor: hue }]} />
-        )}
-        {href ? (
-          <Ionicons
-            color={theme.textGray}
-            name="chevron-forward"
-            size={14}
-            style={styles.chevron}
-          />
         ) : null}
       </View>
     </Pressable>
@@ -275,7 +295,6 @@ const styles = StyleSheet.create({
     marginTop: space.sm,
   },
   body: { flex: 1, gap: space.xxs, minWidth: 0 },
-  chevron: { opacity: 0.6 },
   dot: { borderRadius: radius.xs, height: 8, width: 8 },
   // A ring in the panel's colour parts the front face from the one behind.
   faceBack: {
@@ -294,7 +313,9 @@ const styles = StyleSheet.create({
     right: 0,
   },
   faces: { height: AVATAR, width: AVATAR },
+  kickerRow: { alignItems: "center", flexDirection: "row", gap: space.sm },
   kicker: {
+    flex: 1,
     fontSize: fontSize.eyebrow,
     fontWeight: "700",
     letterSpacing: 0.5,
@@ -337,7 +358,6 @@ const styles = StyleSheet.create({
     borderTopRightRadius: radius.card,
     borderTopWidth: border.edge,
   },
-  tail: { alignItems: "center", gap: space.xs, paddingTop: space.m },
   text: { fontSize: fontSize.body, lineHeight: 20 },
   when: { fontSize: fontSize.caption },
 });

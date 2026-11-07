@@ -6,7 +6,12 @@ import { reverseWsrvUrl } from "@nw/utils/image";
 import { useCallback, useRef, useState } from "react";
 import { Alert } from "react-native";
 import type { CropState } from "@/hooks/use-muse-edit";
-import { MAX_IMAGE_BYTES, pickImage, uploadFile } from "@/lib/media-upload";
+import {
+  alertMediaRejected,
+  MAX_IMAGE_BYTES,
+  pickImage,
+  uploadFile,
+} from "@/lib/media-upload";
 
 /**
  * Pick → upload → crop → save, for the avatar and the card background.
@@ -73,14 +78,15 @@ export const useImageCropFlow = ({
     setUploading(true);
     setVisible(true);
 
-    const url = await uploadFile(api, file, prefix ?? undefined);
+    const { rejected, url } = await uploadFile(api, file, prefix ?? undefined);
     if (run !== generation.current) {
       if (url) void deleteMedia(api, url);
       return false;
     }
     setUploading(false);
     if (!url) {
-      Alert.alert("Upload failed", "Please try again.");
+      if (rejected) alertMediaRejected();
+      else Alert.alert("Upload failed", "Please try again.");
       setVisible(false);
       return false;
     }
@@ -105,6 +111,16 @@ export const useImageCropFlow = ({
     },
     [pickAndUpload],
   );
+
+  /** A picture already in storage — the gallery's — to crop and save. */
+  const openUrl = useCallback((url: string) => {
+    remote.current = reverseWsrvUrl(url) ?? url;
+    setUri(remote.current);
+    setInitial({ scale: 1, x: 50, y: 50 });
+    setAutoFit(true);
+    setUploading(false);
+    setVisible(true);
+  }, []);
 
   const close = useCallback(() => {
     generation.current += 1;
@@ -137,6 +153,7 @@ export const useImageCropFlow = ({
     confirm,
     initial,
     open,
+    openUrl,
     /** "Replace" inside the tray: a different file, same flow. */
     replace: pickAndUpload,
     saving,

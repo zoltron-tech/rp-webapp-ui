@@ -9,6 +9,14 @@
  */
 export const queryKeys = {
   authUser: () => ["session", "user"] as const,
+  /** Every chapter you have saved your place in. Web's `/rp/bookmarks`. */
+  bookmarks: () => ["bookmarks"] as const,
+  /** The sound cues of one chapter. */
+  chapterSoundscape: (eventId: string) =>
+    ["story-chapter", eventId, "sound"] as const,
+  /** Your saved place in one chapter. */
+  chapterBookmark: (eventId: string) =>
+    ["bookmarks", "chapter", eventId] as const,
   conversation: (conversationId: string) =>
     ["conversations", conversationId] as const,
   conversationMembers: (conversationId: string) =>
@@ -88,6 +96,8 @@ export const queryKeys = {
     ["profile", username, "friends"] as const,
   novelistLeaderboard: () => ["leaderboard", "novelists"] as const,
   novelistMuses: (username: string) => ["profile", username, "muses"] as const,
+  /** Your own songs: the endpoint answers for the caller. */
+  ownMusic: () => ["own-music"] as const,
   /**
    * A novelist's own out-of-character posts, paged.
    *
@@ -111,6 +121,8 @@ export const queryKeys = {
    * outgoing replies, and nothing that invalidates a prompt should refetch it.
    */
   outgoingThreads: () => ["outgoing-threads"] as const,
+  /** Threads with new replies, across every page of that list. */
+  outgoingUnreadCount: () => ["outgoing-threads", "unread"] as const,
   profile: (username: string) => ["profile", username] as const,
   /** One prompt by id — the prompt page, reached from an activity. */
   prompt: (promptId: string) => ["prompt", promptId] as const,
@@ -150,6 +162,7 @@ export const queryKeys = {
     ["story", storyId, "characters"] as const,
   storyCodex: (storyId: string) => ["story", storyId, "codex"] as const,
   storyMaps: (storyId: string) => ["story", storyId, "maps"] as const,
+  storyNotes: (storyId: string) => ["story", storyId, "notes"] as const,
   storyTimeline: (storyId: string) => ["story", storyId, "timeline"] as const,
   /**
    * One thread — the comment at its root, with the prompt it hangs off.

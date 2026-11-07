@@ -31,6 +31,11 @@ export const FeedShimmerList = styled.div`
   flex-direction: column;
   gap: 16px;
   width: min(480px, 100%);
+
+  /* One ghost per list now, so the rails can sit between them. */
+  & + & {
+    margin-top: 16px;
+  }
 `;
 
 export const FeedShimmerItem = styled.div`
@@ -128,30 +133,6 @@ export const NovelistCardShimmer = styled.div`
   }
 `;
 
-// ─── Friends strip shimmers ───────────────────────────────────────────────────
-
-export const SidebarShimmerItem = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  flex-shrink: 0;
-  gap: 6px;
-`;
-
-export const SidebarShimmerAvatar = styled.div`
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  ${shimmer}
-`;
-
-export const SidebarShimmerName = styled.div`
-  height: 8px;
-  width: 44px;
-  border-radius: 4px;
-  ${shimmer}
-`;
-
 export const PageContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -212,12 +193,28 @@ export const ContentContainer = styled.div`
   }
 `;
 
-/** Single "continue reading" bookmark card above Stories — not a carousel,
- * so just a centered, comfortably wide single item. */
-export const ContinueReadingWrap = styled.div`
+/** The composer at the top of Home: the feed cards' width (800px at most,
+ * centred), so the pill and the inline composer line up with the posts. */
+export const ComposeWrap = styled.div`
   width: 100%;
-  max-width: 700px;
-  padding-inline: 4px;
+  max-width: 800px;
+  margin: 8px auto 0;
+`;
+
+/** The "continue reading" bookmark and its heading: the feed cards' width
+ * (`Prompt`'s and `ActivityBox`'s wrappers — 800px at most, centred, 8px in
+ * from each side once the screen is narrower), so the card lines up with
+ * the posts under it and the heading with their edge. */
+export const ContinueReadingWrap = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 800px;
+  margin-inline: auto;
+
+  @media screen and (max-width: 800px) {
+    width: calc(100% - 16px);
+  }
 `;
 
 export const ActivityContainer = styled.div`
@@ -226,7 +223,7 @@ export const ActivityContainer = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  margin-top: 28px;
+  margin-top: 22px;
   padding-bottom: 20px;
 `;
 
@@ -265,59 +262,6 @@ export const SubText = styled.h2`
   }
 `;
 
-/** Empty state inside the friends strip. Inline and compact, the same shape as
- *  the ice breaker rail's — SubText was being reused here, but that is the
- *  section-heading style (uppercase, italic, 18px) and read as a second title. */
-export const FriendsEmptyState = styled.div`
-  display: flex;
-  align-items: center;
-  align-self: center;
-  gap: 8px;
-  padding-right: 14px;
-  color: var(--text-secondary);
-  font-family: var(--font);
-  font-size: 12px;
-  line-height: 1.4;
-
-  /* The art carries its own colour and opacity, so it is left alone here. */
-  svg {
-    flex-shrink: 0;
-  }
-
-  span {
-    max-width: 26ch;
-  }
-`;
-
-export const AddFriendButton = styled.button`
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: 1.5px dashed color-mix(in srgb, var(--bg-12) 22%, transparent);
-  background: var(--material-fill);
-  color: var(--text-secondary);
-  ${FOCUS_RING}
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  align-self: center;
-  transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease,
-    transform 0.15s ease;
-
-  &:hover {
-    border-color: var(--accent-11, var(--accent));
-    color: var(--accent-11, var(--accent));
-    background: var(--fill-hover);
-    transform: scale(1.08);
-  }
-
-  &:active {
-    transform: scale(0.95);
-  }
-`;
-
 export const PartitionContainer = styled.div`
   width: 100%;
   display: flex;
@@ -349,7 +293,7 @@ export const PartitionContainer = styled.div`
   }
 `;
 
-/** Positioning context for a PartitionContainer/FriendsStrip row plus its
+/** Positioning context for a PartitionContainer row plus its
  * left/right ScrollNavButtons. */
 export const ScrollRowWrap = styled.div`
   position: relative;
@@ -405,21 +349,6 @@ export const ScrollNavButton = styled.button<{
   }
 
   ${FOCUS_RING}
-`;
-
-/** Friends strip — same scrollable row as PartitionContainer, plus vertical
- * padding so the avatar's hover outline has room and isn't clipped by the
- * row's own overflow-x scroll box, and a wider gap between the (now bigger)
- * desktop avatars. */
-export const FriendsStrip = styled(PartitionContainer)`
-  padding-block: 8px;
-  gap: 1.25rem;
-
-  /* media, not container query: page-container is no longer a container
-     (see rp/styles.ts) and it was viewport-wide anyway. */
-  @media (max-width: 600px) {
-    gap: 0.5rem;
-  }
 `;
 
 /** Placeholder card at the end of a horizontal carousel that loads the next page. */
@@ -484,5 +413,38 @@ export const NextPageNovelistCard = styled(NextPageCard)`
     min-width: 160px;
     min-height: 265px;
     border-radius: 14px;
+  }
+`;
+
+/** A shelf dealt into the feed between posts (see `RAIL_SLOTS` in page.tsx).
+ *
+ * The same frame as the feed's cards (`PromptRoot`, the activity box's
+ * `ParentContainer`): 800px at most, centred, and 8px in from each edge once
+ * the screen is narrower than that, so a rail does not stick out past the
+ * posts either side of it. The card row and the heading drop their own inset
+ * so the first card lines up with the posts' edges. Air above and below so
+ * it reads as a change of subject rather than one more card.
+ *
+ * Declared after `PartitionContainer` and `SubText`: it selects them, and a
+ * styled component cannot be referenced before it exists. */
+export const FeedRail = styled(ContentContainer)`
+  max-width: 800px;
+  margin: 12px auto 24px;
+
+  ${SubText} {
+    padding-inline: 2px;
+  }
+
+  ${PartitionContainer} {
+    padding-inline: 0;
+    scroll-padding-inline: 0;
+  }
+
+  @media screen and (max-width: 800px) {
+    width: calc(100% - 16px);
+  }
+
+  @media (max-width: 600px) {
+    margin-block: 8px 20px;
   }
 `;

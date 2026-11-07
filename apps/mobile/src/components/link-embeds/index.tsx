@@ -1,6 +1,8 @@
+import { headcanonIdInUrl } from "@nw/types/headcanon";
 import type { NovelistWorldLink } from "@nw/utils/nw-links";
 import { memo } from "react";
 import { ChapterLinkCard } from "./chapter-card";
+import { HeadcanonLinkCard } from "./headcanon-card";
 import { MuseLinkCard } from "./muse-card";
 import { NovelistLinkCard } from "./novelist-card";
 import { PromptLinkCard } from "./prompt-card";
@@ -21,8 +23,15 @@ export const LinkEmbed = memo(function LinkEmbed({
   link: NovelistWorldLink;
 }) {
   switch (link.kind) {
-    case "muse":
-      return <MuseLinkCard id={link.id} url={link.url} />;
+    case "muse": {
+      // A headcanon's link is its character's, opened at the card.
+      const headcanonId = headcanonIdInUrl(link.url);
+      return headcanonId ? (
+        <HeadcanonLinkCard headcanonId={headcanonId} museId={link.id} />
+      ) : (
+        <MuseLinkCard id={link.id} url={link.url} />
+      );
+    }
     case "prompt":
       return <PromptLinkCard id={link.id} url={link.url} />;
     case "thread":

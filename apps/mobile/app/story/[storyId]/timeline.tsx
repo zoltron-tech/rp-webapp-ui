@@ -1,5 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import type { StoryBoardEvent } from "@nw/types";
+import { useSession } from "@nw/features";
+import type {
+  StoryBoardEvent,
+  StoryTimelineLane,
+  StoryTimelineMarker,
+} from "@nw/types";
 import { wsrvImage } from "@nw/utils";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
@@ -17,16 +22,29 @@ import Svg, { Line } from "react-native-svg";
 import { CroppedImage } from "@/components/cropped-image";
 import { ListStatus } from "@/components/list-status";
 import { TimelineSkeleton } from "@/components/sheet-skeletons";
+import {
+  LaneSheet,
+  MarkerSheet,
+  PlacementSheet,
+  TimelinesManager,
+} from "@/components/story/timeline-editors";
 import { PillButton } from "@/components/settings";
 import { BottomSheet } from "@/components/sheet";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
-import { useStoryTimeline } from "@/hooks/use-story";
+import { useStory, useStoryTimeline } from "@/hooks/use-story";
+import { useStoryTimelineEdit } from "@/hooks/use-story-timeline-edit";
 import { asColor } from "@/lib/color";
-import { chapterColor, plainText, storyClock, storyDate } from "@/lib/story";
+import {
+  chapterColor,
+  isStoryMember,
+  plainText,
+  storyClock,
+  storyDate,
+} from "@/lib/story";
 import { border, fontSize, radius, space, type, useAppTheme } from "@/theme";
 
 /**
- * The timelines — web's `StoryTimelineView`, read-only.
+ * The timelines — web's `StoryTimelineView`.
  *
  * When the chapters happen, as opposed to the order they are read in. Each
  * timeline is a line across the board; a chapter branches off it at its start
@@ -38,6 +56,9 @@ import { border, fontSize, radius, space, type, useAppTheme } from "@/theme";
  * and the packing is the same interval sweep, so a board reads the same on
  * both. The board scrolls sideways; a bar opens its chapter's detail sheet,
  * and chapters not on any timeline wait on a shelf beneath.
+ *
+ * A story member adds timelines and markers from the bar above the board, and
+ * places a chapter from its sheet. See `timeline-editors.tsx`.
  */
 
 const AXIS_MAX = 100;
@@ -79,6 +100,20 @@ export default function TimelineScreen() {
   const timeline = useStoryTimeline(storyId);
 
   const [openId, setOpenId] = useState<string | null>(null);
+
+  const story = useStory(storyId);
+  const { novelist, status } = useSession();
+  const canEdit =
+    status === "signed-in" && isStoryMember(story.data, novelist?.username);
+  const edit = useStoryTimelineEdit(storyId);
+  const [placingId, setPlacingId] = useState<string | null>(null);
+  const [managing, setManaging] = useState(false);
+  const [laneEditor, setLaneEditor] = useState<{
+    lane: StoryTimelineLane | null;
+  } | null>(null);
+  const [markerEditor, setMarkerEditor] = useState<{
+    marker: StoryTimelineMarker | null;
+  } | null>(null);
 
   const events = timeline.data?.events ?? [];
   const lanes = useMemo(
@@ -165,6 +200,7 @@ export default function TimelineScreen() {
   const x = (position: number) => TRACK_PAD + (position / AXIS_MAX) * axisWidth;
 
   const opened = events.find((event) => event.id === openId) ?? null;
+  const placing = events.find((event) => event.id === placingId) ?? null;
 
   return (
     <View style={styles.fill}>
@@ -183,6 +219,27 @@ export default function TimelineScreen() {
           chapters branch off it. Scroll sideways, and tap a chapter for its
           details.
         </Text>
+
+        {canEdit ? (
+          <View style={styles.tools}>
+            <PillButton
+              icon="add"
+              label="New timeline"
+              onPress={() => setLaneEditor({ lane: null })}
+              tone="accent"
+            />
+            <PillButton
+              icon="flag-outline"
+              label="New marker"
+              onPress={() => setMarkerEditor({ marker: null })}
+            />
+            <PillButton
+              icon="reorder-three-outline"
+              label="Manage"
+              onPress={() => setManaging(true)}
+            />
+          </View>
+        ) : null}
 
         {lanes.length === 0 ? (
           <View
@@ -422,22 +479,72 @@ export default function TimelineScreen() {
         event={opened}
         laneName={lanes.find((lane) => lane.id === opened?.timelineLaneId)?.name}
         onClose={() => setOpenId(null)}
+        onPlace={
+          canEdit
+            ? (eventId) => {
+                setOpenId(null);
+                setPlacingId(eventId);
+              }
+            : undefined
+        }
         onRead={(eventId) => {
           setOpenId(null);
           router.push({ params: { eventId }, pathname: "/story/chapter/[eventId]" });
         }}
         reading={opened?.id ? (readingPositions.get(opened.id) ?? 0) : 0}
       />
+
+      {canEdit ? (
+        <>
+          <PlacementSheet
+            chrono={placing?.id ? (chronoPositions.get(placing.id) ?? null) : null}
+            edit={edit}
+            event={placing}
+            lanes={lanes}
+            onClose={() => setPlacingId(null)}
+            reading={placing?.id ? (readingPositions.get(placing.id) ?? 0) : 0}
+            visible={placing !== null}
+          />
+          <TimelinesManager
+            edit={edit}
+            lanes={lanes}
+            markers={markers}
+            onClose={() => setManaging(false)}
+            onEditLane={(lane) => {
+              setManaging(false);
+              setLaneEditor({ lane });
+            }}
+            onEditMarker={(marker) => {
+              setManaging(false);
+              setMarkerEditor({ marker });
+            }}
+            visible={managing}
+          />
+          <LaneSheet
+            edit={edit}
+            lane={laneEditor?.lane ?? null}
+            onClose={() => setLaneEditor(null)}
+            visible={laneEditor !== null}
+          />
+          <MarkerSheet
+            edit={edit}
+            marker={markerEditor?.marker ?? null}
+            onClose={() => setMarkerEditor(null)}
+            visible={markerEditor !== null}
+          />
+        </>
+      ) : null}
     </View>
   );
 }
 
-/** A chapter's detail — web's bar card and block sheet, without the editing. */
+/** A chapter's detail — web's bar card, with the way to its placement. */
 const ChapterSheet = ({
   chrono,
   event,
   laneName,
   onClose,
+  onPlace,
   onRead,
   reading,
 }: {
@@ -445,6 +552,8 @@ const ChapterSheet = ({
   event: StoryBoardEvent | null;
   laneName?: string;
   onClose: () => void;
+  /** Given to a story member. */
+  onPlace?: (eventId: string) => void;
   onRead: (eventId: string) => void;
   reading: number;
 }) => {
@@ -532,6 +641,13 @@ const ChapterSheet = ({
             onPress={() => shown.id && onRead(shown.id)}
             tone="accent"
           />
+          {onPlace ? (
+            <PillButton
+              icon="git-branch-outline"
+              label={placed ? "Edit placement" : "Place on a timeline"}
+              onPress={() => shown.id && onPlace(shown.id)}
+            />
+          ) : null}
         </View>
       ) : null}
     </BottomSheet>
@@ -642,6 +758,13 @@ const styles = StyleSheet.create({
   sheetPreview: { fontSize: fontSize.label, lineHeight: 19 },
   sheetText: { flex: 1, gap: 3 },
   shelf: { gap: space.sm, paddingHorizontal: space.m, paddingTop: space.lg },
+  tools: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: space.sm,
+    paddingBottom: space.sm,
+    paddingHorizontal: space.m,
+  },
   shelfChip: {
     alignItems: "center",
     borderRadius: radius.full,

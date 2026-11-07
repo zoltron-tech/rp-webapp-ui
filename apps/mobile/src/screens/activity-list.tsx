@@ -1,10 +1,16 @@
-import { getUserActivities } from "@nw/api/endpoints/home";
+import { deleteActivity, getUserActivities } from "@nw/api/endpoints/home";
 import { queryKeys, useApi } from "@nw/features";
+import { API_MESSAGE } from "@nw/types";
 import type { Activity } from "@nw/types/activity";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import {
+  type InfiniteData,
+  useInfiniteQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
-import { FlatList, StyleSheet, View } from "react-native";
+import { Alert, FlatList, StyleSheet, View } from "react-native";
 import { ActivityBox } from "@/components/activity/box";
+import { useActivityShare } from "@/components/activity/use-activity-share";
 import { EmptyFeed } from "@/components/empty-feed";
 import { EndOfList } from "@/components/end-of-list";
 import { LikersSheet } from "@/components/feed/likers-sheet";
@@ -89,16 +95,65 @@ export const ActivityList = ({ username }: { username: string }) => {
     null,
   );
   const [viewing, setViewing] = useState<string | null>(null);
+  const { share: shareActivity, sheets: shareSheets } = useActivityShare();
+
+  /**
+   * One of the owner's own entries, from the card's trash button (which the
+   * card shows only on the owner's own). Confirmed here, as the viewer and the
+   * likers sheet are owned here; on success the row leaves the cached pages
+   * rather than waiting for a refetch.
+   */
+  const queryClient = useQueryClient();
+  const removeActivity = useCallback(
+    (activity: Activity) => {
+      Alert.alert(
+        "Delete this activity?",
+        "It leaves your profile and your friends' feeds. What it was about — the post, character, story or upload — stays.",
+        [
+          { style: "cancel", text: "Cancel" },
+          {
+            onPress: async () => {
+              const result = await deleteActivity(api, activity.id).catch(
+                () => null,
+              );
+              if (result?.message !== API_MESSAGE.Success) {
+                Alert.alert(
+                  "Not deleted",
+                  "Couldn't delete that activity. Try again.",
+                );
+                return;
+              }
+              queryClient.setQueryData<InfiniteData<Activity[]>>(
+                queryKeys.novelistActivity(username),
+                (old) =>
+                  old && {
+                    ...old,
+                    pages: old.pages.map((page) =>
+                      page.filter((it) => it.id !== activity.id),
+                    ),
+                  },
+              );
+            },
+            style: "destructive",
+            text: "Delete",
+          },
+        ],
+      );
+    },
+    [api, queryClient, username],
+  );
 
   const renderItem = useCallback(
     ({ item }: { item: Activity }) => (
       <ActivityBox
         activity={item}
+        onDelete={removeActivity}
         onOpenMedia={setViewing}
+        onShare={shareActivity}
         onShowLikers={setLikers}
       />
     ),
-    [],
+    [removeActivity, shareActivity],
   );
 
   // The bar floats over this list: `tabBarScroll` is what sizes it as the list
@@ -154,6 +209,8 @@ export const ActivityList = ({ username }: { username: string }) => {
         onEndReachedThreshold={0.6}
         renderItem={renderItem}
       />
+
+      {shareSheets}
 
       <LikersSheet
         count={likers?.count ?? 0}

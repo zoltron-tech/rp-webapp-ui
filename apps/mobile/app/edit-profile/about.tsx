@@ -1,9 +1,12 @@
+import { searchMentionMuses } from "@nw/api/endpoints/muse";
 import { useApi, useSession } from "@nw/features";
+import type { MentionDataItem, MentionTab } from "@nw/types";
 import { Stack, useNavigation } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Keyboard,
   Pressable,
   StyleSheet,
   View,
@@ -14,11 +17,23 @@ import {
   RichTextEditor,
   type RichTextEditorHandle,
 } from "@/components/editor/rich-text-editor";
+import {
+  MediaTrayInline,
+  type TrayTab,
+} from "@/components/chat/media-tray-inline";
 import { getGlassTier } from "@/components/glass-surface";
 import { PillButton } from "@/components/settings";
-import { useKeyboardOffset } from "@/hooks/use-keyboard-height";
+import {
+  useKeyboardHeight,
+  useKeyboardOffset,
+} from "@/hooks/use-keyboard-height";
 import { useProfileEdit } from "@/hooks/use-profile-edit";
-import { MAX_IMAGE_BYTES, pickImage, uploadFile } from "@/lib/media-upload";
+import {
+  alertMediaRejected,
+  MAX_IMAGE_BYTES,
+  pickImage,
+  uploadFile,
+} from "@/lib/media-upload";
 import { fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
@@ -37,6 +52,11 @@ export default function AboutScreen() {
   const { novelist } = useSession();
   const edit = useProfileEdit();
 
+  /** The last keyboard height, for the drawer to open at. */
+  const keyboardHeight = useKeyboardHeight();
+  const lastKeyboardHeight = useRef(0);
+  if (keyboardHeight > 0) lastKeyboardHeight.current = keyboardHeight;
+
   const editor = useRef<RichTextEditorHandle>(null);
   const original = novelist?.about ?? "";
   const [html, setHtml] = useState(original);
@@ -47,6 +67,44 @@ export default function AboutScreen() {
 
   const dirty = html !== original;
   const busy = saving || uploading.size > 0;
+
+  const [trayTab, setTrayTab] = useState<TrayTab | null>(null);
+  /** Remounts the editor on Reset: it owns its document once it has started. */
+  const [editorKey, setEditorKey] = useState(0);
+
+  const reset = () => {
+    setHtml(original);
+    setEditorKey((key) => key + 1);
+  };
+
+  /** Web's Friends and Muses tabs in the @ list. */
+  const mentionTabs = useMemo<MentionTab[]>(
+    () => [
+      {
+        getData: async (prefix: string): Promise<MentionDataItem[]> =>
+          (novelist?.friends ?? [])
+            .filter((friend) =>
+              friend.username.toLowerCase().includes(prefix.toLowerCase()),
+            )
+            .map((friend) => ({
+              displayName: friend.username,
+              id: friend.id,
+              image: friend.image,
+              type: "NOVELIST" as const,
+            })),
+        iconKey: "avatar",
+        id: "novelists",
+        label: "Friends",
+      },
+      {
+        getData: (prefix: string) => searchMentionMuses(api, prefix),
+        iconKey: "icon",
+        id: "muses",
+        label: "Muses",
+      },
+    ],
+    [api, novelist?.friends],
+  );
 
   const save = useCallback(async () => {
     if (!dirty || busy) return;
@@ -94,7 +152,7 @@ export default function AboutScreen() {
     }
     editor.current?.insertImage(file.uri);
     setUploading((current) => new Set(current).add(file.uri));
-    const url = await uploadFile(api, file, "profile-about");
+    const { rejected, url } = await uploadFile(api, file, "profile-about");
     setUploading((current) => {
       const next = new Set(current);
       next.delete(file.uri);
@@ -102,7 +160,8 @@ export default function AboutScreen() {
     });
     if (!url) {
       editor.current?.removeImageBySrc(file.uri);
-      Alert.alert("Upload failed", "The picture could not be uploaded.");
+      if (rejected) alertMediaRejected();
+      else Alert.alert("Upload failed", "The picture could not be uploaded.");
       return;
     }
     editor.current?.replaceImageSrc(file.uri, url);
@@ -186,20 +245,48 @@ export default function AboutScreen() {
             ? "Uploading picture…"
             : "Tell people about yourself."}
         </Text>
+        {dirty ? (
+          <PillButton disabled={saving} label="Reset" onPress={reset} />
+        ) : null}
         <PillButton
           disabled={saving}
           icon="image-outline"
           label="Picture"
           onPress={() => void attach()}
         />
+        <PillButton
+          disabled={saving}
+          label="GIF"
+          onPress={() => {
+            Keyboard.dismiss();
+            setTrayTab("gif");
+          }}
+        />
       </View>
 
       <RichTextEditor
         initialHtml={original}
+        key={editorKey}
+        mentionTabs={mentionTabs}
         onChange={(next) => setHtml(next)}
         placeholder="Tell people about yourself..."
         ref={editor}
         uploadingSources={uploading}
+      />
+
+      <MediaTrayInline
+        keyboardHeight={lastKeyboardHeight.current}
+        onClose={() => setTrayTab(null)}
+        onRequestKeyboard={() => {
+          setTrayTab(null);
+          editor.current?.focus();
+        }}
+        onSelect={(url) => {
+          setTrayTab(null);
+          editor.current?.insertImage(url);
+        }}
+        onTabChange={setTrayTab}
+        tab={trayTab}
       />
     </View>
   );

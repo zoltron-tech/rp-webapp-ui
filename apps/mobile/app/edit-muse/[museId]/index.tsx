@@ -23,6 +23,7 @@ import {
   SettingsGroup,
   SettingsRow,
 } from "@/components/settings";
+import { useHeadcanonSection } from "@/hooks/use-headcanons";
 import { useImageCropFlow } from "@/hooks/use-image-crop-flow";
 import {
   useMuseAboutSections,
@@ -73,6 +74,7 @@ const Landing = ({ muse }: { muse: Muse }) => {
   const sections = useMuseAboutSections(id, true);
   const media = useMuseMedia(id, true);
   const connections = useMuseConnections(id, true);
+  const headcanons = useHeadcanonSection(id, true);
 
   const go = (section: string) =>
     router.push({
@@ -416,13 +418,48 @@ const Landing = ({ muse }: { muse: Muse }) => {
             }
           />
           <SettingsRow
-            accessory={<Chip label="Coming soon" />}
-            disabled
             icon="bulb-outline"
             label="Headcanons"
-            onPress={() => undefined}
-            subtitle="Personal interpretations and lore outside the source."
-            tone="neutral"
+            onPress={() => go("headcanons")}
+            subtitle={
+              <RowDetail text="Traits, quick facts and headcanons.">
+                {headcanons.data ? (
+                  <>
+                    <Chip
+                      label={`${headcanons.data.traits.length} traits`}
+                      tone={
+                        headcanons.data.traits.length > 0 ? "accent" : "neutral"
+                      }
+                    />
+                    <Chip
+                      label={
+                        headcanons.data.headcanons.length === 1
+                          ? "1 headcanon"
+                          : `${headcanons.data.headcanons.length} headcanons`
+                      }
+                      tone={
+                        headcanons.data.headcanons.length > 0
+                          ? "accent"
+                          : "neutral"
+                      }
+                    />
+                  </>
+                ) : null}
+              </RowDetail>
+            }
+          />
+        </SettingsGroup>
+
+        <SettingsGroup>
+          <SettingsRow
+            icon="person-circle-outline"
+            label={`View ${muse.firstName}'s profile`}
+            onPress={() =>
+              router.push({
+                params: { museId: id },
+                pathname: "/(tabs)/(profile)/muse/[museId]",
+              })
+            }
           />
         </SettingsGroup>
       </ScrollView>

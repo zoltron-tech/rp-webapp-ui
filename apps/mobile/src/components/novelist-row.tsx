@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import { isSupportNovelist } from "@nw/chat";
-import { useSession } from "@nw/features";
 import type { Friend } from "@nw/types";
 import { mainVerseMuses } from "@nw/utils";
 import { Image } from "@/components/image";
@@ -31,18 +30,18 @@ import { useGlobalState } from "@nw/store";
 /**
  * One novelist, as a row.
  *
- * Everything web's `NovelistPreviewCard` carries — face, name, handle, crests,
- * their characters, mutual friends, and the button that changes the friendship
- * — at the density of a list rather than the shape of a card. A screen of
- * cards is two novelists per phone screen and a lot of scrolling to compare
- * them; the same facts as rows are five or six, which is what a list of people
- * is for.
+ * The face, name and handle of web's `NovelistPreviewCard`, and the button that
+ * changes the friendship, at the density of a list rather than the shape of a
+ * card. A screen of cards is two novelists per phone screen and a lot of
+ * scrolling to compare them; rows are what a list of people is for.
  *
- * ## What went, and what took its place
+ * ## Two lines
  *
- * Level went: it is the one number nobody adds a friend over. Muses stayed, but
- * as *faces* with the count beside them rather than a block of their own — a
- * row of small portraits says "characters" faster than the word does.
+ * Name, then one line of detail: the handle and the fact most likely to matter,
+ * friends in common or failing that how many characters. It was three lines with
+ * character faces lapped along the bottom one, in a row that already has a banner
+ * behind it and a button beside it. The faces are on the profile, a tap away.
+ * Level went for the same reason: nobody adds a friend over it.
  *
  * ## The banner is the row
  *
@@ -93,20 +92,15 @@ import { useGlobalState } from "@nw/store";
  *   content arrives, so scrolling never waits on measurement.
  */
 
-/** Enough faces to say what kind of writer this is, at this width. */
-const MAX_MUSES = 3;
-
-const MUSE_AVATAR = 22;
-const AVATAR = 56;
+const AVATAR = 48;
 
 /**
  * Fixed, so the list can compute offsets instead of measuring.
  *
- * The tallest content is the three-line identity block (name, handle, meta),
- * which is shorter than the avatar; the avatar plus the row's vertical padding
- * is what actually sets this number.
+ * The two-line identity block is shorter than the avatar; the avatar plus the
+ * row's vertical padding is what actually sets this number.
  */
-export const ROW_HEIGHT = AVATAR + (space.md - 2) * 2;
+export const ROW_HEIGHT = AVATAR + space.m * 2;
 
 const NovelistRowView = ({
   novelist,
@@ -136,12 +130,21 @@ const NovelistRowView = ({
     () => accentFromPalette(novelist.palette),
     [novelist.palette],
   );
-  const muses = useMemo(
-    () => mainVerseMuses(novelist.muses ?? []),
+  const museCount = useMemo(
+    () => mainVerseMuses(novelist.muses ?? []).length,
     [novelist.muses],
   );
-  const visibleMuses = useMemo(() => muses.slice(0, MAX_MUSES), [muses]);
   const mutual = novelist.mutualFriendCount ?? 0;
+  const detail = [
+    `@${novelist.username}`,
+    mutual > 0
+      ? `${mutual} mutual`
+      : museCount > 0
+        ? `${museCount} ${museCount === 1 ? "character" : "characters"}`
+        : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   const busy = action.isPending;
   /** Which button should be spinning, when one is. */
@@ -255,60 +258,10 @@ const NovelistRowView = ({
 
         <Text
           numberOfLines={1}
-          style={[styles.handle, { color: theme.textGray }]}
+          style={[styles.detail, { color: theme.textGray }]}
         >
-          @{novelist.username}
+          {detail}
         </Text>
-
-        {/*
-          The third line carries whatever this person actually has: their
-          characters as faces, the count beside them, and how many friends you
-          share. A novelist with neither gets two lines rather than a row of
-          zeroes.
-        */}
-        {muses.length > 0 || mutual > 0 ? (
-          <View style={styles.meta}>
-            {visibleMuses.length > 0 ? (
-              <View style={styles.museStack}>
-                {visibleMuses.map((muse) => (
-                  <View
-                    key={muse.id ?? muse.firstName}
-                    style={[
-                      styles.museFace,
-                      { borderColor: theme.material.fill },
-                    ]}
-                  >
-                    <Avatar
-                      name={muse.firstName}
-                      size={MUSE_AVATAR}
-                      image={muse.avatar}
-                      uri={muse.avatar?.src ?? muse.image}
-                    />
-                  </View>
-                ))}
-              </View>
-            ) : null}
-
-            {/*
-              One line that gives way: the counts are the least important
-              thing in the row, and written as separate labels they could not
-              shorten — they ran on under the button instead.
-            */}
-            <Text
-              numberOfLines={1}
-              style={[styles.metaText, { color: theme.textGray }]}
-            >
-              {[
-                muses.length > 0
-                  ? `${muses.length} ${muses.length === 1 ? "character" : "characters"}`
-                  : null,
-                mutual > 0 ? `${mutual} mutual` : null,
-              ]
-                .filter(Boolean)
-                .join(" · ")}
-            </Text>
-          </View>
-        ) : null}
       </View>
 
       <View style={styles.actions}>
@@ -417,24 +370,8 @@ export const RowButton = memo(
 const styles = StyleSheet.create({
   actions: { alignItems: "center", flexDirection: "row", gap: space.s },
   bannerImage: { height: "100%", width: "100%" },
-  handle: { fontSize: fontSize.caption },
-  identity: { flex: 1, gap: 1, minWidth: 0 },
-  meta: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: space.s,
-    marginTop: 3,
-    // The faces keep their size; the text beside them is what shortens.
-    overflow: "hidden",
-  },
-  metaText: { flexShrink: 1, fontSize: fontSize.meta },
-  museFace: {
-    borderRadius: (MUSE_AVATAR + 3) / 2,
-    borderWidth: 1.5,
-    // Lapped, so three faces read as a group rather than three dots.
-    marginRight: -7,
-  },
-  museStack: { flexDirection: "row", flexShrink: 0, paddingRight: 7 },
+  detail: { fontSize: fontSize.caption },
+  identity: { flex: 1, gap: space.xxs, minWidth: 0 },
   name: { flexShrink: 1, fontSize: fontSize.body + 1, fontWeight: "700" },
   nameRow: { alignItems: "center", flexDirection: "row", gap: space.xs },
   row: {
@@ -446,7 +383,7 @@ const styles = StyleSheet.create({
     height: ROW_HEIGHT,
     // Clipped, because the banner and the gradient behind it are square.
     overflow: "hidden",
-    paddingHorizontal: space.md - 2,
+    paddingHorizontal: space.m,
   },
   scrim: { opacity: 0.86 },
   self: {

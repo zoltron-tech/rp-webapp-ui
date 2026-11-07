@@ -9,6 +9,7 @@ import { BreadCrumb } from "@/components/breadcrumb";
 import { ScrollJumpButton } from "@/components/common/scroll-jump-button";
 import type { SegmentedTabOption } from "@/components/common/segmented-tabs";
 import { novelistToSource } from "@/components/event-thread-input/helpers";
+import { useFandomSearch } from "@/components/filter-search/use-fandom-search";
 import { LoadMore } from "@/components/load-more/page";
 import { Prompt as PromptComponent } from "@/components/prompt";
 import { PromptComposeTrigger } from "@/components/prompt-compose-trigger";
@@ -17,6 +18,7 @@ import { FullPagePromptInput } from "@/components/prompt-input/full-page-prompt-
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useCustomEvents } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
+import { usePagedSearch } from "@/hooks/use-paged-search";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import {
   FEED_PAGE_SIZES,
@@ -31,7 +33,10 @@ import {
   type PromptCommentReplyUpdatedPayload,
   type PromptReactedPayload,
 } from "@/utils/constants/custom-events";
-import { getNewPromptsAction } from "../explore-prompts/actions";
+import {
+  getNewPromptsAction,
+  searchExplorePromptsAction,
+} from "../explore-prompts/actions";
 import { getNewsFeedPageAction } from "../news-feed/actions";
 import * as S from "./styles";
 
@@ -337,6 +342,29 @@ export default function ExplorePage() {
 
   const prompts = mode === "NEWSFEED" ? newsFeedPrompts : explorePrompts;
 
+  /*
+   * The prompt search: the same field and fandom chips as the character
+   * directory (`useFandomSearch`), over the feed's prompts by the character
+   * who wrote them (`GET /prompt/explore/search`). While it narrows anything,
+   * its results stand in for the feed; the feed stays mounted underneath, so
+   * clearing the search returns to it where it was.
+   */
+  const signedIn = authState === "LOGGED_IN";
+  const search = useFandomSearch();
+  const searching = signedIn && mode === "PROMPTS" && search.filtering;
+  const results = usePagedSearch<Prompt>({
+    enabled: searching,
+    fetchPage: (pageNumber) =>
+      searchExplorePromptsAction({
+        fandoms: search.fandomIds,
+        pageNumber,
+        pageSize: PAGE_SIZE,
+        query: search.term,
+      }),
+    key: `${search.term}|${search.fandomKey}`,
+    pageSize: PAGE_SIZE,
+  });
+
   return (
     <S.Container>
       <BreadCrumb label="Explore" username={user?.username ?? ""} />
@@ -368,7 +396,20 @@ export default function ExplorePage() {
         />
       )}
 
-      {authState === "LOGGED_IN" && prompts === null && (
+      {signedIn && mode === "PROMPTS" && (
+        <S.PromptSearch
+          value={search.query}
+          onChange={search.setQuery}
+          placeholder="Search prompts by character or fandom…"
+          filters={search.chips}
+          activeFilters={search.activeChipIds}
+          onFilterChange={search.onChipsChange}
+          filterLabel="Fandoms:"
+        />
+      )}
+
+      {signedIn &&
+        (searching ? results.items === null : prompts === null) && (
         <S.FeedLoader>
           <AiOutlineLoading3Quarters />
         </S.FeedLoader>
@@ -394,7 +435,9 @@ export default function ExplorePage() {
         </div>
 
         <div
-          style={{ display: mode === "PROMPTS" ? "contents" : "none" }}
+          style={{
+            display: mode === "PROMPTS" && !searching ? "contents" : "none",
+          }}
           role="tabpanel"
         >
           {explorePrompts?.map((prompt) => (
@@ -407,6 +450,33 @@ export default function ExplorePage() {
             onLoadMore={loadMore}
           />
         </div>
+
+        {searching && results.items !== null && (
+          <div style={{ display: "contents" }} role="tabpanel">
+            {results.failed ? (
+              <S.SearchEmpty role="alert">
+                Couldn&apos;t search prompts right now.
+                <S.RetryButton type="button" onClick={results.retry}>
+                  Try again
+                </S.RetryButton>
+              </S.SearchEmpty>
+            ) : results.items.length === 0 ? (
+              <S.SearchEmpty>No prompts match that search.</S.SearchEmpty>
+            ) : (
+              <>
+                {results.items.map((prompt) => (
+                  <PromptComponent key={prompt.id} prompt={prompt} />
+                ))}
+                <LoadMore
+                  hasMore={results.hasMore}
+                  loadingMore={results.loadingMore}
+                  onLoadMore={results.loadMore}
+                  endMarker
+                />
+              </>
+            )}
+          </div>
+        )}
 
         <ScrollJumpButton direction="up" onClick={scrollToTop} />
       </S.PromptListContainer>

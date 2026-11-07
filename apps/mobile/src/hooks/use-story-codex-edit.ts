@@ -1,24 +1,44 @@
 import {
+  deleteCodexCategory,
+  deleteCodexEntry,
+  deleteCodexGroup,
   deleteCodexRelationship,
   deleteCodexTone,
+  deleteStoryCharacter,
+  reorderCodexCategories,
+  saveCodexCategory,
+  saveCodexEntry,
+  saveCodexGroup,
   saveCodexRelationship,
   saveCodexTone,
+  saveStoryCharacter,
 } from "@nw/api/endpoints/story";
 import { queryKeys, useApi } from "@nw/features";
 import {
   API_MESSAGE,
   type Codex,
+  type CodexCategory,
+  type CodexEntry,
+  type CodexGroup,
   type CodexRelationship,
   type CodexTone,
+  type StoryCharacter,
 } from "@nw/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
 
+/** The saved one in place of the one with its id, or on the end. */
+const upsert = <T extends { id: string | null }>(list: T[], saved: T): T[] =>
+  list.some((item) => item.id === saved.id)
+    ? list.map((item) => (item.id === saved.id ? saved : item))
+    : [...list, saved];
+
 /**
- * Writing to a story's codex: relationships and the tones they are drawn in.
+ * Writing to a story's codex: its entries, categories, characters and groups,
+ * and the relationships and tones of the mesh.
  *
- * `use-story.ts` reads and nothing else, by design; this is the writing half
- * for the mesh. The codex is one query (`queryKeys.storyCodex`), so every
+ * `use-story.ts` reads and nothing else, by design; this is the writing half.
+ * The codex is one query (`queryKeys.storyCodex`), so every
  * write patches that one cache entry the way web patches its local state:
  * the saved entity replaces the one with its id or is appended, a delete
  * drops it, and a retired tone also clears `toneId` on the relationships
@@ -141,15 +161,192 @@ export const useStoryCodexEdit = (storyId: string | undefined) => {
     [api, id, key, patch, queryClient, track],
   );
 
+  /** A save whose answer replaces, or joins, one list of the codex. */
+  const saver = useCallback(
+    <T extends { id: string | null }>(
+      request: () => Promise<unknown>,
+      apply: (codex: Codex, saved: T) => Codex,
+    ): Promise<T | null> =>
+      track(async () => {
+        if (!id) return null;
+        const result = await request().catch(() => null);
+        if (!result || typeof result !== "object" || "message" in result) {
+          return null;
+        }
+        const saved = result as T;
+        patch((codex) => apply(codex, saved));
+        return saved;
+      }),
+    [id, patch, track],
+  );
+
+  /** A delete: gone at once, and back from the server if it did not take. */
+  const remover = useCallback(
+    (
+      request: () => Promise<{ message?: unknown } | null | undefined>,
+      apply: (codex: Codex) => Codex,
+    ): Promise<boolean> =>
+      track(async () => {
+        if (!id) return false;
+        patch(apply);
+        const result = await request().catch(() => null);
+        if (!result || result.message !== API_MESSAGE.Success) {
+          void queryClient.invalidateQueries({ queryKey: key });
+          return false;
+        }
+        return true;
+      }),
+    [id, key, patch, queryClient, track],
+  );
+
+  const saveEntry = useCallback(
+    (entry: CodexEntry) =>
+      saver<CodexEntry>(
+        () => saveCodexEntry(api, id, entry),
+        (codex, saved) => ({
+          ...codex,
+          entries: upsert(codex.entries, saved),
+        }),
+      ),
+    [api, id, saver],
+  );
+
+  const deleteEntry = useCallback(
+    (entryId: string) =>
+      remover(
+        () => deleteCodexEntry(api, entryId),
+        (codex) => ({
+          ...codex,
+          entries: codex.entries.filter((entry) => entry.id !== entryId),
+        }),
+      ),
+    [api, remover],
+  );
+
+  const saveCategory = useCallback(
+    (category: CodexCategory) =>
+      saver<CodexCategory>(
+        () => saveCodexCategory(api, id, category),
+        (codex, saved) => ({
+          ...codex,
+          categories: upsert(codex.categories, saved),
+        }),
+      ),
+    [api, id, saver],
+  );
+
+  const deleteCategory = useCallback(
+    (categoryId: string) =>
+      remover(
+        () => deleteCodexCategory(api, categoryId),
+        (codex) => ({
+          ...codex,
+          categories: codex.categories.filter(
+            (category) => category.id !== categoryId,
+          ),
+        }),
+      ),
+    [api, remover],
+  );
+
+  /** The whole order, once: the server answers with the renumbered list. */
+  const reorderCategories = useCallback(
+    (orderedIds: string[]): Promise<boolean> =>
+      track(async () => {
+        if (!id) return false;
+        const result = await reorderCodexCategories(api, id, orderedIds).catch(
+          () => null,
+        );
+        if (!Array.isArray(result)) return false;
+        patch((codex) => ({ ...codex, categories: result }));
+        return true;
+      }),
+    [api, id, patch, track],
+  );
+
+  const saveGroup = useCallback(
+    (group: CodexGroup) =>
+      saver<CodexGroup>(
+        () => saveCodexGroup(api, id, group),
+        (codex, saved) => ({
+          ...codex,
+          groups: upsert(codex.groups ?? [], saved),
+        }),
+      ),
+    [api, id, saver],
+  );
+
+  const deleteGroup = useCallback(
+    (groupId: string) =>
+      remover(
+        () => deleteCodexGroup(api, groupId),
+        (codex) => ({
+          ...codex,
+          groups: (codex.groups ?? []).filter((group) => group.id !== groupId),
+        }),
+      ),
+    [api, remover],
+  );
+
+  const saveCharacter = useCallback(
+    (character: StoryCharacter) =>
+      saver<StoryCharacter>(
+        () => saveStoryCharacter(api, id, character),
+        (codex, saved) => ({
+          ...codex,
+          characters: upsert(codex.characters, saved),
+        }),
+      ),
+    [api, id, saver],
+  );
+
+  const deleteCharacter = useCallback(
+    (characterId: string) =>
+      remover(
+        () => deleteStoryCharacter(api, characterId),
+        (codex) => ({
+          ...codex,
+          characters: codex.characters.filter(
+            (character) => character.id !== characterId,
+          ),
+        }),
+      ),
+    [api, remover],
+  );
+
   return useMemo(
     () => ({
+      deleteCategory,
+      deleteCharacter,
+      deleteEntry,
+      deleteGroup,
       deleteRelationship,
       deleteTone,
       pending: pending > 0,
+      reorderCategories,
+      saveCategory,
+      saveCharacter,
+      saveEntry,
+      saveGroup,
       saveRelationship,
       saveTone,
     }),
-    [deleteRelationship, deleteTone, pending, saveRelationship, saveTone],
+    [
+      deleteCategory,
+      deleteCharacter,
+      deleteEntry,
+      deleteGroup,
+      deleteRelationship,
+      deleteTone,
+      pending,
+      reorderCategories,
+      saveCategory,
+      saveCharacter,
+      saveEntry,
+      saveGroup,
+      saveRelationship,
+      saveTone,
+    ],
   );
 };
 

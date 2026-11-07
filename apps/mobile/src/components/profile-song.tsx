@@ -1,5 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
+import { report } from "@nw/api/endpoints/thread";
+import { useApi } from "@nw/features";
 import { mixColors } from "@nw/theme";
+import { API_MESSAGE } from "@nw/types";
 import type { ProfileSong } from "@nw/types/music";
 import { formatTime } from "@nw/utils";
 import { useEventListener } from "expo";
@@ -8,6 +11,7 @@ import * as WebBrowser from "expo-web-browser";
 import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Animated,
   Image,
   Pressable,
@@ -17,7 +21,9 @@ import {
 import { GradientSurface } from "@/components/gradient-surface";
 import { useSpotifyEmbed } from "@/components/spotify-embed";
 import { Text } from "@/components/text";
+import { contrastRatio } from "@/lib/color";
 import { usePlaybackSlot } from "@/lib/playback";
+import { alertReportSent } from "@/lib/report";
 import { isHttpsUrlOn } from "@/lib/safe-link";
 import {
   border,
@@ -119,16 +125,63 @@ const Equalizer = ({ color }: { color: string }) => {
 };
 
 export const ProfileSongPill = ({
+  accent,
   attachedBottom,
+  autoStart = false,
+  reportable = false,
   song,
 }: {
+  /**
+   * A muse's own accent (six-digit hex, already gated on `useAccent`). Paints
+   * the wash, the edge, the progress and the play button in place of the
+   * theme accent — web's `accent` prop, which redefines `--accent`.
+   */
+  accent?: string;
   /** Squares the bottom corners so About can sit flush under it. */
   attachedBottom?: boolean;
+  /** The press that mounted this one: start at once. */
+  autoStart?: boolean;
+  /**
+   * Someone else's song: show a Report button for an uploaded (LIBRARY) one.
+   * Spotify tracks are licensed through Spotify and get none. The caller
+   * decides, because only it knows whose page this is.
+   */
+  reportable?: boolean;
   song: ProfileSong;
 }) => {
   const theme = useAppTheme();
+  const api = useApi();
 
   const isSpotify = song.source === "SPOTIFY";
+  const reportId = reportable && !isSpotify ? song.songId : null;
+
+  // APP_STORE_REVIEW_PLAN.md M12: an uploaded song is user content like any
+  // other, so it can be reported like any other.
+  const confirmReport = () => {
+    if (!reportId) return;
+    Alert.alert(
+      `Report ${song.title}?`,
+      "Report a song that isn't the uploader's to share, or that breaks the community rules. Our support team will review it.",
+      [
+        { style: "cancel", text: "Cancel" },
+        {
+          onPress: async () => {
+            const result = await report(api, reportId, "", "SONG").catch(
+              () => null,
+            );
+            if (result?.message === API_MESSAGE.Success) alertReportSent();
+            else
+              Alert.alert(
+                "Could not report",
+                "The report was not sent. Please try again.",
+              );
+          },
+          style: "destructive",
+          text: "Report",
+        },
+      ],
+    );
+  };
   const hasFile = !isSpotify && Boolean(song.url);
 
   /*
@@ -139,8 +192,8 @@ export const ProfileSongPill = ({
    * most visitors scroll past. The engine starts when the play button is
    * pressed; that press is remembered and honoured once the engine is ready.
    */
-  const [engineOn, setEngineOn] = useState(false);
-  const [wantPlay, setWantPlay] = useState(false);
+  const [engineOn, setEngineOn] = useState(autoStart);
+  const [wantPlay, setWantPlay] = useState(autoStart);
 
   // Null for a Spotify track: there is nothing local to play, and handing the
   // player a track id would have it retry a URL it can never load.
@@ -190,13 +243,10 @@ export const ProfileSongPill = ({
   const armed = engineOn && (isSpotify ? spotify.ready : hasFile);
 
   // One player at a time, and none once the page is left — `lib/playback`.
-  usePlaybackSlot(
-    () => {
-      if (isSpotify) spotify.pause();
-      else player.pause();
-    },
-    playing,
-  );
+  usePlaybackSlot(() => {
+    if (isSpotify) spotify.pause();
+    else player.pause();
+  }, playing);
 
   // The remembered first press, paid once the engine can take it.
   useEffect(() => {
@@ -241,7 +291,16 @@ export const ProfileSongPill = ({
   // Web's pill: an accent wash over the card surface, brightest at the top
   // left. Vertical here, because `GradientSurface` runs top to bottom and a
   // diagonal would need a second gradient node for one degree of prettiness.
-  const from = mixColors(theme.accent.surface, 0.16, theme.material.fill);
+  const surface = accent ?? theme.accent.surface;
+  const solid = accent ?? theme.accent.solid;
+  const loading = accent
+    ? mixColors(accent, 0.6, theme.material.fill)
+    : theme.accent.surfaceActive;
+  // A muse can pick any colour, a pale one included; white stays only where
+  // it reads (the 3:1 bold-label rule `onSolid` uses).
+  const ink =
+    accent && contrastRatio("#ffffff", accent) < 3 ? "#111111" : "#ffffff";
+  const from = mixColors(surface, 0.16, theme.material.fill);
   const to = theme.material.fill;
 
   return (
@@ -254,7 +313,7 @@ export const ProfileSongPill = ({
           borderBottomRightRadius: attachedBottom ? 0 : radius.md + 2,
           borderBottomWidth: attachedBottom ? 0 : StyleSheet.hairlineWidth,
           borderColor: mixColors(
-            theme.accent.surface,
+            surface,
             0.22,
             theme.material.edge,
           ),
@@ -313,7 +372,7 @@ export const ProfileSongPill = ({
               style={[
                 styles.trackFill,
                 {
-                  backgroundColor: theme.accent.solid,
+                  backgroundColor: solid,
                   width: `${progress * 100}%`,
                 },
               ]}
@@ -330,6 +389,18 @@ export const ProfileSongPill = ({
         <Text style={[styles.clock, { color: theme.textGray }]}>
           {formatTime(time)}
         </Text>
+      ) : null}
+
+      {reportId ? (
+        <Pressable
+          accessibilityLabel={`Report ${song.title}`}
+          accessibilityRole="button"
+          hitSlop={space.sm}
+          onPress={confirmReport}
+          style={({ pressed }) => [styles.report, { opacity: pressed ? 0.6 : 1 }]}
+        >
+          <Ionicons color={theme.textGray} name="flag-outline" size={16} />
+        </Pressable>
       ) : null}
 
       {playable || (spotifyBroken && song.externalUrl) ? (
@@ -351,19 +422,16 @@ export const ProfileSongPill = ({
           style={({ pressed }) => [
             styles.play,
             {
-              backgroundColor:
-                playable && engineOn && !armed
-                  ? theme.accent.surfaceActive
-                  : theme.accent.solid,
+              backgroundColor: playable && engineOn && !armed ? loading : solid,
               opacity: pressed ? 0.8 : 1,
             },
           ]}
         >
           {playable && engineOn && !armed ? (
-            <ActivityIndicator color="#ffffff" size="small" />
+            <ActivityIndicator color={ink} size="small" />
           ) : (
             <Ionicons
-              color="#ffffff"
+              color={ink}
               name={spotifyBroken ? "open-outline" : playing ? "pause" : "play"}
               size={spotifyBroken ? 16 : 18}
             />
@@ -417,7 +485,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: 34,
   },
+  report: {
+    alignItems: "center",
+    height: 32,
+    justifyContent: "center",
+    width: 28,
+  },
   title: { fontSize: fontSize.label, fontWeight: "700" },
-  track: { borderRadius: radius.full, height: 3, marginTop: space.xs, width: "100%" },
+  track: {
+    borderRadius: radius.full,
+    height: 3,
+    marginTop: space.xs,
+    width: "100%",
+  },
   trackFill: { borderRadius: radius.full, height: "100%" },
 });

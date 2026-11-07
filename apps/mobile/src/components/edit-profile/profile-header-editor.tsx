@@ -17,6 +17,7 @@ import { CroppedImage } from "@/components/cropped-image";
 import { NoteEditSheet } from "@/components/edit-profile/note-sheet";
 import { ImageCropEditor } from "@/components/muse/edit/image-crop-editor";
 import { getNoteEmojiRotate, NoteEmojiIcon } from "@/components/note-emoji";
+import { useAvatarPicker } from "@/hooks/use-avatar-picker";
 import { useImageCropFlow } from "@/hooks/use-image-crop-flow";
 import { existingAvatar, type ProfileEdit } from "@/hooks/use-profile-edit";
 import { asColor, withAlpha } from "@/lib/color";
@@ -102,6 +103,7 @@ export const ProfileHeaderEditor = ({
 
   const avatarFlow = useImageCropFlow({ onSave: edit.setAvatar, prefix: null });
   const bannerFlow = useImageCropFlow({ onSave: edit.setBanner, prefix: null });
+  const avatarPicker = useAvatarPicker(avatarFlow);
 
   const banner = novelist.banner?.src ? novelist.banner : null;
   const note = novelist.note?.text?.trim() ? novelist.note : null;
@@ -134,7 +136,7 @@ export const ProfileHeaderEditor = ({
 
   const openCover = () => (banner ? setMenu("cover") : bannerFlow.open(null));
   const openPhoto = () =>
-    avatarFlow.open(existingAvatar(novelist.avatar, novelist.image));
+    avatarPicker.open(existingAvatar(novelist.avatar, novelist.image));
   const openNoteTool = () => (note ? setMenu("note") : setNoteOpen(true));
 
   const coverItems: ActionItem[] = [
@@ -451,12 +453,14 @@ export const ProfileHeaderEditor = ({
         initial={avatarFlow.initial}
         onClose={avatarFlow.close}
         onConfirm={(crop) => void avatarFlow.confirm(crop)}
+        onLibrary={avatarPicker.openLibrary}
         onReplace={() => void avatarFlow.replace()}
         title="Adjust photo"
         uploading={avatarFlow.uploading}
         uri={avatarFlow.uri}
         visible={avatarFlow.visible}
       />
+      {avatarPicker.sheets}
       <ImageCropEditor
         aspect={5 / 2}
         autoFit={bannerFlow.autoFit}

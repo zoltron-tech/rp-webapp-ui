@@ -38,6 +38,7 @@ export default function EditMuseLayout() {
       <Stack.Screen name="[museId]/story" options={{ title: "Story" }} />
       <Stack.Screen name="[museId]/gallery" options={{ title: "Gallery" }} />
       <Stack.Screen name="[museId]/connections" options={{ title: "Connections" }} />
+      <Stack.Screen name="[museId]/headcanons" options={{ title: "Headcanons" }} />
     </Stack>
   );
 }

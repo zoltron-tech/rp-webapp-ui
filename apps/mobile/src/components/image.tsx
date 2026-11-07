@@ -1,16 +1,23 @@
-import { Image as ExpoImage, type ImageProps, type ImageSource } from "expo-image";
+import {
+  Image as ExpoImage,
+  type ImageProps,
+  type ImageSource,
+} from "expo-image";
 import {
   createContext,
   forwardRef,
   memo,
   type RefObject,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
   useRef,
 } from "react";
 import {
+  evictMissingMedia,
   type MediaKind,
+  mediaEvictions,
   prefetchMedia,
   resolveMediaUri,
   useMediaUri,
@@ -32,6 +39,13 @@ export * from "expo-image";
  * `expo-image` (see `local-store/media.ts` for what the cache keeps and for
  * how long). The rest of `expo-image` is re-exported untouched.
  *
+ * ## When the file has gone
+ *
+ * The OS can reclaim a cached file at any time. That is not the picture
+ * failing, so `onError` does not hear of it: the URL is dropped from the cache
+ * and the picture is drawn from the network. A caller's `onError` marks a URL
+ * dead for the session, which here would throw away a picture that is fine.
+ *
  * ## Kinds
  *
  * `mediaKind` tags the download for retention — `chat` expires with the
@@ -52,7 +66,8 @@ export const MediaKindProvider = MediaKindContext.Provider;
 type Source = ImageProps["source"];
 
 const resolveSource = (source: Source, kind: MediaKind): Source => {
-  if (typeof source === "string") return resolveMediaUri(source, kind) ?? source;
+  if (typeof source === "string")
+    return resolveMediaUri(source, kind) ?? source;
   if (Array.isArray(source)) {
     return (source as (string | ImageSource)[]).map((item) =>
       resolveSource(item, kind),
@@ -67,8 +82,10 @@ const resolveSource = (source: Source, kind: MediaKind): Source => {
 
 const firstUri = (source: Source): string | null | undefined => {
   if (typeof source === "string") return source;
-  if (Array.isArray(source)) return firstUri((source as (string | ImageSource)[])[0] as Source);
-  if (source && typeof source === "object" && "uri" in source) return source.uri;
+  if (Array.isArray(source))
+    return firstUri((source as (string | ImageSource)[])[0] as Source);
+  if (source && typeof source === "object" && "uri" in source)
+    return source.uri;
   return null;
 };
 
@@ -84,47 +101,59 @@ const firstUri = (source: Source): string | null | undefined => {
  * finger is on the list.
  */
 const CachedImage = memo(
-  forwardRef<ExpoImage, ImageProps & { mediaKind?: MediaKind; playing?: boolean }>(
-    function Image({ mediaKind, playing, source, ...props }, forwarded) {
-      const contextKind = useContext(MediaKindContext);
-      const kind = mediaKind ?? contextKind;
-      // Subscribes to the index for this picture's URL, so the download landing
-      // re-renders this component and nothing else.
-      useMediaUri(firstUri(source), kind);
-      const resolved = useMemo(
-        () => resolveSource(source, kind),
-        [kind, source],
+  forwardRef<
+    ExpoImage,
+    ImageProps & { mediaKind?: MediaKind; playing?: boolean }
+  >(function Image({ mediaKind, playing, source, ...props }, forwarded) {
+    const contextKind = useContext(MediaKindContext);
+    const kind = mediaKind ?? contextKind;
+    // Subscribes to the index for this picture's URL, so the download landing
+    // re-renders this component and nothing else.
+    const uri = firstUri(source);
+    useMediaUri(uri, kind);
+    // Not a re-render of its own: `evictMissingMedia` notifies the hook above.
+    const evicted = mediaEvictions(uri);
+    const resolved = useMemo(
+      () => resolveSource(source, kind),
+      [evicted, kind, source],
+    );
+    const { onError } = props;
+    const handleError = useCallback<NonNullable<ImageProps["onError"]>>(
+      (event) => {
+        if (!evictMissingMedia(uri)) onError?.(event);
+      },
+      [onError, uri],
+    );
+    const cachePolicy =
+      props.cachePolicy ?? (kind === "chat" ? "memory" : undefined);
+
+    const own = useRef<ExpoImage>(null);
+    const ref = forwarded ?? own;
+    const view = ref as RefObject<ExpoImage | null>;
+
+    useEffect(() => {
+      if (playing === undefined) return;
+      const target = view.current;
+      if (!target) return;
+      // Both resolve async on the native side; a view that has gone by
+      // then rejects, and there is nothing to do about a picture that
+      // is no longer on screen.
+      void (playing ? target.startAnimating() : target.stopAnimating()).catch(
+        () => {},
       );
-      const cachePolicy =
-        props.cachePolicy ?? (kind === "chat" ? "memory" : undefined);
+    }, [playing, view]);
 
-      const own = useRef<ExpoImage>(null);
-      const ref = forwarded ?? own;
-      const view = ref as RefObject<ExpoImage | null>;
-
-      useEffect(() => {
-        if (playing === undefined) return;
-        const target = view.current;
-        if (!target) return;
-        // Both resolve async on the native side; a view that has gone by
-        // then rejects, and there is nothing to do about a picture that
-        // is no longer on screen.
-        void (playing ? target.startAnimating() : target.stopAnimating()).catch(
-          () => {},
-        );
-      }, [playing, view]);
-
-      return (
-        <ExpoImage
-          {...props}
-          autoplay={playing ?? props.autoplay}
-          cachePolicy={cachePolicy}
-          ref={ref}
-          source={resolved}
-        />
-      );
-    },
-  ),
+    return (
+      <ExpoImage
+        {...props}
+        autoplay={playing ?? props.autoplay}
+        cachePolicy={cachePolicy}
+        onError={handleError}
+        ref={ref}
+        source={resolved}
+      />
+    );
+  }),
 );
 
 /**

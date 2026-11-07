@@ -15,6 +15,7 @@ import {
   SettingsGroup,
   SettingsRow,
 } from "@/components/settings";
+import { useAvatarPicker } from "@/hooks/use-avatar-picker";
 import { useImageCropFlow } from "@/hooks/use-image-crop-flow";
 import { useKeyboardOffset } from "@/hooks/use-keyboard-height";
 import { existingAvatar, useProfileEdit } from "@/hooks/use-profile-edit";
@@ -124,6 +125,7 @@ export default function EditProfileHome() {
     onSave: edit.setAvatar,
     prefix: null,
   });
+  const avatarPicker = useAvatarPicker(avatarFlow);
 
   if (!novelist) return null;
 
@@ -239,7 +241,9 @@ export default function EditProfileHome() {
               accessibilityLabel="Change avatar"
               accessibilityRole="button"
               onPress={() =>
-                avatarFlow.open(existingAvatar(novelist.avatar, novelist.image))
+                avatarPicker.open(
+                  existingAvatar(novelist.avatar, novelist.image),
+                )
               }
               style={[
                 styles.avatarWrap,
@@ -379,6 +383,12 @@ export default function EditProfileHome() {
             onPress={() => router.push("/edit-profile/notifications")}
             subtitle="Which notifications may interrupt you."
           />
+          <SettingsRow
+            icon="lock-closed-outline"
+            label="Profile privacy"
+            onPress={() => router.push("/edit-profile/privacy")}
+            subtitle="Who can see your bookshelf, characters and About; whether your activity is recorded."
+          />
         </SettingsGroup>
       </ScrollView>
 
@@ -420,12 +430,14 @@ export default function EditProfileHome() {
         initial={avatarFlow.initial}
         onClose={avatarFlow.close}
         onConfirm={(crop) => void avatarFlow.confirm(crop)}
+        onLibrary={avatarPicker.openLibrary}
         onReplace={() => void avatarFlow.replace()}
         title="Adjust avatar"
         uploading={avatarFlow.uploading}
         uri={avatarFlow.uri}
         visible={avatarFlow.visible}
       />
+      {avatarPicker.sheets}
     </View>
   );
 }

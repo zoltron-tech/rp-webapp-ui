@@ -42,7 +42,6 @@ const initialState: StoreState = {
   },
   notifications: null,
   novelist: null,
-  novelistRank: null,
   novelists: [],
   pageLoading: false,
   searchBarExpanded: false,

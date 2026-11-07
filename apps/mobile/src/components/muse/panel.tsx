@@ -9,7 +9,6 @@ import {
   useState,
 } from "react";
 import {
-  ActivityIndicator,
   ScrollView,
   StyleSheet,
   View,
@@ -72,11 +71,17 @@ export const PANEL = {
 export const dividerColor = (accent?: string) =>
   accent ? withAlpha(accent, 0.28) : PANEL.line;
 
-/** Web's `InfoAttributeCard` fill and border. */
+/**
+ * The surface every item in a section sits on — a detail, a connection, a
+ * story block, a post: a dark fill tinted by the accent at 70%, so the words
+ * read over any wallpaper while a little of it still shows through.
+ */
+export const itemFill = (accent?: string) =>
+  withAlpha(accent ? mixColors(accent, 0.18, "#0a0a0e") : "#141418", 0.7);
+
+/** An item's fill and border (web's `InfoAttributeCard`, made 70% opaque). */
 export const glassCard = (accent?: string) => ({
-  backgroundColor: accent
-    ? withAlpha(mixColors(accent, 0.3, "#000000"), 0.5)
-    : PANEL.card,
+  backgroundColor: itemFill(accent),
   borderColor: accent ? withAlpha(accent, 0.3) : PANEL.cardBorder,
 });
 
@@ -102,12 +107,19 @@ const MAX_BLUR = 40;
 export const MusePanel = ({
   accent,
   children,
+  header,
   hideBackground = false,
   scroll = true,
   style,
 }: {
   accent?: string;
   children: ReactNode;
+  /**
+   * Pinned above the scrolling part: the face, name and author, the divider
+   * and the section's title — web's `SectionMiniHeader` + `InfoSectionLabel`
+   * stay put while `ScrollableContent` scrolls under them.
+   */
+  header?: ReactNode;
   /** Advanced appearance: drop the gradient entirely. */
   hideBackground?: boolean;
   /** Off for a section that manages its own scrolling (the gallery grid). */
@@ -166,9 +178,13 @@ export const MusePanel = ({
         pointerEvents="none"
         style={StyleSheet.absoluteFill}
       />
+      {header ? <View style={styles.header}>{header}</View> : null}
       {scroll ? (
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[
+            styles.scrollContent,
+            header ? styles.scrollUnderHeader : null,
+          ]}
           // Tells the shared drawings to hold still while the reader moves —
           // see `context/scroll-activity`.
           onScroll={markScrolling}
@@ -291,10 +307,14 @@ const styles = StyleSheet.create({
     flex: 1,
     overflow: "hidden",
   },
+  /** The pinned part keeps the panel's own padding at the top and sides. */
+  header: { paddingHorizontal: space.md, paddingTop: space.md },
   scroll: { flex: 1 },
   scrollContent: {
     paddingBottom: space.lg,
     paddingHorizontal: space.md,
     paddingTop: space.md,
   },
+  /** Under a pinned header the title's own margin is the gap; no more. */
+  scrollUnderHeader: { paddingTop: 0 },
 });

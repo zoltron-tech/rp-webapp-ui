@@ -67,20 +67,61 @@ export const getPresignedFileUploadObject = (
     scoped: formData.get("scoped") !== "false",
   });
 
-export const uploadMedia = async (
+/**
+ * `POST /s3/upload`, telling a refused image apart from a failed upload: the
+ * service screens images for sexual content before storing them and answers
+ * 422 when it refuses one (APP_STORE_REVIEW_PLAN.md H1).
+ */
+export const uploadMediaScreened = async (
   api: ApiClient,
   formData: FormData,
-): Promise<string | API_MESSAGE.MediaError> => {
+): Promise<string | API_MESSAGE.MediaError | API_MESSAGE.MediaRejected> => {
   const response = await api.raw(`${PORTFOLIO}/s3/upload`, {
     body: formData,
     label: "uploadMedia",
     method: "POST",
   });
 
+  if (response.status === 422) return API_MESSAGE.MediaRejected;
   if (!response.ok) return API_MESSAGE.MediaError;
 
   const result = (await response.json()) as WithMessage;
   return result.message;
+};
+
+/**
+ * The same, with a refusal folded into `MediaError` — for the web callers,
+ * which compare against `MediaError` alone and would otherwise take the
+ * rejection string for a URL.
+ */
+export const uploadMedia = async (
+  api: ApiClient,
+  formData: FormData,
+): Promise<string | API_MESSAGE.MediaError> => {
+  const result = await uploadMediaScreened(api, formData);
+  return result === API_MESSAGE.MediaRejected ? API_MESSAGE.MediaError : result;
+};
+
+/**
+ * Screens a file just PUT to a presigned URL. `false` only when the service
+ * refused it — it has already deleted the object, so the URL must not be used.
+ * Anything else (allowed, not an image, the check unavailable, a service that
+ * predates the route) is `true`: the check fails open, as it does server-side.
+ */
+export const moderateUpload = async (
+  api: ApiClient,
+  fileUrl: string,
+): Promise<boolean> => {
+  try {
+    const response = await api.raw(`${PORTFOLIO}/s3/moderate`, {
+      body: { fileUrl },
+      label: "moderateUpload",
+      method: "POST",
+    });
+    return response.status !== 422;
+  } catch {
+    return true;
+  }
 };
 
 /** Unauthenticated by design — the enhance endpoint never checked a token. */

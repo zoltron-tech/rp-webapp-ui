@@ -19,7 +19,7 @@ import { TextField } from "@/components/text-field";
  * answer either client has.
  */
 
-const MAX_USERNAME = 30;
+const MAX_USERNAME = 50;
 
 type Availability = "idle" | "checking" | "available" | "taken" | "unknown";
 

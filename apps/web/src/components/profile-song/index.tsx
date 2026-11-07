@@ -2,7 +2,17 @@
 
 import type { ProfileSong } from "@nw/types/music";
 import { type FC, useEffect, useRef, useState } from "react";
-import { MdMusicNote, MdPause, MdPlayArrow } from "react-icons/md";
+import {
+  MdMusicNote,
+  MdOutlinedFlag,
+  MdPause,
+  MdPlayArrow,
+} from "react-icons/md";
+import { reportAction } from "@/app/rp/thread/actions";
+import { AppAlertDialog } from "@/components/dialog";
+import { useUIContext } from "@/hooks";
+import { API_MESSAGE } from "@/utils/constants";
+import { REPORT_SENT_TOAST } from "@/utils/report";
 import {
   getSpotifyIframeApi,
   type SpotifyEmbedController,
@@ -22,6 +32,11 @@ type Props = {
    * pill gradient, play button, and progress bar in place of the global accent.
    */
   accent?: string;
+  /**
+   * Someone else's song: show a Report flag for an uploaded (LIBRARY) one.
+   * Spotify tracks are licensed through Spotify and get none.
+   */
+  reportable?: boolean;
 };
 
 /**
@@ -37,8 +52,23 @@ export const ProfileSongPlayer: FC<Props> = ({
   block,
   flushBottom,
   accent,
+  reportable = false,
 }) => {
   const isSpotify = song.source === "SPOTIFY" && !!song.spotifyTrackId;
+  const reportId =
+    reportable && song.source === "LIBRARY" ? song.songId : null;
+  const { successToast, errorToast } = useUIContext();
+  const [confirmingReport, setConfirmingReport] = useState(false);
+
+  const handleReport = async () => {
+    if (!reportId) return;
+    const response = await reportAction(reportId, "", "SONG");
+    if (response?.message === API_MESSAGE.Success) {
+      successToast(REPORT_SENT_TOAST);
+    } else {
+      errorToast("There was an issue while reporting this song.");
+    }
+  };
 
   const [ready, setReady] = useState(!isSpotify);
   const [playing, setPlaying] = useState(false);
@@ -175,6 +205,17 @@ export const ProfileSongPlayer: FC<Props> = ({
           )}
         </S.Info>
 
+        {reportId && (
+          <S.ReportButton
+            type="button"
+            onClick={() => setConfirmingReport(true)}
+            aria-label={`Report ${song.title}`}
+            title="Report this song"
+          >
+            <MdOutlinedFlag size={16} />
+          </S.ReportButton>
+        )}
+
         {playable && (
           <S.PlayButton
             $slim={slim}
@@ -202,6 +243,17 @@ export const ProfileSongPlayer: FC<Props> = ({
 
       {/* Real Spotify iframe — driven off-screen, never shown to the user */}
       {isSpotify && <S.HiddenEmbed ref={embedHostRef} aria-hidden />}
+
+      {reportId && (
+        <AppAlertDialog
+          heading={`Report ${song.title}?`}
+          text="Report a song that isn't the uploader's to share, or that breaks the community rules. Our support team will review it."
+          open={confirmingReport}
+          onOpenChange={setConfirmingReport}
+          onConfirm={handleReport}
+          actionButtonLabel="Report"
+        />
+      )}
     </S.Wrapper>
   );
 };

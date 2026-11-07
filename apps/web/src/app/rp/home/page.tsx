@@ -9,18 +9,26 @@ import type {
   StoryBoard,
 } from "@nw/types";
 import type { Activity } from "@nw/types/activity";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa6";
-import { FiSearch } from "react-icons/fi";
 import { ActivityBox } from "@/components/activity-box";
-import { NoFriendsRailArt } from "@/components/book-art";
 import { ScrollJumpButton } from "@/components/common/scroll-jump-button";
 import HomeTourGuide from "@/components/home-tour-guide";
 import { LoadMore } from "@/components/load-more/page";
 import { MusePreviewCard } from "@/components/muse-preview-card";
 import { NovelistPreviewCard } from "@/components/novelist-preview-card";
+import { novelistToSource } from "@/components/event-thread-input/helpers";
 import { Prompt as PromptComponent } from "@/components/prompt";
-import { SideBarFriendListItem } from "@/components/sidebar-friend-list-item";
+import { PromptComposeTrigger } from "@/components/prompt-compose-trigger";
+import PromptInput from "@/components/prompt-input";
+import { FullPagePromptInput } from "@/components/prompt-input/full-page-prompt-input";
 import { StoryCard } from "@/components/story-card";
 import VideoCard from "@/components/video-card";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
@@ -34,7 +42,6 @@ import {
   prefetchHomeActivities,
   prefetchOOCPosts,
 } from "@/lib/feed-prefetch";
-import { ROUTES } from "@/utils/constants/routes";
 import { BookmarkCard } from "../bookmarks/bookmark-card";
 import { getNewPromptsAction } from "../explore-prompts/actions";
 import { getBookmarkedEventsAction } from "../story/actions";
@@ -45,6 +52,7 @@ import {
   getRandomStories,
   getStrangerNovelistsAction,
 } from "./actions";
+import { ComposeSheet } from "../explore/styles";
 import { HomeMobileSearch } from "./mobile-search";
 import * as S from "./styles";
 
@@ -74,7 +82,8 @@ type FeedItem =
  *      the others — the user sees a mix immediately rather than long runs
  *      of one kind.
  *
- * Order per cycle: activity → explore prompt → OOC post.
+ * Order per cycle: explore prompt → activity → OOC post. The feed opens on a
+ * prompt, the thing a writer can answer, rather than on a friend's update.
  */
 const interleaveFeed = (
   activities: Activity[],
@@ -88,13 +97,42 @@ const interleaveFeed = (
     oocPosts.length,
   );
   for (let i = 0; i < max; i++) {
-    const a = activities[i];
-    if (a) out.push({ data: a, key: `activity-${a.id}`, kind: "activity" });
     const p = explorePrompts[i];
     if (p) out.push({ data: p, key: `prompt-${p.id}`, kind: "prompt" });
+    const a = activities[i];
+    if (a) out.push({ data: a, key: `activity-${a.id}`, kind: "activity" });
     const o = oocPosts[i];
     if (o) out.push({ data: o, key: `ooc-${o.id}`, kind: "ooc" });
   }
+  return out;
+};
+
+/**
+ * Where each shelf sits in the feed: before the feed item at that index.
+ * Shared shape with the mobile app's Home (`apps/mobile/src/screens/home.tsx`).
+ */
+const RAIL_SLOTS = {
+  friendsMuses: 3,
+  publicMuses: 12,
+  stories: 9,
+  suggestions: 6,
+} as const;
+
+/**
+ * The rows with each rail placed before the row at its index. A feed too
+ * short to reach a rail's place gets it at the end, so a reader with an
+ * empty feed still sees every shelf, stacked.
+ */
+const dealRails = (
+  rows: ReactNode[],
+  rails: { at: number; node: ReactNode }[],
+): ReactNode[] => {
+  const out: ReactNode[] = [];
+  rows.forEach((row, index) => {
+    for (const rail of rails) if (rail.at === index) out.push(rail.node);
+    out.push(row);
+  });
+  for (const rail of rails) if (rail.at >= rows.length) out.push(rail.node);
   return out;
 };
 
@@ -104,13 +142,14 @@ export default function HomePage() {
   const [startTour, setStartTour] = useState(false);
   const authState = useGlobalState("authState");
   const novelist = useGlobalState("novelist");
+  const [composeOpen, setComposeOpen] = useState(false);
   const cachedSuggestions = useGlobalState("friendSuggestions");
   const cachedActivities = useGlobalState("cachedHomeActivities");
   const cachedExplorePrompts = useGlobalState("cachedExplorePrompts");
   const cachedOOCPosts = useGlobalState("cachedOOCPosts");
   const notifications = useGlobalState("notifications");
   const setGlobalState = useGlobalStoreSet();
-  const { routeToPage, stopPageLoading } = usePageRouter();
+  const { stopPageLoading } = usePageRouter();
   const [strangers, setStrangers] = useState<Novelist[] | undefined>(
     cachedSuggestions ?? undefined,
   );
@@ -427,6 +466,31 @@ export default function HomePage() {
     setFeedLoadingMore(false);
   };
 
+  /**
+   * A post just written here goes to the top of the feed, and into the cache
+   * Explore reads too (as Explore's own composer does), so it is there on
+   * either page without a refetch.
+   */
+  const handlePromptSent = useCallback(
+    (prompt: Prompt) => {
+      const prepend = (list: Prompt[] | null): Prompt[] | null =>
+        list ? [prompt, ...list] : list;
+      const isOOC = prompt.source.sourceType === "NOVELIST";
+      setMixedFeed((prev) => [
+        isOOC
+          ? { data: prompt, key: `ooc-${prompt.id}`, kind: "ooc" }
+          : { data: prompt, key: `prompt-${prompt.id}`, kind: "prompt" },
+        ...prev,
+      ]);
+      setGlobalState((state) =>
+        isOOC
+          ? { cachedOOCPosts: prepend(state.cachedOOCPosts) }
+          : { cachedExplorePrompts: prepend(state.cachedExplorePrompts) },
+      );
+    },
+    [setGlobalState],
+  );
+
   const loadNextFriendsMuses = async () => {
     setFriendsMusesLoading(true);
     const nextPage = friendsMusesPage + 1;
@@ -508,9 +572,6 @@ export default function HomePage() {
     }
   }, [authState, hydrateActivities, hydrateExplorePrompts, hydrateOOCPosts]);
 
-  const friendsScroll = useScrollArrows<HTMLDivElement>([
-    novelist?.friends.length,
-  ]);
   const storiesScroll = useScrollArrows<HTMLDivElement>([storyboards?.length]);
   const friendsMusesScroll = useScrollArrows<HTMLDivElement>([
     friendsMuses?.length,
@@ -521,6 +582,242 @@ export default function HomePage() {
   ]);
   const unknownMusesScroll = useScrollArrows<HTMLDivElement>([
     unknownMuses?.length,
+  ]);
+
+  // ── Rails, dealt into the feed ───────────────────────────────────────────
+  // The feed opens with posts. The shelves that used to stack above it sit
+  // between them instead, a few posts apart (see `RAIL_SLOTS`) — the same
+  // places the mobile app deals them.
+
+  const friendsMusesRail =
+    friendsMusesInitialLoading ||
+    (friendsMuses !== undefined && friendsMuses.length > 0) ? (
+      <S.FeedRail key="rail-friends-muses" id="home-tour-step-2">
+        <S.SubText>characters by your friends</S.SubText>
+        <S.ScrollRowWrap>
+          <S.ScrollNavButton
+            $side="left"
+            $visible={friendsMusesScroll.canScrollLeft}
+            onClick={() => friendsMusesScroll.scrollByPage(-1)}
+            aria-label="Scroll left"
+          >
+            <FaChevronLeft />
+          </S.ScrollNavButton>
+          <S.PartitionContainer ref={friendsMusesScroll.ref}>
+            {friendsMusesInitialLoading ? (
+              [0, 1, 2, 3, 4].map((i) => <S.MuseCardShimmer key={i} />)
+            ) : (
+              <>
+                {friendsMuses!.map((knownMuse) => (
+                  <MusePreviewCard key={knownMuse?.id} muse={knownMuse} />
+                ))}
+                {friendsMusesHasMore && (
+                  <S.NextPageCard
+                    onClick={loadNextFriendsMuses}
+                    disabled={friendsMusesLoading}
+                    title="Load more characters"
+                  >
+                    {friendsMusesLoading ? (
+                      <S.SpinnerRing />
+                    ) : (
+                      <>
+                        <FaChevronRight size={24} />
+                        <span>More</span>
+                      </>
+                    )}
+                  </S.NextPageCard>
+                )}
+              </>
+            )}
+          </S.PartitionContainer>
+          <S.ScrollNavButton
+            $side="right"
+            $visible={friendsMusesScroll.canScrollRight}
+            onClick={() => friendsMusesScroll.scrollByPage(1)}
+            aria-label="Scroll right"
+          >
+            <FaChevronRight />
+          </S.ScrollNavButton>
+        </S.ScrollRowWrap>
+      </S.FeedRail>
+    ) : null;
+
+  const suggestionsRail = (
+    <S.FeedRail key="rail-suggestions" id="home-tour-step-3">
+      <S.SubText>Friend Suggestions</S.SubText>
+      <S.ScrollRowWrap>
+        <S.ScrollNavButton
+          $side="left"
+          $visible={strangersScroll.canScrollLeft}
+          onClick={() => strangersScroll.scrollByPage(-1)}
+          aria-label="Scroll left"
+        >
+          <FaChevronLeft />
+        </S.ScrollNavButton>
+        <S.PartitionContainer ref={strangersScroll.ref}>
+          {strangersInitialLoading ? (
+            [0, 1, 2, 3].map((i) => <S.NovelistCardShimmer key={i} />)
+          ) : (
+            <>
+              {friendRequestCards.map((card) => (
+                <NovelistPreviewCard key={card.username} novelist={card} />
+              ))}
+              {strangers?.map((stranger) => (
+                <NovelistPreviewCard
+                  key={stranger?.username}
+                  novelist={stranger}
+                />
+              ))}
+              {strangersHasMore && (
+                <S.NextPageNovelistCard
+                  onClick={loadNextStrangers}
+                  disabled={strangersLoading}
+                  title="Load more suggestions"
+                >
+                  {strangersLoading ? (
+                    <S.SpinnerRing />
+                  ) : (
+                    <>
+                      <FaChevronRight size={24} />
+                      <span>More</span>
+                    </>
+                  )}
+                </S.NextPageNovelistCard>
+              )}
+            </>
+          )}
+        </S.PartitionContainer>
+        <S.ScrollNavButton
+          $side="right"
+          $visible={strangersScroll.canScrollRight}
+          onClick={() => strangersScroll.scrollByPage(1)}
+          aria-label="Scroll right"
+        >
+          <FaChevronRight />
+        </S.ScrollNavButton>
+      </S.ScrollRowWrap>
+    </S.FeedRail>
+  );
+
+  const storiesRail =
+    storiesInitialLoading ||
+    (storyboards !== undefined && storyboards.length > 0) ? (
+      <S.FeedRail key="rail-stories">
+        <S.SubText>Dive into the Stories</S.SubText>
+        <S.ScrollRowWrap>
+          <S.ScrollNavButton
+            $side="left"
+            $visible={storiesScroll.canScrollLeft}
+            onClick={() => storiesScroll.scrollByPage(-1)}
+            aria-label="Scroll left"
+          >
+            <FaChevronLeft />
+          </S.ScrollNavButton>
+          <S.PartitionContainer ref={storiesScroll.ref}>
+            {storiesInitialLoading ? (
+              [0, 1, 2, 3].map((i) => <S.StoryCardShimmer key={i} />)
+            ) : (
+              <>
+                {storyboards!.map((storyBoard) => (
+                  <StoryCard key={storyBoard?.id} storyBoard={storyBoard} />
+                ))}
+              </>
+            )}
+          </S.PartitionContainer>
+          <S.ScrollNavButton
+            $side="right"
+            $visible={storiesScroll.canScrollRight}
+            onClick={() => storiesScroll.scrollByPage(1)}
+            aria-label="Scroll right"
+          >
+            <FaChevronRight />
+          </S.ScrollNavButton>
+        </S.ScrollRowWrap>
+      </S.FeedRail>
+    ) : null;
+
+  const publicMusesRail = (
+    <S.FeedRail key="rail-public-muses" id="home-tour-step-4">
+      <S.SubText>Public Characters out there</S.SubText>
+      <S.ScrollRowWrap>
+        <S.ScrollNavButton
+          $side="left"
+          $visible={unknownMusesScroll.canScrollLeft}
+          onClick={() => unknownMusesScroll.scrollByPage(-1)}
+          aria-label="Scroll left"
+        >
+          <FaChevronLeft />
+        </S.ScrollNavButton>
+        <S.PartitionContainer ref={unknownMusesScroll.ref}>
+          {unknownMusesInitialLoading ? (
+            [0, 1, 2, 3, 4].map((i) => <S.MuseCardShimmer key={i} />)
+          ) : (
+            <>
+              {unknownMuses?.map((unknownMuse) => (
+                <MusePreviewCard key={unknownMuse?.id} muse={unknownMuse} />
+              ))}
+              {unknownMusesHasMore && (
+                <S.NextPageCard
+                  onClick={loadNextUnknownMuses}
+                  disabled={unknownMusesLoading}
+                  title="Load more characters"
+                >
+                  {unknownMusesLoading ? (
+                    <S.SpinnerRing />
+                  ) : (
+                    <>
+                      <FaChevronRight size={24} />
+                      <span>More</span>
+                    </>
+                  )}
+                </S.NextPageCard>
+              )}
+            </>
+          )}
+        </S.PartitionContainer>
+        <S.ScrollNavButton
+          $side="right"
+          $visible={unknownMusesScroll.canScrollRight}
+          onClick={() => unknownMusesScroll.scrollByPage(1)}
+          aria-label="Scroll right"
+        >
+          <FaChevronRight />
+        </S.ScrollNavButton>
+      </S.ScrollRowWrap>
+    </S.FeedRail>
+  );
+
+  // Ghost posts while the first page is out; the rails are dealt in among
+  // them at the same places, so nothing jumps when the posts land.
+  const feedRows: ReactNode[] = feedInitializing
+    ? [0, 1, 2, 3, 4].map((i) => (
+        <S.FeedShimmerList key={`ghost-${i}`}>
+          <S.FeedShimmerItem>
+            <S.ShimmerRow>
+              <S.ShimmerAvatar />
+              <S.ShimmerLines>
+                <S.ShimmerLine $width="48%" $height="13px" />
+                <S.ShimmerLine $width="72%" $height="11px" />
+              </S.ShimmerLines>
+            </S.ShimmerRow>
+            <S.ShimmerBlock $height={i % 2 === 0 ? "110px" : "64px"} />
+            <S.ShimmerLine $width="38%" $height="11px" />
+          </S.FeedShimmerItem>
+        </S.FeedShimmerList>
+      ))
+    : mixedFeed.map((item) =>
+        item.kind === "activity" ? (
+          <ActivityBox key={item.key} activity={item.data} />
+        ) : (
+          <PromptComponent key={item.key} prompt={item.data} $noBorder />
+        ),
+      );
+
+  const feed = dealRails(feedRows, [
+    { at: RAIL_SLOTS.friendsMuses, node: friendsMusesRail },
+    { at: RAIL_SLOTS.suggestions, node: suggestionsRail },
+    { at: RAIL_SLOTS.stories, node: storiesRail },
+    { at: RAIL_SLOTS.publicMuses, node: publicMusesRail },
   ]);
 
   return (
@@ -537,295 +834,61 @@ export default function HomePage() {
       )} */}
       <S.MainContainer>
         {isMobile && <HomeMobileSearch />}
-        <S.ContentContainer id="home-tour-step-1">
-          <S.SubText>Friends</S.SubText>
-          <S.ScrollRowWrap>
-            <S.ScrollNavButton
-              $side="left"
-              $visible={friendsScroll.canScrollLeft}
-              onClick={() => friendsScroll.scrollByPage(-1)}
-              aria-label="Scroll left"
-            >
-              <FaChevronLeft />
-            </S.ScrollNavButton>
-            <S.FriendsStrip ref={friendsScroll.ref}>
-              {!novelist?.friends.length && (
-                <S.AddFriendButton
-                  onClick={() => routeToPage(ROUTES.Fellows)}
-                  title="Find novelists to connect with"
-                  aria-label="Find novelists"
-                >
-                  <FiSearch size={18} />
-                </S.AddFriendButton>
-              )}
-              {novelist === null ? (
-                [0, 1, 2, 3].map((i) => (
-                  <S.SidebarShimmerItem key={i}>
-                    <S.SidebarShimmerAvatar />
-                    <S.SidebarShimmerName />
-                  </S.SidebarShimmerItem>
-                ))
-              ) : novelist.friends.length > 0 ? (
-                novelist.friends.map((friend) => (
-                  <SideBarFriendListItem
-                    key={friend?.username}
-                    novelist={friend}
-                    isRequest={false}
-                  />
-                ))
-              ) : (
-                <S.FriendsEmptyState>
-                  <NoFriendsRailArt />
-                  <span>No friends yet. Find novelists to connect with.</span>
-                </S.FriendsEmptyState>
-              )}
-            </S.FriendsStrip>
-            <S.ScrollNavButton
-              $side="right"
-              $visible={friendsScroll.canScrollRight}
-              onClick={() => friendsScroll.scrollByPage(1)}
-              aria-label="Scroll right"
-            >
-              <FaChevronRight />
-            </S.ScrollNavButton>
-          </S.ScrollRowWrap>
-        </S.ContentContainer>
+        {/* The way in to writing, as Explore has it: a pill that opens the
+            full-page composer on phones, the inline composer on desktop. */}
+        {authState === "LOGGED_IN" && novelist && (
+          <S.ComposeWrap>
+            {isMobile ? (
+              <PromptComposeTrigger
+                avatarSrc={novelist.image}
+                avatarAlt={novelist.username}
+                avatarNwImage={novelist.avatar}
+                onClick={() => setComposeOpen(true)}
+              />
+            ) : (
+              <PromptInput
+                type="prompt"
+                dropdownSelection="ALL"
+                initialSelection={novelistToSource(novelist)}
+                onSend={handlePromptSent}
+              />
+            )}
+          </S.ComposeWrap>
+        )}
         {continueBookmark && (
           <S.ContentContainer>
-            <S.SubText>Continue Reading</S.SubText>
             <S.ContinueReadingWrap>
+              <S.SubText>Continue Reading</S.SubText>
               <BookmarkCard bookmarked={continueBookmark} />
             </S.ContinueReadingWrap>
           </S.ContentContainer>
         )}
-        {(storiesInitialLoading ||
-          (storyboards !== undefined && storyboards.length > 0)) && (
-          <S.ContentContainer>
-            <S.SubText>Dive into the Stories</S.SubText>
-            <S.ScrollRowWrap>
-              <S.ScrollNavButton
-                $side="left"
-                $visible={storiesScroll.canScrollLeft}
-                onClick={() => storiesScroll.scrollByPage(-1)}
-                aria-label="Scroll left"
-              >
-                <FaChevronLeft />
-              </S.ScrollNavButton>
-              <S.PartitionContainer ref={storiesScroll.ref}>
-                {storiesInitialLoading ? (
-                  [0, 1, 2, 3].map((i) => <S.StoryCardShimmer key={i} />)
-                ) : (
-                  <>
-                    {storyboards!.map((storyBoard) => (
-                      <StoryCard key={storyBoard?.id} storyBoard={storyBoard} />
-                    ))}
-                  </>
-                )}
-              </S.PartitionContainer>
-              <S.ScrollNavButton
-                $side="right"
-                $visible={storiesScroll.canScrollRight}
-                onClick={() => storiesScroll.scrollByPage(1)}
-                aria-label="Scroll right"
-              >
-                <FaChevronRight />
-              </S.ScrollNavButton>
-            </S.ScrollRowWrap>
-          </S.ContentContainer>
-        )}
-        {(friendsMusesInitialLoading ||
-          (friendsMuses !== undefined && friendsMuses.length > 0)) && (
-          <S.ContentContainer id="home-tour-step-2">
-            <S.SubText>characters by your friends</S.SubText>
-            <S.ScrollRowWrap>
-              <S.ScrollNavButton
-                $side="left"
-                $visible={friendsMusesScroll.canScrollLeft}
-                onClick={() => friendsMusesScroll.scrollByPage(-1)}
-                aria-label="Scroll left"
-              >
-                <FaChevronLeft />
-              </S.ScrollNavButton>
-              <S.PartitionContainer ref={friendsMusesScroll.ref}>
-                {friendsMusesInitialLoading ? (
-                  [0, 1, 2, 3, 4].map((i) => <S.MuseCardShimmer key={i} />)
-                ) : (
-                  <>
-                    {friendsMuses!.map((knownMuse) => (
-                      <MusePreviewCard key={knownMuse?.id} muse={knownMuse} />
-                    ))}
-                    {friendsMusesHasMore && (
-                      <S.NextPageCard
-                        onClick={loadNextFriendsMuses}
-                        disabled={friendsMusesLoading}
-                        title="Load more characters"
-                      >
-                        {friendsMusesLoading ? (
-                          <S.SpinnerRing />
-                        ) : (
-                          <>
-                            <FaChevronRight size={24} />
-                            <span>More</span>
-                          </>
-                        )}
-                      </S.NextPageCard>
-                    )}
-                  </>
-                )}
-              </S.PartitionContainer>
-              <S.ScrollNavButton
-                $side="right"
-                $visible={friendsMusesScroll.canScrollRight}
-                onClick={() => friendsMusesScroll.scrollByPage(1)}
-                aria-label="Scroll right"
-              >
-                <FaChevronRight />
-              </S.ScrollNavButton>
-            </S.ScrollRowWrap>
-          </S.ContentContainer>
-        )}
-        <S.ContentContainer id="home-tour-step-3">
-          <S.SubText>Friend Suggestions</S.SubText>
-          <S.ScrollRowWrap>
-            <S.ScrollNavButton
-              $side="left"
-              $visible={strangersScroll.canScrollLeft}
-              onClick={() => strangersScroll.scrollByPage(-1)}
-              aria-label="Scroll left"
-            >
-              <FaChevronLeft />
-            </S.ScrollNavButton>
-            <S.PartitionContainer ref={strangersScroll.ref}>
-              {strangersInitialLoading ? (
-                [0, 1, 2, 3].map((i) => <S.NovelistCardShimmer key={i} />)
-              ) : (
-                <>
-                  {friendRequestCards.map((card) => (
-                    <NovelistPreviewCard key={card.username} novelist={card} />
-                  ))}
-                  {strangers?.map((stranger) => (
-                    <NovelistPreviewCard
-                      key={stranger?.username}
-                      novelist={stranger}
-                    />
-                  ))}
-                  {strangersHasMore && (
-                    <S.NextPageNovelistCard
-                      onClick={loadNextStrangers}
-                      disabled={strangersLoading}
-                      title="Load more suggestions"
-                    >
-                      {strangersLoading ? (
-                        <S.SpinnerRing />
-                      ) : (
-                        <>
-                          <FaChevronRight size={24} />
-                          <span>More</span>
-                        </>
-                      )}
-                    </S.NextPageNovelistCard>
-                  )}
-                </>
-              )}
-            </S.PartitionContainer>
-            <S.ScrollNavButton
-              $side="right"
-              $visible={strangersScroll.canScrollRight}
-              onClick={() => strangersScroll.scrollByPage(1)}
-              aria-label="Scroll right"
-            >
-              <FaChevronRight />
-            </S.ScrollNavButton>
-          </S.ScrollRowWrap>
-        </S.ContentContainer>
-        <S.ContentContainer id="home-tour-step-4">
-          <S.SubText>Public Characters out there</S.SubText>
-          <S.ScrollRowWrap>
-            <S.ScrollNavButton
-              $side="left"
-              $visible={unknownMusesScroll.canScrollLeft}
-              onClick={() => unknownMusesScroll.scrollByPage(-1)}
-              aria-label="Scroll left"
-            >
-              <FaChevronLeft />
-            </S.ScrollNavButton>
-            <S.PartitionContainer ref={unknownMusesScroll.ref}>
-              {unknownMusesInitialLoading ? (
-                [0, 1, 2, 3, 4].map((i) => <S.MuseCardShimmer key={i} />)
-              ) : (
-                <>
-                  {unknownMuses?.map((unknownMuse) => (
-                    <MusePreviewCard key={unknownMuse?.id} muse={unknownMuse} />
-                  ))}
-                  {unknownMusesHasMore && (
-                    <S.NextPageCard
-                      onClick={loadNextUnknownMuses}
-                      disabled={unknownMusesLoading}
-                      title="Load more characters"
-                    >
-                      {unknownMusesLoading ? (
-                        <S.SpinnerRing />
-                      ) : (
-                        <>
-                          <FaChevronRight size={24} />
-                          <span>More</span>
-                        </>
-                      )}
-                    </S.NextPageCard>
-                  )}
-                </>
-              )}
-            </S.PartitionContainer>
-            <S.ScrollNavButton
-              $side="right"
-              $visible={unknownMusesScroll.canScrollRight}
-              onClick={() => unknownMusesScroll.scrollByPage(1)}
-              aria-label="Scroll right"
-            >
-              <FaChevronRight />
-            </S.ScrollNavButton>
-          </S.ScrollRowWrap>
-        </S.ContentContainer>
-        <S.ActivityContainer>
-          <S.SubText id="home-tour-step-5">
-            Updates from your friends
-          </S.SubText>
-          {feedInitializing ? (
-            <S.FeedShimmerList>
-              {[0, 1, 2, 3, 4].map((i) => (
-                <S.FeedShimmerItem key={i}>
-                  <S.ShimmerRow>
-                    <S.ShimmerAvatar />
-                    <S.ShimmerLines>
-                      <S.ShimmerLine $width="48%" $height="13px" />
-                      <S.ShimmerLine $width="72%" $height="11px" />
-                    </S.ShimmerLines>
-                  </S.ShimmerRow>
-                  <S.ShimmerBlock $height={i % 2 === 0 ? "110px" : "64px"} />
-                  <S.ShimmerLine $width="38%" $height="11px" />
-                </S.FeedShimmerItem>
-              ))}
-            </S.FeedShimmerList>
-          ) : (
-            <>
-              {mixedFeed.map((item) => {
-                if (item.kind === "activity") {
-                  return <ActivityBox key={item.key} activity={item.data} />;
-                }
-                return (
-                  <PromptComponent key={item.key} prompt={item.data} $noBorder />
-                );
-              })}
-              <LoadMore
-                hasMore={feedHasMore}
-                loadingMore={feedLoadingMore}
-                onLoadMore={loadMoreFeed}
-              />
-            </>
+        <S.ActivityContainer id="home-tour-step-5">
+          {feed}
+          {!feedInitializing && (
+            <LoadMore
+              hasMore={feedHasMore}
+              loadingMore={feedLoadingMore}
+              onLoadMore={loadMoreFeed}
+            />
           )}
         </S.ActivityContainer>
         <ScrollJumpButton direction="up" onClick={scrollToTop} />
       </S.MainContainer>
+
+      <ComposeSheet $open={composeOpen}>
+        <FullPagePromptInput
+          type="prompt"
+          dropdownSelection="ALL"
+          initialSelection={novelist ? novelistToSource(novelist) : undefined}
+          className="compose-fp-inner"
+          onBack={() => setComposeOpen(false)}
+          onSend={(prompt) => {
+            handlePromptSent(prompt);
+            setComposeOpen(false);
+          }}
+        />
+      </ComposeSheet>
     </S.PageContainer>
   );
 }

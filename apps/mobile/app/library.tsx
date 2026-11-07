@@ -3,6 +3,7 @@ import { queryKeys, useApi } from "@nw/features";
 import type { StoryBoard } from "@nw/types";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
+import { Button } from "@/components/button";
 import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -173,9 +174,16 @@ export default function LibraryScreen() {
           ) : null
         }
         ListHeaderComponent={
-          <Text style={[styles.subtitle, { color: theme.textGray }]}>
-            Browse every story on Novelist World
-          </Text>
+          <View style={styles.head}>
+            <Text style={[styles.subtitle, { color: theme.textGray }]}>
+              Browse every story on Novelist World
+            </Text>
+            <Button
+              icon="library-outline"
+              label="Open World Library"
+              onPress={() => router.push("/books/search")}
+            />
+          </View>
         }
         numColumns={COLUMNS}
         onEndReached={loadMore}
@@ -193,6 +201,7 @@ export default function LibraryScreen() {
 }
 
 const styles = StyleSheet.create({
+  head: { alignItems: "flex-start", gap: space.m, marginBottom: space.m },
   content: { gap: GUTTER, paddingHorizontal: GUTTER, paddingTop: space.sm },
   fill: { flex: 1 },
   footer: { alignItems: "center", paddingVertical: space.md },

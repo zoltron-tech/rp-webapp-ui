@@ -89,7 +89,7 @@ export const NotificationRowSkeleton = () => (
   </SkeletonPulse>
 );
 
-/** `outgoing-thread-card.tsx`: head, rule, the quoted words, the footer line. */
+/** `outgoing-thread-card.tsx`: head, the quoted words, the footer line. */
 export const OutgoingThreadCardSkeleton = () => {
   const theme = useAppTheme();
   return (
@@ -101,11 +101,7 @@ export const OutgoingThreadCardSkeleton = () => {
             <Bone height={14} width="50%" />
             <Bone height={10} width="70%" />
           </View>
-          <Bone height={22} radius={radius.full} width={60} />
         </View>
-        <View
-          style={[styles.rule, { backgroundColor: theme.material.edge }]}
-        />
         <View style={[styles.quote, { borderColor: theme.material.edge }]}>
           <Bone height={12} />
           <Bone height={12} width="90%" />
@@ -120,17 +116,16 @@ export const OutgoingThreadCardSkeleton = () => {
   );
 };
 
-/** `novelist-row.tsx`: fixed `ROW_HEIGHT`, 56pt face, name/handle/meta, a pill. */
+/** `novelist-row.tsx`: fixed `ROW_HEIGHT`, 48pt face, name and detail, a circle. */
 export const NovelistRowSkeleton = () => (
   <SkeletonPulse label="Loading a novelist">
     <Frame style={styles.novelist}>
-      <Bone circle height={56} />
+      <Bone circle height={48} />
       <View style={styles.body}>
         <Bone height={15} width="55%" />
-        <Bone height={10} width="35%" />
         <Bone height={10} width="60%" />
       </View>
-      <Bone height={34} radius={radius.full} width={72} />
+      <Bone circle height={38} />
     </Frame>
   </SkeletonPulse>
 );
@@ -215,7 +210,6 @@ const styles = StyleSheet.create({
     gap: space.s,
     padding: space.ms,
   },
-  rule: { height: StyleSheet.hairlineWidth, width: "100%" },
   shelf: { gap: space.ms },
   shelfRow: { flexDirection: "row", gap: space.ms },
   thread: { borderRadius: radius.md, gap: space.sm, padding: space.ms },

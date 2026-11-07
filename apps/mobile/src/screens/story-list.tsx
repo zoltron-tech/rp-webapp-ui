@@ -110,7 +110,7 @@ export const StoryList = ({ username }: { username: string }) => {
     if (atLimit) {
       Alert.alert(
         "Story limit reached",
-        `You've reached your plan's limit of ${limit} stories. Upgrade your tier or remove a story to create a new one.`,
+        `You've reached your limit of ${limit} stories. Remove a story to create a new one.`,
       );
       return;
     }

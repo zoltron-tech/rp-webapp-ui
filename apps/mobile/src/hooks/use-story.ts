@@ -4,6 +4,7 @@ import {
   getStoryboardEventThreads,
   getStoryCharacters,
   getStoryCodex,
+  getChapterSoundscape,
   getStoryMaps,
   getStoryTimeline,
 } from "@nw/api/endpoints/story";
@@ -166,6 +167,18 @@ export const useStoryTimeline = (storyId: string | undefined) => {
     enabled: Boolean(storyId),
     queryFn: async () => unwrap(await getStoryTimeline(api, storyId as string)),
     queryKey: queryKeys.storyTimeline(storyId ?? ""),
+    staleTime: STALE,
+  });
+};
+
+/** A chapter's cues: everyone who can read it can hear it. */
+export const useChapterSoundscape = (eventId: string | undefined) => {
+  const api = useApi();
+  return useQuery({
+    enabled: Boolean(eventId),
+    queryFn: async () =>
+      unwrap(await getChapterSoundscape(api, eventId as string)),
+    queryKey: queryKeys.chapterSoundscape(eventId ?? ""),
     staleTime: STALE,
   });
 };

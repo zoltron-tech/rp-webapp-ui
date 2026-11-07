@@ -14,7 +14,9 @@
       "ios": {
         "image": "latest"
       },
-      "environment": "development"
+      "env": {
+        "EXPO_NO_METRO_WORKSPACE_ROOT": "1"
+      }
     },
     "development-simulator": {
       "extends": "development",
@@ -31,7 +33,10 @@
       "ios": {
         "image": "latest"
       },
-      "environment": "preview"
+      "channel": "preview",
+      "env": {
+        "EXPO_NO_METRO_WORKSPACE_ROOT": "1"
+      }
     },
     "production": {
       "environment": "production",
@@ -39,7 +44,10 @@
       "ios": {
         "image": "latest"
       },
-      "environment": "production"
+      "channel": "production",
+      "env": {
+        "EXPO_NO_METRO_WORKSPACE_ROOT": "1"
+      }
     }
   },
   "submit": {

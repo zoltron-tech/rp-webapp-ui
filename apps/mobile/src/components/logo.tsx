@@ -113,11 +113,13 @@ const styles = StyleSheet.create({
   // Web sets 5px between the tile and each word.
   // Uppercase, as the wordmark is written.
   headerLabel: { textTransform: "uppercase" },
-  headerNovelist: { fontSize: 18, fontStyle: "italic", fontWeight: "400" },
-  headerRow: { gap: 7 },
+  // A step down from web's bar (18/20): beside three header buttons on a
+  // phone the full-size lockup crowded them.
+  headerNovelist: { fontSize: 15, fontStyle: "italic", fontWeight: "400" },
+  headerRow: { gap: 6 },
   headerWordmark: { flexShrink: 1 },
   headerWorld: {
-    fontSize: fontSize.title,
+    fontSize: fontSize.lead,
     fontStyle: "italic",
     fontWeight: "700",
   },

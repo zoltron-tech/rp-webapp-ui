@@ -1,4 +1,5 @@
 import type { Fandom, NWImage, PrivacyLevel } from "@nw/types";
+import type { MuseNavItem } from "@nw/types/novelist";
 import type { ProfileSong } from "@nw/types/music";
 import {
   createGetFunction,
@@ -36,6 +37,8 @@ export type MuseState = {
   featuredSong: ProfileSong | null;
   /** When creating an alternative verse: the muse this one is a verse of. */
   originalVerseId: string | null;
+  /** The verse family (main verse included), when alternatives exist. Read-only. */
+  verses: MuseNavItem[] | null;
 };
 
 export const INITIAL_STATE: MuseState = {
@@ -63,6 +66,7 @@ export const INITIAL_STATE: MuseState = {
   story: null,
   useAccent: false,
   useExtraImages: false,
+  verses: null,
   wallpaper: null,
 };
 

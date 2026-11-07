@@ -1,5 +1,6 @@
 "use client";
 
+import { REPORT_SENT_TOAST } from "@/utils/report";
 import type { StoryBoard, StoryBoardEvent } from "@nw/types";
 import { useParams } from "@/lib/navigation";
 import { useEffect, useState } from "react";
@@ -230,7 +231,7 @@ export default function UserProfilePage({}) {
 
     const response = await reportAction(storyboardId, "", "STORY_BOARD");
     if (response?.message === API_MESSAGE.Success) {
-      successToast("Reported successfully.");
+      successToast(REPORT_SENT_TOAST);
     } else {
       errorToast("There was an issue while reporting this story.");
     }

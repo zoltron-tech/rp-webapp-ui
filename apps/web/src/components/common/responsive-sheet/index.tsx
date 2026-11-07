@@ -19,6 +19,14 @@ type Props = {
   /** Extra circular actions, sat left of the close button — for a read-only
    *  sheet that offers its own verbs (edit, archive, delete). */
   headerActions?: ReactNode;
+  /**
+   * One size whatever the content: the sheet keeps the same height and width
+   * whether it holds two lines or twenty, and only its body scrolls. Opt-in,
+   * so the storyboard sheets keep sizing to their content.
+   */
+  fixed?: boolean;
+  /** Pinned under the scrolling body — counts, hints, the sheet's own verbs. */
+  footer?: ReactNode;
   children: ReactNode;
 };
 
@@ -35,6 +43,8 @@ export const ResponsiveSheet: FC<Props> = ({
   onClose,
   wide,
   headerActions,
+  fixed,
+  footer,
   children,
 }) => {
   const accent = useGlobalState("accent");
@@ -54,7 +64,13 @@ export const ResponsiveSheet: FC<Props> = ({
   return createPortal(
     <div className={classNames(theme, accent)}>
       <S.SheetOverlay onClick={onClose} />
-      <S.Sheet role="dialog" aria-modal aria-label={title} $wide={wide}>
+      <S.Sheet
+        role="dialog"
+        aria-modal
+        aria-label={title}
+        $wide={wide}
+        $fixed={fixed}
+      >
         <S.SheetHeader>
           <S.SheetTitle>{title}</S.SheetTitle>
           {headerActions}
@@ -80,6 +96,7 @@ export const ResponsiveSheet: FC<Props> = ({
           )}
         </S.SheetHeader>
         <S.SheetBody>{children}</S.SheetBody>
+        {footer && <S.SheetFooter>{footer}</S.SheetFooter>}
       </S.Sheet>
     </div>,
     document.body,

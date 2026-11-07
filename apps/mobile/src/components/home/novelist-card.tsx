@@ -524,11 +524,10 @@ const NovelistCardView = ({
                 <Text style={[styles.statValue, { color: theme.text }]}>
                   {mutual}
                 </Text>{" "}
-                {m.wide
-                  ? mutual === 1
-                    ? "mutual friend"
-                    : "mutual friends"
-                  : "mutual"}
+                {/* "mutual" at every size: the people icon says friends, and
+                    the full phrase beside "N characters" truncated both once
+                    the home rail's card shrank to 64% of the screen. */}
+                mutual
               </Text>
             </View>
           ) : null}

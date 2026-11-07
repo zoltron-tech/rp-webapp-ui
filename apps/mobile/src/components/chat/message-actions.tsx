@@ -34,17 +34,6 @@ import { fontSize, radius, space, useAppTheme } from "@/theme";
  */
 
 /**
- * The reactions the sheet offers, taken from the shared vocabulary.
- *
- * The first twelve of web's picker, in web's order — position is how people
- * find "Haha" without reading, and two clients ordering these differently is
- * worse than two clients offering different sets. Twelve is about three
- * screenfuls of thumb travel in the row; the rest are rare enough that a
- * shorter row is worth more than reaching them.
- */
-const REACTIONS = REACTION_OPTIONS.slice(0, 12);
-
-/**
  * What to call a message that is one piece of media.
  *
  * Sharper than the shared summariser, which names every still "Photo": a
@@ -78,11 +67,17 @@ export const MessageActions = ({
   onDelete,
   onReact,
   onDiscard,
+  onForward,
   onReply,
+  onReport,
   onRetry,
 }: {
   /** Present for a sent message of your own; the screen confirms first. */
   onDelete?: (message: Message) => void;
+  /** Present for somebody else's message; the screen confirms first. */
+  onReport?: (message: Message) => void;
+  /** Present for a sent message. Opens its own tray, after this one closes. */
+  onForward?: (message: Message) => void;
   /** Present for a message still waiting to be sent; removing it is final. */
   onDiscard?: () => void;
   /** False while the socket is down: a reaction has no REST fallback. */
@@ -142,6 +137,15 @@ export const MessageActions = ({
         linkOnly
           ? { icon: "link-outline", label: "Copy link", onPress: copy }
           : { icon: "copy-outline", label: "Copy text", onPress: copy },
+        ...(onForward
+          ? [
+              {
+                icon: "arrow-redo-outline" as const,
+                label: "Forward",
+                onSelect: () => onForward(message),
+              },
+            ]
+          : []),
         ...(onRetry
           ? [
               {
@@ -177,6 +181,20 @@ export const MessageActions = ({
                 onPress: () => {
                   onClose();
                   onDelete(message);
+                },
+                variant: "danger" as const,
+              },
+            ]
+          : []),
+        ...(onReport
+          ? [
+              { separator: true },
+              {
+                icon: "flag-outline" as const,
+                label: "Report",
+                onPress: () => {
+                  onClose();
+                  onReport(message);
                 },
                 variant: "danger" as const,
               },
@@ -229,7 +247,9 @@ export const MessageActions = ({
           horizontal
           showsHorizontalScrollIndicator={false}
         >
-          {REACTIONS.map((option) => {
+          {/* All of web's, in web's order: position is how people find "Haha"
+              without reading. */}
+          {REACTION_OPTIONS.map((option) => {
             const active = isSameReaction(option.key, myReaction);
             return (
               <Pressable

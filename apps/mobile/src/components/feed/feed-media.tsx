@@ -21,6 +21,7 @@ import {
   useAppTheme,
 } from "@/theme";
 import { wsrvImage } from "@nw/utils";
+import { openImage } from "@/lib/image-viewer";
 
 /**
  * A post's attachment — one picture, or one clip — as a feed draws it.
@@ -177,23 +178,29 @@ const FeedImageView = ({ src }: { src: string }) => {
   );
 
   return (
-    <Image
-      cachePolicy="memory-disk"
-      contentFit="contain"
-      onLoad={({ source }) => {
-        if (!source?.width || !source?.height) return;
-        const next = clampRatio(source.width / source.height);
-        RATIOS.set(src, next);
-        if (next !== ratio) setRatio(next);
-      }}
-      recyclingKey={src}
-      source={{ uri }}
-      style={[
-        styles.image,
-        { aspectRatio: ratio, backgroundColor: theme.glass.field },
-      ]}
-      transition={0}
-    />
+    <Pressable
+      accessibilityLabel="View image"
+      accessibilityRole="button"
+      onPress={() => openImage(src)}
+    >
+      <Image
+        cachePolicy="memory-disk"
+        contentFit="contain"
+        onLoad={({ source }) => {
+          if (!source?.width || !source?.height) return;
+          const next = clampRatio(source.width / source.height);
+          RATIOS.set(src, next);
+          if (next !== ratio) setRatio(next);
+        }}
+        recyclingKey={src}
+        source={{ uri }}
+        style={[
+          styles.image,
+          { aspectRatio: ratio, backgroundColor: theme.glass.field },
+        ]}
+        transition={0}
+      />
+    </Pressable>
   );
 };
 
@@ -253,7 +260,9 @@ const LazyClipView = ({ url }: { url: string }) => {
         <LiveStill url={url} />
       ) : null}
       <View pointerEvents="none" style={styles.scrim} />
-      <View style={[styles.playBadge, { borderColor: "rgba(255,255,255,0.5)" }]}>
+      <View
+        style={[styles.playBadge, { borderColor: "rgba(255,255,255,0.5)" }]}
+      >
         <Ionicons color="#ffffff" name="play" size={26} />
       </View>
       {frame || LIVE_STILLS ? null : (

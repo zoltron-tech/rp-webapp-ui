@@ -2,19 +2,19 @@ import { css, styled } from "styled-components";
 import { FOCUS_RING, MATERIAL } from "@/theme";
 import { shimmerMove } from "@/theme/animations";
 
-/* Book dialog — compact by design: the 375 × 667 budget leaves ~560px, and
- * the header, the shelf control and the first paragraph should all fit
- * before scrolling. */
+/* Book dialog — the book, the three shelf choices, a few lines about it;
+ * everything else folded under "More details". On a 375 × 667 phone the
+ * cover, the choices and the start of the description fit before scrolling. */
 
 export const Body = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   min-width: 0;
   padding-right: 2px;
 
   @media screen and (max-width: 800px) {
-    gap: 10px;
+    gap: 12px;
   }
 `;
 
@@ -73,6 +73,9 @@ export const Subtitle = styled.div`
   font-size: var(--font-size-small);
   font-style: italic;
   color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 export const Authors = styled.div`
@@ -102,152 +105,125 @@ export const AuthorLink = styled.button`
   ${FOCUS_RING}
 `;
 
-export const Rating = styled.div`
+/** "★ 4.2 · 1937 · 310 pages" — the one line of facts under the author. */
+export const Facts = styled.div`
   display: flex;
-  align-items: center;
   flex-wrap: wrap;
-  gap: 6px;
-  font-size: var(--font-size-small);
-  color: var(--text-secondary);
-`;
-
-/** Five stars, filled to the average with a clipped gradient. */
-export const Stars = styled.span<{ $value: number }>`
-  font-size: 13px;
-  letter-spacing: 1px;
-  line-height: 1;
-
-  &::before {
-    content: "★★★★★";
-    background: linear-gradient(
-      90deg,
-      var(--accent-11, var(--accent)) ${({ $value }) => ($value / 5) * 100}%,
-      var(--material-edge) 0
-    );
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-`;
-
-/** "1938 · 482 editions · ~310 pages" — one muted line instead of a grid. */
-export const MetaLine = styled.div`
+  align-items: center;
+  gap: 2px 0;
   font-size: var(--font-size-small);
   line-height: 1.5;
   color: var(--text-secondary);
-  overflow-wrap: anywhere;
-`;
 
-/**
- * Open Library's own reader counts. Labelled and dimmed so nobody reads
- * them as this novelist's shelf — the shelf control right below uses the
- * same three words.
- */
-export const OpenLibraryReaders = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 8px;
-  font-size: 11px;
-  line-height: 1.4;
-  color: var(--text-secondary);
-
-  svg {
-    flex-shrink: 0;
-    opacity: 0.8;
-  }
-
-  b {
-    font-weight: var(--font-weight-bold);
-    color: var(--text-primary);
+  & > * + *::before {
+    content: "·";
+    margin: 0 6px;
+    color: var(--text-secondary);
   }
 `;
 
-export const ReadersSource = styled.span`
+export const RatingFact = styled.span`
   font-weight: var(--font-weight-bold);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  color: var(--text-primary);
+
+  span {
+    color: var(--accent-11, var(--accent));
+  }
 `;
 
 // ── Shelf control (BOOKSHELF_PLAN.md §4.2) ─────────────────────────────────
 
-export const ShelfBox = styled.div`
-  ${MATERIAL}
+/**
+ * No panel: the three choices are the control, the filled one is the state.
+ * It sits in the summary column beside the cover, under the author and facts.
+ */
+export const Shelf = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 10px;
-  border-radius: 14px;
-`;
-
-export const ShelfHeading = styled.div`
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 6px;
+  margin-top: 6px;
   min-width: 0;
 `;
 
-export const ShelfTitle = styled.span`
-  flex-shrink: 0;
-  white-space: nowrap;
-  font-size: 11px;
-  font-weight: var(--font-weight-bold);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-`;
+/**
+ * One track for the three statuses — only one can hold — with a single
+ * highlight (`StatusThumb`) under the options that slides to the chosen
+ * one. Sits in the summary column beside the cover.
+ */
+const TRACK_PAD = 3;
 
-export const ShelfState = styled.span`
-  font-size: 11px;
-  color: var(--text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-`;
-
-/** Three equal buttons in one track: the status is a choice, not three chips. */
 export const StatusTrack = styled.div`
+  position: relative;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-  padding: 3px;
-  border-radius: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: 440px;
+  padding: ${TRACK_PAD}px;
+  border-radius: 14px;
   background: var(--field-fill, var(--bg-3));
   border: 1px solid var(--material-edge);
+`;
+
+/**
+ * The highlight: a third of the track, moved by whole widths. Hidden (and
+ * parked on the first option) until the book is on the shelf, so the first
+ * choice fades in where it lands rather than sliding in from the left.
+ */
+export const StatusThumb = styled.span<{ $index: number }>`
+  position: absolute;
+  top: ${TRACK_PAD}px;
+  bottom: ${TRACK_PAD}px;
+  left: ${TRACK_PAD}px;
+  width: calc((100% - ${TRACK_PAD * 2}px) / 3);
+  border-radius: 11px;
+  background: var(--accent);
+  box-shadow:
+    inset 0 0 0 1px var(--accent-11, var(--accent)),
+    0 4px 12px -6px rgb(0 0 0 / 0.6);
+  transform: translateX(${({ $index }) => Math.max($index, 0) * 100}%);
+  opacity: ${({ $index }) => ($index < 0 ? 0 : 1)};
+  transition:
+    transform 0.32s cubic-bezier(0.3, 0.7, 0.2, 1),
+    opacity 0.18s ease;
+  pointer-events: none;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: opacity 0.18s ease;
+  }
 `;
 
 export const StatusButton = styled.button<{ $active: boolean }>`
   all: unset;
   box-sizing: border-box;
+  position: relative;
+  z-index: 1;
   cursor: pointer;
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  min-height: 36px;
-  padding: 0 6px;
-  border-radius: 9px;
+  gap: 4px;
+  min-width: 0;
+  min-height: 48px;
+  padding: 6px 4px;
+  border-radius: 11px;
+  text-align: center;
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-bold);
-  white-space: nowrap;
+  line-height: 1.15;
+  /* The colour follows the thumb, a beat behind it so they land together. */
   color: ${({ $active }) => ($active ? "#fff" : "var(--text-secondary)")};
-  background: ${({ $active }) =>
-    $active ? "var(--accent-11, var(--accent))" : "transparent"};
-  box-shadow: ${({ $active }) =>
-    $active ? "0 4px 12px -6px rgb(0 0 0 / 0.6)" : "none"};
-  transition:
-    background-color 0.15s ease,
-    color 0.15s ease;
+  transition: color 0.2s ease 0.06s;
 
   svg {
     flex-shrink: 0;
+    color: ${({ $active }) =>
+      $active ? "#fff" : "var(--accent-11, var(--accent))"};
+    transition: color 0.2s ease 0.06s;
   }
 
   @media (hover: hover) {
     &:hover:not(:disabled):not([aria-pressed="true"]) {
       color: var(--text-primary);
-      background: var(--fill-hover);
     }
   }
 
@@ -257,17 +233,20 @@ export const StatusButton = styled.button<{ $active: boolean }>`
 
   ${FOCUS_RING}
 
+  /* Beside a 72px cover on a phone each option is ~80px. */
   @media screen and (max-width: 480px) {
-    gap: 4px;
-    padding: 0 4px;
+    min-height: 46px;
+    padding: 5px 2px;
     font-size: 11px;
   }
 `;
 
+/** Favourite and Remove, under the track and as wide as it. */
 export const ShelfRow = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  max-width: 440px;
 `;
 
 export const HeartButton = styled.button<{ $active: boolean }>`
@@ -276,9 +255,9 @@ export const HeartButton = styled.button<{ $active: boolean }>`
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  min-height: 32px;
-  padding: 0 12px;
+  gap: 5px;
+  min-height: 30px;
+  padding: 0 10px;
   border-radius: 50px;
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-bold);
@@ -323,8 +302,8 @@ export const RemoveButton = styled.button`
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  min-height: 32px;
-  padding: 0 8px;
+  min-height: 30px;
+  padding: 0 6px;
   border-radius: 8px;
   font-size: var(--font-size-small);
   color: var(--text-secondary);
@@ -344,6 +323,49 @@ export const RemoveButton = styled.button`
   }
 
   ${FOCUS_RING}
+`;
+
+// ── More details ───────────────────────────────────────────────────────────
+
+export const MoreToggle = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  cursor: pointer;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 50px;
+  ${MATERIAL}
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-secondary);
+
+  svg {
+    transition: transform 0.2s ease;
+  }
+
+  &[aria-expanded="true"] svg {
+    transform: rotate(180deg);
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      color: var(--text-primary);
+    }
+  }
+
+  ${FOCUS_RING}
+`;
+
+export const MoreDetails = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--material-edge);
 `;
 
 // ── Sections ───────────────────────────────────────────────────────────────
@@ -474,37 +496,26 @@ export const Links = styled.ul`
 
 export const Footer = styled.div`
   display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 2px;
+  justify-content: center;
+  padding-top: 2px;
 `;
 
-export const Credit = styled.div`
-  font-size: 11px;
-  color: var(--text-secondary);
-`;
-
-/** The book's own page on openlibrary.org, in a new tab. */
+/** The book's own page on openlibrary.org, in a new tab — and the credit. */
 export const ExternalLink = styled.a`
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  min-height: 30px;
-  padding: 0 12px;
-  border-radius: 50px;
-  ${MATERIAL}
-  font-size: var(--font-size-small);
-  font-weight: var(--font-weight-bold);
+  gap: 5px;
+  min-height: 28px;
+  padding: 0 6px;
+  border-radius: 6px;
+  font-size: 11px;
   color: var(--text-secondary);
   text-decoration: none;
-  transition: color 0.15s ease, border-color 0.15s ease;
+  transition: color 0.15s ease;
 
   @media (hover: hover) {
     &:hover {
       color: var(--accent-11, var(--accent));
-      border-color: color-mix(in srgb, var(--accent-11, var(--accent)) 40%, transparent);
     }
   }
 
@@ -553,11 +564,14 @@ export const SrOnly = styled.span`
  * — no second modal stacked over the dialog (modality: one at a time).
  */
 export const ConfirmRow = styled.div`
+  ${MATERIAL}
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 12px;
-  padding: 2px 2px 0;
+  gap: 8px 10px;
+  margin-top: 6px;
+  padding: 10px;
+  border-radius: 12px;
 `;
 
 export const ConfirmText = styled.p`

@@ -138,7 +138,7 @@ import { font, fontSize, radius, useAppTheme } from "@/theme";
  * A one-word label under each icon, as the platform expects ("Include tab labels
  * to help with navigation" — HIG, Tab bars). Six tabs leave about 57pt a column
  * at the 375pt baseline, so the long titles get short labels (`tabBarLabel`:
- * Interactions → Threads, Notifications → Alerts) while `accessibilityLabel`
+ * Interactions → Threads) while `accessibilityLabel`
  * keeps the full title. Labels are capped at 1.2× text scaling — people who
  * enlarge text want the content bigger, not the tab titles (HIG, Typography).
  *
@@ -381,14 +381,46 @@ export const TabBar = ({
       ? SCRIM_ALPHA_BLURRED
       : SCRIM_ALPHA;
 
-  // The fractional tab index. The lozenge and the icons derive from it.
-  const progress = useRef(new Animated.Value(state.index)).current;
+  /*
+   * The routes that get a column. A tab declared with `href: null`
+   * (Notifications, opened from the header bell) is still a route of this
+   * navigator, so its stack keeps its place, but expo-router marks it
+   * `tabBarItemStyle: { display: "none" }` and it is drawn nowhere here.
+   *
+   * Keyed by a string so the list, and the animated nodes built from it,
+   * survive the re-renders a badge change causes.
+   */
+  const hiddenKeys = state.routes
+    .filter(
+      (route) =>
+        StyleSheet.flatten(descriptors[route.key]?.options.tabBarItemStyle)
+          ?.display === "none",
+    )
+    .map((route) => route.key)
+    .join("|");
+  const columns = useMemo(() => {
+    const hidden = new Set(hiddenKeys.split("|"));
+    return state.routes.filter((route) => !hidden.has(route.key));
+  }, [hiddenKeys, state.routes]);
+  const focusedKey = state.routes[state.index].key;
+  // -1 while a column-less route is on screen: no column is lit.
+  const litColumn = columns.findIndex((route) => route.key === focusedKey);
+
+  // The fractional column index. The lozenge and the icons derive from it.
+  const progress = useRef(new Animated.Value(Math.max(litColumn, 0))).current;
+  // 1 while a column is lit, 0 while none is. Multiplies the lozenge and
+  // every icon's fill, so the bar can rest with nothing chosen.
+  const lit = useRef(new Animated.Value(litColumn < 0 ? 0 : 1)).current;
 
   useEffect(() => {
+    lit.setValue(litColumn < 0 ? 0 : 1);
+    // Nothing to travel to: the lozenge stays where it was, unseen, and
+    // leaves from there when a column is chosen again.
+    if (litColumn < 0) return;
     // Reduce Motion: the lozenge is simply at the new tab. The icon crossfade
     // reads the same value, so it lands with it.
     if (reduceMotion) {
-      progress.setValue(state.index);
+      progress.setValue(litColumn);
       return;
     }
     Animated.spring(progress, {
@@ -397,17 +429,17 @@ export const TabBar = ({
       // for and coming back for it.
       bounciness: 4,
       speed: 16,
-      toValue: state.index,
+      toValue: litColumn,
       useNativeDriver: true,
     }).start();
-  }, [progress, reduceMotion, state.index]);
+  }, [lit, litColumn, progress, reduceMotion]);
 
-  const focused = descriptors[state.routes[state.index].key];
+  const focused = descriptors[focusedKey];
   const barStyle = StyleSheet.flatten(focused?.options.tabBarStyle) as
     | ViewStyle
     | undefined;
 
-  const tabCount = state.routes.length;
+  const tabCount = columns.length;
   const metrics = useMemo(() => barMetrics(insets.bottom), [insets.bottom]);
   const column = useMemo(
     () => tabWidth(windowWidth, tabCount),
@@ -439,12 +471,15 @@ export const TabBar = ({
        * or a fast double-tap reads as one continuous movement rather than a
        * queue of steps.
        */
-      nearness: state.routes.map((_, index) =>
-        progress.interpolate({
-          extrapolate: "clamp",
-          inputRange: [index - 1, index, index + 1],
-          outputRange: [0, 1, 0],
-        }),
+      nearness: columns.map((_, index) =>
+        Animated.multiply(
+          progress.interpolate({
+            extrapolate: "clamp",
+            inputRange: [index - 1, index, index + 1],
+            outputRange: [0, 1, 0],
+          }),
+          lit,
+        ),
       ),
       pillScaleX: between(metrics.pillScaleX),
       pillScaleY: between(metrics.pillScaleY),
@@ -452,7 +487,7 @@ export const TabBar = ({
       pillTravel: Animated.multiply(progress, column),
       surfaceScaleY: between(metrics.surfaceScaleY),
     };
-  }, [collapse, column, metrics, progress, state.routes]);
+  }, [collapse, column, columns, lit, metrics, progress]);
 
   /*
    * The host is given the scrim's height explicitly rather than left to wrap
@@ -562,6 +597,7 @@ export const TabBar = ({
             style={[
               styles.pillSlot,
               {
+                opacity: lit,
                 transform: [
                   { translateX: anim.pillTravel },
                   { translateY: anim.drop },
@@ -591,7 +627,7 @@ export const TabBar = ({
             pointerEvents="box-none"
             style={[styles.row, { transform: [{ translateY: anim.drop }] }]}
           >
-            {state.routes.map((route, index) => {
+            {columns.map((route, index) => {
               const { options } = descriptors[route.key];
 
               return (
@@ -620,11 +656,11 @@ export const TabBar = ({
                       type: "tabPress",
                     });
 
-                    if (state.index !== index && !event.defaultPrevented) {
+                    if (focusedKey !== route.key && !event.defaultPrevented) {
                       navigation.navigate(route.name, route.params);
                     }
                   }}
-                  selected={state.index === index}
+                  selected={litColumn === index}
                   shortLabel={
                     typeof options.tabBarLabel === "string"
                       ? options.tabBarLabel

@@ -5,24 +5,20 @@ import {
 import { queryKeys, useApi } from "@nw/features";
 import type { Prompt } from "@nw/types";
 import { FlashList } from "@shopify/flash-list";
-import {
-  type InfiniteData,
-  useInfiniteQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-import { useRouter } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { useCallback, useMemo } from "react";
 import { StyleSheet, View } from "react-native";
+import { ComposeTrigger } from "@/components/compose/compose-trigger";
 import { EmptyFeed } from "@/components/empty-feed";
 import { EndOfList } from "@/components/end-of-list";
-import { LikersSheet } from "@/components/feed/likers-sheet";
-import { PromptCard, type PromptReaction } from "@/components/feed/prompt-card";
+import { PromptCard } from "@/components/feed/prompt-card";
 import { SkeletonRows } from "@/components/list-skeletons";
 import { ListStatus } from "@/components/list-status";
 import { PromptCardSkeleton } from "@/components/skeleton";
 import { useTabBarContentStyle, useTabBarScroll } from "@/context/tab-bar";
+import { usePromptFeedActions } from "@/hooks/use-prompt-feed-actions";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
-import { space, useAppTheme } from "@/theme";
+import { space } from "@/theme";
 import { FeedSeparator } from "@/components/list-parts";
 
 /**
@@ -40,7 +36,8 @@ import { FeedSeparator } from "@/components/list-parts";
  * forgotten as soon as the row scrolled away. A profile feed and a discovery
  * feed are the same list of the same thing, and they now share `PromptCard`,
  * a recycling `FlashList`, opened comments, and a heart written back into
- * the query cache — see `explore.tsx` for the reasoning behind each.
+ * the query cache — see `explore.tsx` for the reasoning behind each. Everything
+ * a card can do comes from `usePromptFeedActions`, as it does there.
  *
  * ## The two are not the same content, despite the endpoint names
  *
@@ -83,18 +80,6 @@ export type FeedKind = "posts" | "prompts";
 
 const keyExtractor = (item: Prompt) => item.id;
 
-/** One frozen empty set, so resetting an open set is not a new allocation. */
-const EMPTY_SET: ReadonlySet<string> = new Set();
-
-const toggleIn = (
-  set: ReadonlySet<string>,
-  id: string,
-): ReadonlySet<string> => {
-  const next = new Set(set);
-  if (!next.delete(id)) next.add(id);
-  return next;
-};
-
 export const PromptFeed = ({
   kind,
   novelistId,
@@ -106,10 +91,14 @@ export const PromptFeed = ({
   /** Whose feed this is, for the empty state's sentence. */
   username?: string;
 }) => {
-  const theme = useAppTheme();
   const api = useApi();
-  const router = useRouter();
-  const queryClient = useQueryClient();
+
+  const actions = usePromptFeedActions();
+  const { canAct, cardProps, expandedIds, novelist, openCompose, unfoldedIds } =
+    actions;
+
+  /** Your own list is also somewhere to write from, as it is on web. */
+  const own = canAct && novelist?.id === novelistId;
 
   const queryKey =
     kind === "prompts"
@@ -143,88 +132,35 @@ export const PromptFeed = ({
 
   // Memoised: `flat()` builds a new array on every render, and a fresh array
   // identity feeding a list's `data` prop is a re-render loop.
-  const items = useMemo(() => (query.data?.pages ?? []).flat(), [query.data]);
+  // Written offline, waiting: at the head of your own list until sent.
+  const queued = useMemo(
+    () =>
+      own
+        ? actions.queuedPrompts.filter(
+            (prompt) =>
+              (prompt.source.sourceType === "MUSE") === (kind === "prompts"),
+          )
+        : [],
+    [actions.queuedPrompts, kind, own],
+  );
+  const items = useMemo(
+    () => [...queued, ...(query.data?.pages ?? []).flat()],
+    [query.data, queued],
+  );
 
   // The pull spinner only for a pull, not for a background refetch.
   const pull = usePullToRefresh(query.refetch);
 
-  /*
-   * Which cards have their comments open, and which long bodies are shown in
-   * full — by prompt id, held here rather than in the card, because a card is
-   * a *slot* in a recycling list. See `prompt-card.tsx`.
-   */
-  const [expandedIds, setExpandedIds] = useState(EMPTY_SET);
-  const [unfoldedIds, setUnfoldedIds] = useState(EMPTY_SET);
-  const [likers, setLikers] = useState<Prompt | null>(null);
-
-  const openLikers = useCallback((prompt: Prompt) => setLikers(prompt), []);
-
-  const toggleComments = useCallback((id: string) => {
-    setExpandedIds((open) => toggleIn(open, id));
-  }, []);
-
-  const unfold = useCallback((id: string) => {
-    setUnfoldedIds((open) => toggleIn(open, id));
-  }, []);
-
-  /**
-   * Write a settled heart back into this feed's cache, so it survives the card
-   * being recycled. Returns the original object when the prompt is not in a
-   * page, which is what keeps react-query from re-rendering every row for a
-   * patch that touched none of them.
-   */
-  const handleReacted = useCallback(
-    (promptId: string, next: PromptReaction) => {
-      queryClient.setQueryData(
-        queryKey,
-        (data: InfiniteData<Prompt[], number> | undefined) => {
-          if (!data) return data;
-          let touched = false;
-          const pages = data.pages.map((page) => {
-            if (!page.some((prompt) => prompt.id === promptId)) return page;
-            touched = true;
-            return page.map((prompt) =>
-              prompt.id === promptId ? { ...prompt, ...next } : prompt,
-            );
-          });
-          return touched ? { ...data, pages } : data;
-        },
-      );
-    },
-    [queryClient, queryKey],
-  );
-
-  const openThread = useCallback(
-    (threadId: string) =>
-      router.push({
-        params: { threadId },
-        pathname: "/threads/[threadId]",
-      }),
-    [router],
-  );
-
   const renderItem = useCallback(
     ({ item }: { item: Prompt }) => (
       <PromptCard
+        {...cardProps}
         expanded={expandedIds.has(item.id)}
-        onOpenThread={openThread}
-        onReacted={handleReacted}
-        onShowLikers={openLikers}
-        onToggleComments={toggleComments}
-        onUnfold={unfold}
         prompt={item}
         unfolded={unfoldedIds.has(item.id)}
       />
     ),
-    [
-      expandedIds,
-      handleReacted,
-      openLikers,
-      openThread,
-      toggleComments,
-      unfold,
-      unfoldedIds,
-    ],
+    [cardProps, expandedIds, unfoldedIds],
   );
 
   // The bar floats over this list: `tabBarScroll` is what sizes it as the list
@@ -257,6 +193,17 @@ export const PromptFeed = ({
         data={items}
         ItemSeparatorComponent={FeedSeparator}
         keyExtractor={keyExtractor}
+        ListHeaderComponent={
+          own ? (
+            <View style={styles.compose}>
+              <ComposeTrigger
+                avatarUri={novelist?.avatar?.src ?? novelist?.image}
+                name={novelist?.firstName}
+                onPress={openCompose}
+              />
+            </View>
+          ) : null
+        }
         ListEmptyComponent={
           <ListStatus
             empty={
@@ -290,16 +237,13 @@ export const PromptFeed = ({
         renderItem={renderItem}
       />
 
-      <LikersSheet
-        count={likers?.reactions ?? 0}
-        onClose={() => setLikers(null)}
-        targetId={likers?.id ?? null}
-      />
+      {actions.sheets}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  compose: { paddingBottom: space.ms },
   content: { padding: space.md },
   fill: { flex: 1 },
 });

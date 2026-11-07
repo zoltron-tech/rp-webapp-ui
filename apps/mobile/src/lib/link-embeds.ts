@@ -5,6 +5,7 @@ import {
   parseNovelistWorldLink,
   uniqueNovelistWorldLinks,
 } from "@nw/utils/nw-links";
+import { headcanonIdInUrl } from "@nw/types/headcanon";
 import type { Href } from "expo-router";
 import { WEB_URL } from "@/lib/links";
 import { urlHost } from "@/lib/safe-link";
@@ -38,8 +39,16 @@ export const linksIn = (text: string): NovelistWorldLink[] =>
  */
 export const hrefFor = (link: NovelistWorldLink): Href => {
   switch (link.kind) {
-    case "muse":
-      return { params: { museId: link.id }, pathname: "/muse/[museId]" };
+    case "muse": {
+      // A headcanon's link is its character's, opened at the card.
+      const headcanon = headcanonIdInUrl(link.url);
+      return {
+        params: headcanon
+          ? { headcanon, museId: link.id }
+          : { museId: link.id },
+        pathname: "/muse/[museId]",
+      };
+    }
     case "prompt":
       return { params: { promptId: link.id }, pathname: "/prompt/[promptId]" };
     case "thread":

@@ -535,6 +535,12 @@ export const ConversationsSvg = styled(Art)`
   height: 98px;
 `;
 
+/** An unlit bulb — the muse headcanons placeholder. */
+export const HeadcanonsSvg = styled(Art)`
+  width: 124px;
+  height: 94px;
+`;
+
 /** A silent bell — the no-notifications placeholder. */
 export const NotificationsSvg = styled(Art)`
   width: 120px;

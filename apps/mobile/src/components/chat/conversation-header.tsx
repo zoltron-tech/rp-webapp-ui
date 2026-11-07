@@ -5,6 +5,7 @@ import { pluralize } from "@nw/utils";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Avatar } from "@/components/avatar";
+import { VerifiedMark } from "@/components/chat/verified-mark";
 import { GlassSurface } from "@/components/glass-surface";
 import { Text } from "@/components/text";
 import { useChatSocket, useIsOnline } from "@/context/socket";
@@ -60,7 +61,12 @@ export const ConversationHeader = ({
   memberCountIsLowerBound?: boolean;
   onBack: () => void;
   onPress: () => void;
-  target: { name: string; image: string | null; username: string };
+  target: {
+    name: string;
+    image: string | null;
+    username: string;
+    participant?: { isVerified?: boolean } | null;
+  };
 }) => {
   const theme = useAppTheme();
   const insets = useSafeAreaInsets();
@@ -175,9 +181,17 @@ export const ConversationHeader = ({
         )}
 
         <View style={styles.text}>
-          <Text numberOfLines={1} style={[styles.name, { color: theme.text }]}>
-            {target.name || "Conversation"}
-          </Text>
+          <View style={styles.nameRow}>
+            <Text
+              numberOfLines={1}
+              style={[styles.name, { color: theme.text }]}
+            >
+              {target.name || "Conversation"}
+            </Text>
+            {!isGroup && target.participant?.isVerified ? (
+              <VerifiedMark username={target.username} />
+            ) : null}
+          </View>
           <View style={styles.subtitleRow}>
             {/* A dot as well as a word. Colour on its own is not a signal for
                 everyone, and the word is what a screen reader announces. */}
@@ -251,7 +265,8 @@ const styles = StyleSheet.create({
     minWidth: 0,
     paddingVertical: space.xs,
   },
-  name: { fontSize: 16, fontWeight: "700" },
+  name: { flexShrink: 1, fontSize: 16, fontWeight: "700" },
+  nameRow: { alignItems: "center", flexDirection: "row", gap: space.xs },
   subtitle: { flexShrink: 1, fontSize: fontSize.caption },
   subtitleRow: { alignItems: "center", flexDirection: "row", gap: space.xs },
   text: { flex: 1, gap: 1, minWidth: 0 },

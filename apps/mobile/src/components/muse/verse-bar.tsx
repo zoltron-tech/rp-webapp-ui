@@ -10,9 +10,9 @@ import { fontSize, space } from "@/theme";
  * Web's `VerseHeaderBar`: flip between the alternative verses of a character.
  *
  * Verse numbers are circles in a horizontally scrolling row rather than
- * wrapping pills, so a character with many verses stays one compact line
- * instead of eating the height the card needs. A lone "1" when there are no
- * alternates, exactly as web shows it.
+ * wrapping pills, after a "Verses" label, on their own row under the byline —
+ * web's phone layout. Like web it shows for every character, a lone "1" when
+ * there are no others.
  *
  * Web also pins a "+" beside the track for the owner — outside the scroll, so
  * it is always one tap away. Creating a verse is a whole character form, so
@@ -35,20 +35,28 @@ export const VerseBar = ({
   onSelect: (verse: MuseNavItem) => void;
   verses: MuseNavItem[];
 }) => {
-  const tint = accent ?? "#ffffff";
-
   return (
     <View accessibilityLabel="Character verses" style={styles.bar}>
-      <View style={styles.labelWrap}>
-        <View style={[styles.labelRule, { backgroundColor: tint }]} />
-        <Ionicons color={tint} name="layers-outline" size={11} />
-        <Text style={styles.label}>Verses</Text>
+      <View style={styles.label}>
+        <View
+          style={[
+            styles.labelRule,
+            { backgroundColor: accent ?? "#ffffff" },
+          ]}
+        />
+        <Ionicons
+          color={accent ?? "#ffffff"}
+          name="layers-outline"
+          size={11}
+        />
+        <Text style={styles.labelText}>Verses</Text>
       </View>
 
       <ScrollView
         contentContainerStyle={styles.track}
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={styles.scroll}
       >
         {verses.length === 0 ? (
           <VerseCircle accent={accent} active disabled number={1} />
@@ -161,12 +169,15 @@ const VerseCircle = ({
 };
 
 const styles = StyleSheet.create({
+  /* Web's `VerseHeaderInner` at ≤950px: 440 wide at most, 16 in, a 10px foot. */
   bar: {
     alignItems: "center",
+    alignSelf: "center",
     flexDirection: "row",
     gap: space.ms,
+    maxWidth: 440,
+    paddingBottom: space.ms,
     paddingHorizontal: space.md,
-    paddingVertical: space.s,
     width: "100%",
   },
   circle: { alignItems: "center", justifyContent: "center" },
@@ -180,25 +191,36 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: 28,
   },
+  /* Web's `VerseHeaderLabel`: the accent tick, the layers glyph, the word. */
   label: {
+    alignItems: "center",
+    flexDirection: "row",
+    flexShrink: 0,
+    gap: 5,
+    paddingLeft: 9,
+  },
+  labelRule: {
+    borderRadius: 2,
+    bottom: 1,
+    left: 0,
+    position: "absolute",
+    top: 1,
+    width: 2,
+  },
+  labelText: {
     color: "rgba(255,255,255,0.75)",
     fontSize: fontSize.meta,
-    fontWeight: "900",
-    letterSpacing: 1.4,
+    fontWeight: "700",
+    letterSpacing: 1.5,
     textShadowColor: "rgba(0,0,0,0.9)",
     textShadowOffset: { height: 1, width: 0 },
     textShadowRadius: 3,
     textTransform: "uppercase",
   },
-  labelRule: { borderRadius: 1, height: 12, width: 2 },
-  labelWrap: {
-    alignItems: "center",
-    flexDirection: "row",
-    flexShrink: 0,
-    gap: 5,
-  },
   link: { height: 1.5, width: 8 },
   number: { color: "#ffffff", fontWeight: "800" },
+  /* Web's track: shrinks to scroll, never grows past its circles. */
+  scroll: { flexGrow: 0, flexShrink: 1 },
   step: { alignItems: "center", flexDirection: "row" },
   track: {
     alignItems: "center",

@@ -21,6 +21,7 @@ export const ROUTES = {
       `/rp/conversations/${conversationId}/details`,
     View: (conversationId: string) => `/rp/conversations/${conversationId}`,
   },
+  CharacterDirectory: "/rp/characters",
   conversations: "/rp/conversations",
   explore: "/rp/explore",
   explorePrompts: "/rp/explore?tab=prompts",
@@ -128,7 +129,6 @@ export const ROUTES = {
   Thread: {
     View: (threadId: string) => `/rp/thread/${threadId}`,
   },
-  Tiers: "/rp/tiers",
   UserMenu: "/rp/user-menu",
   VerifyEmail: "/rp/verify-email",
   Welcome: "/rp/welcome",

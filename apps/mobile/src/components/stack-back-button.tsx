@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { NativeStackNavigationOptions } from "@react-navigation/native-stack";
-import { useRouter } from "expo-router";
+import { type Href, useRouter } from "expo-router";
 import { Platform, Pressable } from "react-native";
 import { space, useAppTheme } from "@/theme";
 
@@ -14,8 +14,13 @@ const HIT_SLOP = {
   top: space.md,
 };
 
-/** The header's back chevron, where the platform will not draw its own. */
-export const StackBackButton = () => {
+/**
+ * The header's back chevron, where the platform will not draw its own.
+ *
+ * `fallback` is where it goes when there is nothing to go back to — a screen
+ * opened cold from a push, say. Without one it is only `router.back()`.
+ */
+export const StackBackButton = ({ fallback }: { fallback?: Href } = {}) => {
   const router = useRouter();
   const theme = useAppTheme();
 
@@ -24,7 +29,10 @@ export const StackBackButton = () => {
       accessibilityLabel="Back"
       accessibilityRole="button"
       hitSlop={HIT_SLOP}
-      onPress={() => router.back()}
+      onPress={() => {
+        if (fallback && !router.canGoBack()) router.navigate(fallback);
+        else router.back();
+      }}
       style={({ pressed }) => ({
         // A square with the glyph in its middle, and no margin: iOS 26 wraps
         // a header item in a glass capsule sized to this view, so anything

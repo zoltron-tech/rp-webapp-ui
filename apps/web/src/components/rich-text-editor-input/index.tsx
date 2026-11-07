@@ -226,10 +226,8 @@ export const RichTextEditor = forwardRef<
     const [showMentionPopover, setShowMentionPopover] =
       useState<boolean>(false);
     const [mentionSearch, setMentionSearch] = useState<string>("");
-    const [mentionPosition, setMentionPosition] = useState<{
-      bottom: number;
-      left: number;
-    }>({ bottom: 0, left: 0 });
+    /** The typed "@" the mention dropdown hangs off (a live DOM Range). */
+    const [mentionAnchor, setMentionAnchor] = useState<Range | null>(null);
     const [focusedItemIndex, setFocusedItemIndex] = useState<number>(0);
     const [showBulletDropdown, setShowBulletDropdown] =
       useState<boolean>(false);
@@ -1180,30 +1178,13 @@ export const RichTextEditor = forwardRef<
         if (!textAfterAt.includes(" ")) {
           setMentionSearch(textAfterAt);
 
-          const tempRange = document.createRange();
-          tempRange.setStart(textNode, lastAtIndex);
-          tempRange.setEnd(textNode, lastAtIndex + 1);
-          const rect = tempRange.getBoundingClientRect();
-          const DROPDOWN_MAX_WIDTH = 320;
-          // Anchored to the editor wrapper, not the viewport: `fixed` breaks
-          // inside a scaled manuscript page (a transformed ancestor becomes
-          // the containing block), so the dropdown lays out in wrapper pixels.
-          const wrapper = editorRef.current?.parentElement;
-          if (wrapper) {
-            const wrapperRect = wrapper.getBoundingClientRect();
-            const { x: sx, y: sy } = wrapperScale(wrapper, wrapperRect);
-            setMentionPosition({
-              bottom:
-                wrapper.offsetHeight - (rect.top - wrapperRect.top) / sy + 8,
-              left: Math.max(
-                8,
-                Math.min(
-                  (rect.left - wrapperRect.left) / sx,
-                  wrapper.clientWidth - DROPDOWN_MAX_WIDTH - 8,
-                ),
-              ),
-            });
-          }
+          // The dropdown portals to <body> and places itself in viewport
+          // coordinates from this range, clear of the editor's clipping and
+          // of a scaled manuscript page.
+          const atRange = document.createRange();
+          atRange.setStart(textNode, lastAtIndex);
+          atRange.setEnd(textNode, lastAtIndex + 1);
+          setMentionAnchor(atRange);
 
           setShowMentionPopover(true);
           setFocusedItemIndex(0);
@@ -2847,13 +2828,9 @@ export const RichTextEditor = forwardRef<
               focusedIndex={focusedItemIndex}
               isLoading={isMentionLoading}
               onSelect={insertMention}
+              onHover={setFocusedItemIndex}
               className={classNames("select-content", theme, accent)}
-              style={{
-                bottom: mentionPosition.bottom,
-                left: mentionPosition.left,
-                position: "absolute",
-                top: "auto",
-              }}
+              anchor={mentionAnchor}
             />
           )}
 

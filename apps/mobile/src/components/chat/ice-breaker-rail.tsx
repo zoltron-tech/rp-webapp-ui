@@ -6,11 +6,13 @@ import {
 } from "@nw/chat";
 import { useSession } from "@nw/features";
 import type { IceBreaker, Novelist } from "@nw/types";
+import { bookCoverUrl } from "@nw/types/books";
 import { truncate } from "@nw/utils";
 import { useIsFocused } from "@react-navigation/native";
 import { memo, useMemo } from "react";
 import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import { Avatar } from "@/components/avatar";
+import { Image } from "@/components/image";
 import {
   IceBreakerTrail,
   useIceBreakerPaint,
@@ -134,9 +136,21 @@ const IceBreakerTile = memo(function IceBreakerTile({
         ]}
         to={paint.to}
       >
-        <Text numberOfLines={3} style={[styles.message, { color: paint.ink }]}>
-          {truncate(iceBreaker.message, PREVIEW_LENGTH)}
-        </Text>
+        <View style={styles.bubbleRow}>
+          {iceBreaker.book?.coverId ? (
+            <Image
+              contentFit="cover"
+              source={{ uri: bookCoverUrl(iceBreaker.book.coverId, "S") }}
+              style={styles.cover}
+            />
+          ) : null}
+          <Text
+            numberOfLines={3}
+            style={[styles.message, styles.messageText, { color: paint.ink }]}
+          >
+            {truncate(iceBreaker.message, PREVIEW_LENGTH)}
+          </Text>
+        </View>
       </GradientSurface>
 
       <IceBreakerTrail
@@ -324,6 +338,9 @@ const FrozenSilence = () => {
 };
 
 const styles = StyleSheet.create({
+  bubbleRow: { alignItems: "center", flexDirection: "row", gap: space.sm },
+  cover: { borderRadius: radius.xs, height: 54, width: 36 },
+  messageText: { flex: 1 },
   // As tall as a tile's bubble, so the face sits level with the prompts.
   add: {
     alignItems: "center",

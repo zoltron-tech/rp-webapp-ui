@@ -26,6 +26,7 @@ import { ROUTES } from "@/utils/constants/routes";
 import { CoverImage } from "../common";
 import * as DropS from "../profile-more-dropdown/styled";
 import * as S from "./styled";
+import { SendToChatButton, SendToChatPanel } from "@/components/send-to-chat";
 import { shareChapterToDiscord } from "@nw/api/endpoints/community";
 import { api } from "@/lib/api";
 
@@ -56,6 +57,8 @@ export const ShareChapterDialog: FC<ShareChapterDialogProps> = ({
   const { errorToast } = useUIContext();
 
   const [copied, setCopied] = useState(false);
+  // The "Send in a chat" view, in place of the share options.
+  const [chatOpen, setChatOpen] = useState(false);
   const [shareState, setShareState] = useState<ShareState>({ status: "idle" });
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -64,6 +67,7 @@ export const ShareChapterDialog: FC<ShareChapterDialogProps> = ({
     if (open) {
       setCopied(false);
       setShareState({ status: "idle" });
+      setChatOpen(false);
     }
   }, [open]);
 
@@ -195,7 +199,15 @@ export const ShareChapterDialog: FC<ShareChapterDialogProps> = ({
 
   let dialogContent: React.ReactNode;
 
-  if (shareState.status === "success") {
+  if (chatOpen) {
+    dialogContent = (
+      <SendToChatPanel
+        label="chapter"
+        onBack={() => setChatOpen(false)}
+        url={chapterUrl}
+      />
+    );
+  } else if (shareState.status === "success") {
     dialogContent = (
       <S.ResultState>
         <S.ResultIconWrap>
@@ -259,6 +271,10 @@ export const ShareChapterDialog: FC<ShareChapterDialogProps> = ({
         </S.LinkRow>
 
         <S.Actions>
+          <SendToChatButton
+            disabled={!chapterUrl}
+            onClick={() => setChatOpen(true)}
+          />
           <S.DiscordButton
             type="button"
             onClick={handleShareToDiscord}

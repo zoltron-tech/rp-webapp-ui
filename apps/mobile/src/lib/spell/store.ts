@@ -3,8 +3,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Asset } from "expo-asset";
 import { File } from "expo-file-system";
 import { InteractionManager } from "react-native";
-import affAsset from "../../../assets/dict/en/index.aff";
-import dicAsset from "../../../assets/dict/en/index.dic";
+import affAsset from "../../../assets/dict/en/en_aff.aff";
+import dicAsset from "../../../assets/dict/en/en_dic.dic";
 
 /**
  * The phone's spell checker: one engine for the app, started at idle and

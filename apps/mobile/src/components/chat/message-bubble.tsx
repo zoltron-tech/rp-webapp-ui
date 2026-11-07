@@ -628,6 +628,30 @@ const MessageBubbleComponent = ({
     </>
   );
 
+  // Something that happened in the conversation, not something anybody said.
+  if (message.type?.toLowerCase() === "activity") {
+    return (
+      <View style={styles.activityRow}>
+        <View
+          style={[
+            styles.activity,
+            {
+              backgroundColor: theme.accent.tint,
+              borderColor: theme.accent.surfaceHover,
+            },
+          ]}
+        >
+          <Text style={[styles.activityText, { color: theme.textGray }]}>
+            <Text style={styles.activitySender}>
+              {message.sender?.name || message.sender?.username}{" "}
+            </Text>
+            {words || "Activity update"}
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View
       style={[
@@ -866,13 +890,20 @@ const MessageBubbleComponent = ({
             {/* No empty line under an album that came without words. */}
             {mediaOnly || !caption.trim() ? null : (
               <View style={hasMosaic ? styles.caption : null}>
-                <RichText html={caption} />
+                {EMOJI_ONLY.test(words.trim()) ? (
+                  <Text style={styles.emojiOnly}>{words.trim()}</Text>
+                ) : (
+                  <RichText html={caption} />
+                )}
               </View>
             )}
 
             {(message.attachments?.length ?? 0) > media.length ? (
               <View style={hasMosaic ? styles.padded : null}>
-                <MessageAttachments attachments={message.attachments ?? []} />
+                <MessageAttachments
+                  attachments={message.attachments ?? []}
+                  onLongPress={() => onShowActions?.(message)}
+                />
               </View>
             ) : null}
 
@@ -962,7 +993,22 @@ export const DaySeparator = ({ label }: { label: string }) => {
 
 /** Chips straight on media: web's `MEDIA_CHIP`, no blur. */
 
+/** Web's `EMOJI_ONLY_RE`: a message of nothing but emoji is drawn large. */
+const EMOJI_ONLY =
+  /^(\p{Extended_Pictographic}|\p{Emoji_Modifier}|\uFE0F|\u20E3|\u200D|\s)+$/u;
+
 const styles = StyleSheet.create({
+  activity: {
+    borderRadius: radius.full,
+    borderWidth: border.edge,
+    maxWidth: "90%",
+    paddingHorizontal: space.m,
+    paddingVertical: space.xs,
+  },
+  activityRow: { alignItems: "center", paddingVertical: space.xs },
+  activitySender: { fontWeight: "700" },
+  activityText: { fontSize: fontSize.caption, textAlign: "center" },
+  emojiOnly: { fontSize: 32, lineHeight: 40 },
   // Reserved even when the avatar is hidden, so a run of messages from one
   // person stays aligned instead of stepping left under the first bubble.
   //

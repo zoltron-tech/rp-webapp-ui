@@ -21,14 +21,21 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  useWindowDimensions,
   View,
 } from "react-native";
 import { EmptyScene } from "@/components/empty-feed";
+import { SegmentedTabs } from "@/components/segmented-tabs";
+import { BottomSheet } from "@/components/sheet";
+import { MuseCard } from "@/components/home/muse-card";
+import { IconButton } from "@/components/icon-button";
 import { MuseListRowSkeleton, SkeletonRows } from "@/components/list-skeletons";
 import { ListStatus } from "@/components/list-status";
 import { InFandomGroup, MuseListRow } from "@/components/muse-list-row";
 import { closeOpenRevealRow } from "@/components/reveal-row";
+import { SearchField } from "@/components/search-field";
 import { PillButton } from "@/components/settings";
+import { Choice, FieldLabel } from "@/components/story/form-bits";
 import { Text } from "@/components/text";
 import { useTabBarContentStyle, useTabBarScroll } from "@/context/tab-bar";
 import { asColor, asHex, withAlpha } from "@/lib/color";
@@ -46,9 +53,9 @@ import { fontSize, radius, space, type, useAppTheme } from "@/theme";
  *
  * ## Fandoms, as on web
  *
- * The fandoms are chips across the top, each with how many characters it
- * holds; tapping one filters to it, tapping more widens the filter, and "All"
- * clears it. "Group by fandom" gathers each fandom's characters into one
+ * The fandoms are chips in the filter tray, each with how many characters it
+ * holds; tapping one filters to it, tapping more widens the filter, and "Clear
+ * filters" empties it. "Group by fandom" gathers each fandom's characters into one
  * container washed in that fandom's colour — web's `FandomGroup` — in the
  * chips' order, fandomless last. Chips come from the whole roster rather than
  * the filtered one, so picking a fandom never hides the others.
@@ -86,9 +93,17 @@ import { fontSize, radius, space, type, useAppTheme } from "@/theme";
  */
 
 const FANDOMLESS_ID = "FANDOMLESS";
+const GRID_GAP = space.sm;
 
-/** A main-verse character, with the size of its verse family. */
-type ListedMuse = Muse & { verseCount?: number };
+const PRIVACY_OPTIONS: { label: string; value: Muse["privacy"] | null }[] = [
+  { label: "All", value: null },
+  { label: "Public", value: "PUBLIC" },
+  { label: "Friends", value: "FRIENDS" },
+  { label: "Only me", value: "ONLY_ME" },
+];
+
+/** A main-verse character, with its verse family when it has one. */
+type ListedMuse = Muse & { family?: Muse[]; verseCount?: number };
 
 interface FandomOption {
   color: string | undefined;
@@ -123,6 +138,8 @@ type ListItem =
  * list, so it carries across lists for the rest of the session.
  */
 let groupPreference = false;
+/** The same for list or grid. Web opens on the grid; a phone reads rows faster. */
+let gridPreference = false;
 
 const NO_SELECTION: string[] = [];
 /** One empty roster, so "no data yet" does not rebuild the chips each render. */
@@ -174,25 +191,33 @@ const useTrailing = <T,>(value: T): T => {
 };
 
 /**
- * The main verses, alphabetical as on web, each carrying how many verses its
- * family has. The response lists alternates beside the characters they branch
- * from, so the count is one pass over data already here.
+ * The main verses, alphabetical as on web, each carrying its verse family. The
+ * response lists alternates beside the characters they branch from, so the
+ * family is one pass over data already here.
  */
 const withVerseCounts = (muses: Muse[]): ListedMuse[] => {
-  const alternates = new Map<string, number>();
+  const alternates = new Map<string, Muse[]>();
   for (const muse of muses) {
     if (muse.originalVerseId) {
-      alternates.set(
-        muse.originalVerseId,
-        (alternates.get(muse.originalVerseId) ?? 0) + 1,
-      );
+      alternates.set(muse.originalVerseId, [
+        ...(alternates.get(muse.originalVerseId) ?? []),
+        muse,
+      ]);
     }
   }
   return mainVerseMuses(muses)
-    .map((muse) => ({
-      ...muse,
-      verseCount: 1 + (muse.id ? (alternates.get(muse.id) ?? 0) : 0),
-    }))
+    .map((muse) => {
+      const others = muse.id ? (alternates.get(muse.id) ?? []) : [];
+      return {
+        ...muse,
+        family: others.length
+          ? [muse, ...others].sort(
+              (a, b) => (a.verseNumber ?? 1) - (b.verseNumber ?? 1),
+            )
+          : undefined,
+        verseCount: 1 + others.length,
+      };
+    })
     .sort((a, b) => (a.firstName ?? "").localeCompare(b.firstName ?? ""));
 };
 
@@ -260,95 +285,106 @@ const FandomChip = ({
   );
 };
 
-const FandomBar = memo(function FandomBar({
-  filtering,
+/**
+ * Everything that narrows or rearranges the list, behind one button.
+ *
+ * It used to be four rows above the first character: privacy, a count, fandoms,
+ * and grouping. Apple's layout guidance asks that essential information not be
+ * crowded with nonessential detail, and here that was the characters themselves,
+ * pushed 39% down the screen. Filters are used now and then; the list is why the
+ * screen exists. Each choice applies at once, so the tray has no confirm.
+ */
+const FilterSheet = memo(function FilterSheet({
+  canGroup,
+  fandoms,
+  grid,
   grouped,
   grouping,
   onClear,
-  onToggle,
+  onClose,
+  onGrid,
+  onPrivacy,
+  onToggleFandom,
   onToggleGroup,
-  options,
   own,
+  privacy,
   selected,
-  total,
+  visible,
 }: {
-  /** The list has not caught up with the chips yet. */
-  filtering: boolean;
+  canGroup: boolean;
+  fandoms: FandomOption[];
+  grid: boolean;
   grouped: boolean;
   /** The list has not caught up with the checkbox yet. */
   grouping: boolean;
   onClear: () => void;
-  onToggle: (id: string) => void;
+  onClose: () => void;
+  onGrid: (grid: boolean) => void;
+  onPrivacy: (privacy: Muse["privacy"] | null) => void;
+  onToggleFandom: (id: string) => void;
   onToggleGroup: () => void;
-  options: FandomOption[];
   own: boolean;
+  privacy: Muse["privacy"] | null;
   selected: string[];
-  total: number;
+  visible: boolean;
 }) {
   const theme = useAppTheme();
-  const shown = selected.length
-    ? options
-        .filter((option) => selected.includes(option.id))
-        .reduce((sum, option) => sum + option.count, 0)
-    : total;
-  const canFilter = options.length > 1;
+  const theming = theme.accent.solid;
 
   return (
-    <View style={styles.bar}>
-      <View style={styles.barTop}>
-        <View style={styles.summaryRow}>
-          <Text style={[styles.summary, { color: theme.textGray }]}>
-            {selected.length
-              ? `${shown} of ${total} characters`
-              : `${total} ${total === 1 ? "character" : "characters"}`}
-            {canFilter ? ` · ${options.length} fandoms` : ""}
-          </Text>
-          {filtering && !grouping ? (
-            <ActivityIndicator color={theme.accent.solid} size="small" />
-          ) : null}
-        </View>
-        {selected.length ? (
-          <Pressable
-            accessibilityRole="button"
-            hitSlop={space.sm}
-            onPress={onClear}
-          >
-            <Text style={[styles.clear, { color: theme.textLink }]}>
-              Clear filter
-            </Text>
-          </Pressable>
+    <BottomSheet
+      ignoreKeyboard
+      maxHeightRatio={0.72}
+      onClose={onClose}
+      title="Filter & view"
+      visible={visible}
+    >
+      <ScrollView contentContainerStyle={styles.sheet}>
+        <FieldLabel>Show as</FieldLabel>
+        <SegmentedTabs<"grid" | "list">
+          onChange={(next) => onGrid(next === "grid")}
+          options={[
+            { icon: "list-outline", label: "List", value: "list" },
+            { icon: "grid-outline", label: "Grid", value: "grid" },
+          ]}
+          value={grid ? "grid" : "list"}
+        />
+
+        {own ? (
+          <>
+            <FieldLabel>Who can see them</FieldLabel>
+            <View style={styles.choices}>
+              {PRIVACY_OPTIONS.map((option) => (
+                <Choice
+                  active={privacy === option.value}
+                  key={option.label}
+                  label={option.label}
+                  onPress={() => onPrivacy(option.value)}
+                />
+              ))}
+            </View>
+          </>
         ) : null}
-      </View>
 
-      {canFilter ? (
-        <ScrollView
-          contentContainerStyle={styles.chips}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.chipScroller}
-        >
-          <FandomChip
-            active={selected.length === 0}
-            color={theme.accent.solid}
-            count={total}
-            label="All"
-            onPress={onClear}
-          />
-          {options.map((option) => (
-            <FandomChip
-              active={selected.includes(option.id)}
-              color={option.color ?? theme.accent.solid}
-              count={option.count}
-              key={option.id}
-              label={option.name}
-              onPress={() => onToggle(option.id)}
-            />
-          ))}
-        </ScrollView>
-      ) : null}
+        {fandoms.length > 1 ? (
+          <>
+            <FieldLabel>Fandoms</FieldLabel>
+            <View style={styles.choices}>
+              {fandoms.map((option) => (
+                <FandomChip
+                  active={selected.includes(option.id)}
+                  color={option.color ?? theming}
+                  count={option.count}
+                  key={option.id}
+                  label={option.name}
+                  onPress={() => onToggleFandom(option.id)}
+                />
+              ))}
+            </View>
+          </>
+        ) : null}
 
-      <View style={styles.barBottom}>
-        {canFilter ? (
+        {canGroup && !grid ? (
           <Pressable
             accessibilityRole="checkbox"
             accessibilityState={{ busy: grouping, checked: grouped }}
@@ -360,8 +396,8 @@ const FandomBar = memo(function FandomBar({
               style={[
                 styles.checkbox,
                 {
-                  backgroundColor: grouped ? theme.accent.solid : "transparent",
-                  borderColor: grouped ? theme.accent.solid : theme.textGray,
+                  backgroundColor: grouped ? theming : "transparent",
+                  borderColor: grouped ? theming : theme.textGray,
                 },
               ]}
             >
@@ -373,33 +409,19 @@ const FandomBar = memo(function FandomBar({
               Group by fandom
             </Text>
             {grouping ? (
-              <ActivityIndicator color={theme.accent.solid} size="small" />
+              <ActivityIndicator color={theming} size="small" />
             ) : null}
           </Pressable>
-        ) : (
-          <View />
-        )}
-        {own ? (
-          <View style={styles.swipeTip}>
-            <Ionicons
-              color={theme.textGray}
-              name="hand-left-outline"
-              size={12}
-            />
-            <Text style={[styles.swipeTipLabel, { color: theme.textGray }]}>
-              Swipe a character to edit
-            </Text>
-          </View>
         ) : null}
-      </View>
-    </View>
+
+        {privacy || selected.length ? (
+          <PillButton icon="close" label="Clear filters" onPress={onClear} />
+        ) : null}
+      </ScrollView>
+    </BottomSheet>
   );
 });
 
-/**
- * Web's "Characters (3 / 50)" heading and its add button, on your own list
- * only: how much of the plan is used, and the way to a new character.
- */
 const CreateBar = ({
   count,
   limit,
@@ -528,6 +550,7 @@ const MuseCell = memo(function MuseCell({
         onEdit={onEdit}
         onOpen={onOpen}
         // A list cached before counts existed reads as a single verse.
+        verses={muse.family}
         verseCount={muse.verseCount ?? 1}
       />
     </SliceFrame>
@@ -549,6 +572,13 @@ export const MuseList = ({ username }: { username: string }) => {
   const [selected, setSelected] = useState<string[]>(NO_SELECTION);
   const [grouped, setGrouped] = useState(groupPreference);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [grid, setGrid] = useState(gridPreference);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const { width } = useWindowDimensions();
+  const gridCard = (width - space.md * 2 - GRID_GAP) / 2;
+  /** Empty shows every privacy. Offered on your own list only. */
+  const [privacy, setPrivacy] = useState<Muse["privacy"] | null>(null);
 
   // The controls read these straight away; the list reads the trailing copies,
   // so a tap paints its checkbox or chip, and the spinner, before the list is
@@ -610,12 +640,21 @@ export const MuseList = ({ username }: { username: string }) => {
     [listSelected, options],
   );
 
-  const isGrouped = listGrouped && canGroup;
+  const isGrouped = listGrouped && canGroup && !grid;
+  const activeFilters = activeSelection.length + (privacy ? 1 : 0);
+  const narrowed = Boolean(search.trim() || activeFilters);
 
   const items = useMemo<ListItem[]>(() => {
-    const visible = listSelection.length
-      ? muses.filter((muse) => listSelection.includes(fandomIdOf(muse)))
-      : muses;
+    const needle = search.trim().toLowerCase();
+    const visible = muses.filter(
+      (muse) =>
+        (!listSelection.length || listSelection.includes(fandomIdOf(muse))) &&
+        (!privacy || muse.privacy === privacy) &&
+        (!needle ||
+          `${muse.firstName} ${muse.lastName ?? ""}`
+            .toLowerCase()
+            .includes(needle)),
+    );
     if (!isGrouped) {
       return visible.map((muse) => ({ kind: "muse", muse, slice: null }));
     }
@@ -661,7 +700,9 @@ export const MuseList = ({ username }: { username: string }) => {
       });
     }
     return list;
-  }, [isGrouped, listSelection, muses, options]);
+    // `search` and `privacy` narrow the list too: without them here, typing
+    // and the privacy filter never re-ran it.
+  }, [isGrouped, listSelection, muses, options, privacy, search]);
 
   const toggleFandom = useCallback(
     (id: string) =>
@@ -672,7 +713,14 @@ export const MuseList = ({ username }: { username: string }) => {
       ),
     [],
   );
-  const clearFandoms = useCallback(() => setSelected(NO_SELECTION), []);
+  const clearFilters = useCallback(() => {
+    setSelected(NO_SELECTION);
+    setPrivacy(null);
+  }, []);
+  const chooseGrid = useCallback((next: boolean) => {
+    gridPreference = next;
+    setGrid(next);
+  }, []);
   const toggleGroup = useCallback(() => {
     closeOpenRevealRow();
     setGrouped((current) => {
@@ -709,7 +757,7 @@ export const MuseList = ({ username }: { username: string }) => {
     if (museCount >= museLimit) {
       Alert.alert(
         "Character limit reached",
-        `You've reached your plan's limit of ${museLimit} characters (alternate verses count toward this too). Upgrade your tier or remove a character to add a new one.`,
+        `You've reached your limit of ${museLimit} characters (alternate verses count toward this too). Remove a character to add a new one.`,
       );
       return;
     }
@@ -771,7 +819,9 @@ export const MuseList = ({ username }: { username: string }) => {
 
   const renderItem = useCallback(
     ({ item }: { item: ListItem }) =>
-      item.kind === "header" ? (
+      grid && item.kind === "muse" ? (
+        <MuseCard muse={item.muse} width={gridCard} />
+      ) : item.kind === "header" ? (
         <GroupHeaderCell
           count={item.count}
           name={item.name}
@@ -787,52 +837,67 @@ export const MuseList = ({ username }: { username: string }) => {
           slice={item.slice}
         />
       ),
-    [deletingId, onDelete, onEdit, openMuse],
+    [deletingId, grid, gridCard, onDelete, onEdit, openMuse],
   );
+
+  const shownCount = items.filter((item) => item.kind === "muse").length;
 
   return (
     <InFandomGroup.Provider value={isGrouped}>
       <FlatList
         {...tabBarScroll}
+        columnWrapperStyle={grid ? styles.gridRow : undefined}
         contentContainerStyle={contentStyle}
         data={items}
+        // A list cannot change its columns in place.
+        key={grid ? "grid" : "list"}
+        numColumns={grid ? 2 : 1}
         initialNumToRender={10}
         keyExtractor={keyExtractor}
         ListEmptyComponent={
-          <ListStatus
-            empty={
-              // The drawn blank card, breathing while the screen is still
-              // (`EmptyScene` rests it under a scroll or another screen). On
-              // your own page it comes with the way to fill it: the bar's
-              // "New character" is above, but an empty page is asking the
-              // question right here.
-              <View style={styles.emptyState}>
-                <EmptyScene
-                  scene="blank-card"
-                  subtitle={
-                    own
-                      ? "Characters are who you write as. Give one a name and a face, and the stories can begin."
-                      : `@${username} hasn't created any characters yet.`
-                  }
-                  title="No characters yet"
-                />
-                {own ? (
-                  <PillButton
-                    icon="sparkles"
-                    label="Create my first character"
-                    onPress={createMuse}
-                    tone="accent"
+          narrowed ? (
+            <Text style={[styles.noMatch, { color: theme.textGray }]}>
+              No characters match that.
+            </Text>
+          ) : (
+            <ListStatus
+              empty={
+                // The drawn blank card, breathing while the screen is still
+                // (`EmptyScene` rests it under a scroll or another screen). On
+                // your own page it comes with the way to fill it: the bar's
+                // "New character" is above, but an empty page is asking the
+                // question right here.
+                <View style={styles.emptyState}>
+                  <EmptyScene
+                    scene="blank-card"
+                    subtitle={
+                      own
+                        ? "Characters are who you write as. Give one a name and a face, and the stories can begin."
+                        : `@${username} hasn't created any characters yet.`
+                    }
+                    title="No characters yet"
                   />
-                ) : null}
-              </View>
-            }
-            error={query.error}
-            loading={query.isPending}
-            onRetry={() => void query.refetch()}
-            skeleton={
-              <SkeletonRows count={6} render={() => <MuseListRowSkeleton />} />
-            }
-          />
+                  {own ? (
+                    <PillButton
+                      icon="sparkles"
+                      label="Create my first character"
+                      onPress={createMuse}
+                      tone="accent"
+                    />
+                  ) : null}
+                </View>
+              }
+              error={query.error}
+              loading={query.isPending}
+              onRetry={() => void query.refetch()}
+              skeleton={
+                <SkeletonRows
+                  count={6}
+                  render={() => <MuseListRowSkeleton />}
+                />
+              }
+            />
+          )
         }
         ListHeaderComponent={
           own || muses.length > 0 ? (
@@ -845,18 +910,63 @@ export const MuseList = ({ username }: { username: string }) => {
                 />
               ) : null}
               {muses.length > 0 ? (
-                <FandomBar
-                  filtering={selected !== listSelected}
-                  grouped={grouped && canGroup}
-                  grouping={grouped !== listGrouped}
-                  onClear={clearFandoms}
-                  onToggle={toggleFandom}
-                  onToggleGroup={toggleGroup}
-                  options={options}
-                  own={own}
-                  selected={activeSelection}
-                  total={muses.length}
-                />
+                <View style={styles.searchBar}>
+                  <View style={styles.searchRow}>
+                    <View style={styles.searchField}>
+                      <SearchField
+                        onChangeText={setSearch}
+                        placeholder="Search characters"
+                        value={search}
+                      />
+                    </View>
+                    <View>
+                      <IconButton
+                        accessibilityLabel={
+                          activeFilters
+                            ? `Filter and view, ${activeFilters} active`
+                            : "Filter and view"
+                        }
+                        icon="options-outline"
+                        onPress={() => setFiltersOpen(true)}
+                        size={40}
+                      />
+                      {activeFilters ? (
+                        <View
+                          pointerEvents="none"
+                          style={[
+                            styles.filterBadge,
+                            { backgroundColor: theme.accent.solid },
+                          ]}
+                        >
+                          <Text style={styles.filterBadgeLabel}>
+                            {activeFilters}
+                          </Text>
+                        </View>
+                      ) : null}
+                    </View>
+                  </View>
+                  {activeFilters ? (
+                    <View style={styles.summaryRow}>
+                      <Text style={[styles.summary, { color: theme.textGray }]}>
+                        {`Showing ${shownCount} of ${muses.length}`}
+                      </Text>
+                      <Pressable
+                        accessibilityRole="button"
+                        hitSlop={space.sm}
+                        onPress={clearFilters}
+                      >
+                        <Text style={[styles.clear, { color: theme.textLink }]}>
+                          Clear
+                        </Text>
+                      </Pressable>
+                    </View>
+                  ) : own ? null : (
+                    <Text style={[styles.summary, { color: theme.textGray }]}>
+                      {`${muses.length} ${muses.length === 1 ? "character" : "characters"}`}
+                      {canGroup ? ` · ${options.length} fandoms` : ""}
+                    </Text>
+                  )}
+                </View>
               ) : null}
             </View>
           ) : null
@@ -866,6 +976,23 @@ export const MuseList = ({ username }: { username: string }) => {
         renderItem={renderItem}
         windowSize={5}
       />
+      <FilterSheet
+        canGroup={canGroup}
+        fandoms={options}
+        grid={grid}
+        grouped={grouped && canGroup}
+        grouping={grouped !== listGrouped}
+        onClear={clearFilters}
+        onClose={() => setFiltersOpen(false)}
+        onGrid={chooseGrid}
+        onPrivacy={setPrivacy}
+        onToggleFandom={toggleFandom}
+        onToggleGroup={toggleGroup}
+        own={own}
+        privacy={privacy}
+        selected={activeSelection}
+        visible={filtersOpen}
+      />
     </InFandomGroup.Provider>
   );
 };
@@ -874,21 +1001,33 @@ const GROUP_PADDING = space.sm + 2;
 const GROUP_GAP = space.sm + 4;
 
 const styles = StyleSheet.create({
-  bar: {
-    gap: space.ms,
-    marginBottom: GROUP_GAP,
-    paddingBottom: space.xs,
-  },
-  barBottom: {
+  choices: { flexDirection: "row", flexWrap: "wrap", gap: space.xs },
+  filterBadge: {
     alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
+    borderRadius: 9,
+    height: 18,
+    justifyContent: "center",
+    minWidth: 18,
+    paddingHorizontal: 4,
+    position: "absolute",
+    right: -4,
+    top: -4,
   },
-  barTop: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between",
+  filterBadgeLabel: {
+    color: "#ffffff",
+    fontSize: fontSize.meta,
+    fontWeight: "700",
   },
+  sheet: {
+    gap: space.sm,
+    paddingBottom: space.xl,
+    paddingHorizontal: space.md,
+  },
+  gridRow: { gap: GRID_GAP, marginBottom: GRID_GAP },
+  searchField: { flex: 1, minWidth: 0 },
+  searchRow: { alignItems: "center", flexDirection: "row", gap: space.sm },
+  noMatch: { fontSize: fontSize.body, padding: space.lg, textAlign: "center" },
+  searchBar: { gap: space.sm, paddingBottom: space.sm },
   /** An ungrouped character. */
   cell: { marginBottom: GROUP_GAP },
   checkbox: {
@@ -920,8 +1059,6 @@ const styles = StyleSheet.create({
   chipCountLabel: { fontSize: fontSize.meta, fontWeight: "700" },
   chipDot: { borderRadius: radius.xs, height: 8, width: 8 },
   chipLabel: { flexShrink: 1, fontSize: fontSize.label, fontWeight: "600" },
-  chipScroller: { marginHorizontal: -space.md },
-  chips: { gap: space.sm, paddingHorizontal: space.md },
   clear: { fontSize: fontSize.label, fontWeight: "600" },
   content: { padding: space.md },
   createBar: {
@@ -974,6 +1111,4 @@ const styles = StyleSheet.create({
   },
   summary: { fontSize: fontSize.caption, fontWeight: "600" },
   summaryRow: { alignItems: "center", flexDirection: "row", gap: space.sm },
-  swipeTip: { alignItems: "center", flexDirection: "row", gap: space.xs },
-  swipeTipLabel: { fontSize: fontSize.caption },
 });

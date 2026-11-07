@@ -1,8 +1,12 @@
 import type { ApiClient } from "@nw/api";
-import { requestPresignedUpload } from "@nw/api/endpoints/profile";
+import {
+  moderateUpload,
+  requestPresignedUpload,
+} from "@nw/api/endpoints/profile";
 import { API_MESSAGE } from "@nw/types";
 import * as FileSystem from "expo-file-system/legacy";
 import * as ImagePicker from "expo-image-picker";
+import { Alert } from "react-native";
 
 /**
  * Picking a file off the phone and getting it into storage, for the muse
@@ -71,31 +75,105 @@ export const pickMedia = async (limit: number): Promise<PickedMedia[]> => {
 };
 
 /**
- * The bytes to storage. `null` on any failure, so a caller decides whether
- * that is an alert or a quiet retry.
+ * One audio file, or `null` if the person backed out.
+ *
+ * Required when asked for, because the picker is native code a build made before
+ * it was added does not hold: importing it at the top of this file would stop
+ * those builds opening at all. There it rejects, and the caller says so. Not
+ * `import()`: Metro's lazy bundles cannot resolve a hoisted package here.
+ */
+export const pickAudio = async (): Promise<
+  (PickedMedia & { name: string }) | null
+> => {
+  const picker: typeof import("expo-document-picker") = require("expo-document-picker");
+  const result = await picker.getDocumentAsync({
+    copyToCacheDirectory: true,
+    type: "audio/*",
+  });
+  const asset = result.canceled ? null : result.assets[0];
+  if (!asset) return null;
+  return {
+    contentType: asset.mimeType ?? "audio/mpeg",
+    fileSize: asset.size ?? 0,
+    name: asset.name,
+    uri: asset.uri,
+  };
+};
+
+/**
+ * What an upload came to. `url` is null on any failure; `rejected` says the
+ * failure was the service's NSFW check refusing the picture, which wants its
+ * own message rather than "try again".
+ */
+export interface UploadResult {
+  url: string | null;
+  rejected: boolean;
+}
+
+/**
+ * The one message for a picture the NSFW check refused, so every upload path
+ * says the same thing (APP_STORE_REVIEW_PLAN.md H1).
+ */
+export const MEDIA_REJECTED_TITLE = "Image not allowed";
+export const MEDIA_REJECTED_MESSAGE =
+  "This image appears to contain sexual content, which isn't allowed on Novelist World. Please choose another.";
+
+let lastRejectedAlert = 0;
+
+/** Once per batch: several refused pictures from one pick say it once. */
+export const alertMediaRejected = () => {
+  const now = Date.now();
+  if (now - lastRejectedAlert < 2000) return;
+  lastRejectedAlert = now;
+  Alert.alert(MEDIA_REJECTED_TITLE, MEDIA_REJECTED_MESSAGE);
+};
+
+/**
+ * Asks the service to screen a picture just PUT to a presigned URL — the PUT
+ * goes straight to S3, so this is the only point the service sees it. `true`
+ * when it may be used; `false` when it was refused, by which time the service
+ * has deleted it. Video and audio are not screened (nor are they on web).
+ */
+export const screenUpload = (
+  api: ApiClient,
+  fileUrl: string,
+  contentType: string,
+): Promise<boolean> =>
+  contentType.startsWith("image/")
+    ? moderateUpload(api, fileUrl)
+    : Promise.resolve(true);
+
+/**
+ * The bytes to storage, then through the NSFW check. Never throws, so a caller
+ * decides whether a failure is an alert or a quiet retry.
  */
 export const uploadFile = async (
   api: ApiClient,
   file: PickedMedia,
   /** The folder under the account: a muse id for its gallery, as web sends. */
   prefix?: string,
-): Promise<string | null> => {
+): Promise<UploadResult> => {
+  const failed: UploadResult = { rejected: false, url: null };
   try {
     const presigned = await requestPresignedUpload(api, {
       contentType: file.contentType,
       mediaBucket: "APP_MEDIA",
       prefix: prefix ?? null,
     });
-    if (presigned === API_MESSAGE.MediaError) return null;
+    if (presigned === API_MESSAGE.MediaError) return failed;
 
     const result = await FileSystem.uploadAsync(presigned.uploadUrl, file.uri, {
       headers: { "Content-Type": file.contentType },
       httpMethod: presigned.method as "PUT" | "POST",
       uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
     });
-    if (result.status < 200 || result.status >= 300) return null;
-    return presigned.fileUrl;
+    if (result.status < 200 || result.status >= 300) return failed;
+
+    if (!(await screenUpload(api, presigned.fileUrl, file.contentType))) {
+      return { rejected: true, url: null };
+    }
+    return { rejected: false, url: presigned.fileUrl };
   } catch {
-    return null;
+    return failed;
   }
 };

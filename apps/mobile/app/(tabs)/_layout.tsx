@@ -1,30 +1,29 @@
 import { Ionicons } from "@expo/vector-icons";
-import {
-  useNotificationCounts,
-  useSession,
-  useUnreadConversations,
-} from "@nw/features";
+import { useSession, useUnreadConversations } from "@nw/features";
 import { Redirect, Tabs, useRouter } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import { Avatar } from "@/components/avatar";
 import { StartupFallback } from "@/components/startup-fallback";
 import { TabBar } from "@/components/tab-bar";
 import { TabBarChromeProvider } from "@/context/tab-bar";
+import { useUnreadReplyCount } from "@/hooks/use-unread-reply-count";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { readAccessToken } from "@/lib/session-store";
 import { radius, useAppTheme } from "@/theme";
 import { glassHeaderOptions } from "@/theme/header";
 import { tabBarStyle } from "@/theme/tab-bar";
-import { MenuButton } from "@/components/menu-button";
+import { HeaderActions } from "@/components/header-actions";
 
 /**
  * The signed-in shell.
  *
- * Six tabs. The web app's left nav has fourteen destinations; adding tabs
- * before the screens behind them exist would be a tab bar of dead ends, so
- * routes arrive here as their phases land (MONOREPO_MIGRATION_PLAN Phases 3–9).
+ * Five tabs in the bar, and Notifications as a sixth route with no column —
+ * the bell in every header opens it. The web app's left nav has fourteen
+ * destinations; adding tabs before the screens behind them exist would be a
+ * tab bar of dead ends, so routes arrive here as their phases land
+ * (MONOREPO_MIGRATION_PLAN Phases 3–9).
  *
- * Six is close to the ceiling. The bar divides the window evenly between its
+ * Six columns is close to the ceiling. The bar divides the window evenly between its
  * columns (`tabWidth`), so at the 375pt baseline a column is 57pt against a
  * 56pt lozenge — a seventh tab would have the highlight wider than the tab it
  * highlights, and the bar would need a different shape rather than one more
@@ -60,9 +59,7 @@ export default function TabsLayout() {
   const router = useRouter();
   const { novelist, status } = useSession();
   const { unreadCount } = useUnreadConversations();
-  // What has arrived since the Alerts tab was last opened, counted by the server.
-  const { data: notificationCounts } = useNotificationCounts();
-  const unseenNotifications = notificationCounts?.unseen ?? 0;
+  const unreadReplies = useUnreadReplyCount();
   // Push registration, tap routing and the icon's number.
   usePushNotifications();
 
@@ -77,11 +74,13 @@ export default function TabsLayout() {
   return (
     <TabBarChromeProvider>
       <Tabs
+        // Back walks the tabs you visited rather than jumping to Home. The
+        // bell opens Notifications as a tab with no column of its own, and
+        // its back button has to return to whichever tab the bell was in.
+        backBehavior="history"
         tabBar={(props) => <TabBar {...props} />}
         screenOptions={{
-          headerRight: () => (
-            <MenuButton />
-          ),
+          headerRight: () => <HeaderActions />,
           ...glassHeaderOptions(theme),
           sceneStyle: { backgroundColor: theme.background },
           // Colours and the badge are the bar's own now; this is the library's
@@ -138,6 +137,31 @@ export default function TabsLayout() {
           }}
         />
         {/*
+          The character directory, beside Explore: the two discovery tabs
+          together — Explore for what people are writing, this for who they
+          are writing as. A stack, like Explore's, so a character opened from
+          the grid stays inside the tab.
+
+          "Muses" under the icon: "Characters" is wider than a sixth of a
+          375pt bar and truncated. The title stays the full name for screen
+          readers.
+        */}
+        <Tabs.Screen
+          name="(characters)"
+          options={{
+            headerShown: false,
+            tabBarIcon: ({ color, focused, size }) => (
+              <Ionicons
+                color={color}
+                name={focused ? "people" : "people-outline"}
+                size={size}
+              />
+            ),
+            tabBarLabel: "Muses",
+            title: "Character Directory",
+          }}
+        />
+        {/*
           Interactions sits between Home and the Inbox deliberately. Both are
           conversations you are part of, and the pair reads left to right as
           public first, private second — the threads anyone can join, then the
@@ -159,6 +183,7 @@ export default function TabsLayout() {
                 size={size}
               />
             ),
+            tabBarBadge: unreadReplies > 0 ? unreadReplies : undefined,
             // One word under the icon; the title stays for screen readers.
             tabBarLabel: "Threads",
             title: "Interactions",
@@ -185,21 +210,23 @@ export default function TabsLayout() {
           inside this tab, or the bar lights Home while the reader is reading
           something they opened from here. Its own header is the stack's, so
           the tab must not draw a second one.
+
+          No column in the bar: it is reached from the bell in every header
+          (`HeaderActions`), which carries the unseen count. `href: null` keeps
+          the route in this navigator — push taps and rows still land here —
+          and `TabBar` skips it, lighting no column while it is on screen.
         */}
         <Tabs.Screen
           name="(notifications)"
           options={{
             headerShown: false,
-            tabBarBadge:
-              unseenNotifications > 0 ? unseenNotifications : undefined,
-            tabBarIcon: ({ color, focused, size }) => (
-              <Ionicons
-                color={color}
-                name={focused ? "notifications" : "notifications-outline"}
-                size={size}
-              />
-            ),
-            tabBarLabel: "Alerts",
+            href: null,
+            // No bar while here, on the list or anything opened from it. The
+            // bell opens this as a page over the tab you were in, with its own
+            // back button; a bar with no column lit read as a second way out.
+            // `TabBar` honours `display: "none"` and tells the screens, so
+            // nothing pads for the missing bar.
+            tabBarStyle: { ...tabBarStyle(theme), display: "none" },
             title: "Notifications",
           }}
         />

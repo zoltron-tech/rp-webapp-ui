@@ -29,6 +29,22 @@ const EXPLANATIONS: Record<string, { heading: string; body: string }> = {
     body: "The provider you signed in with has not confirmed that the email address on that account belongs to you. Confirm it there and try again — we cannot sign you in on an unconfirmed address, because that would let anyone claiming the address into your account.",
     heading: "Email not confirmed",
   },
+  access_denied: {
+    body: "You cancelled the sign-in before it finished. Nothing was changed — try again whenever you are ready.",
+    heading: "Sign-in cancelled",
+  },
+  already_linked: {
+    body: "The Novelist World account with that email address is already linked to a different Apple ID. Sign in with that Apple ID, or with your email and password.",
+    heading: "Linked to another Apple ID",
+  },
+  apple_unavailable: {
+    body: "Sign in with Apple is not available right now. Please try again later, or sign in another way.",
+    heading: "Apple sign-in unavailable",
+  },
+  authorization_request_not_found: {
+    body: "The sign-in took too long or was started in a different browser. Please start it again from this page.",
+    heading: "Sign-in expired",
+  },
   username_unavailable: {
     body: "We could not find a free username for your new account. Please try again, or sign up with an email address and choose one yourself.",
     heading: "Could not pick a username",

@@ -1,12 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import {
-  hasMarkdown,
-  type MessageSenderChoice,
-  markdownToHtml,
-  messagePreview,
-} from "@nw/chat";
+import { type MessageSenderChoice, messagePreview } from "@nw/chat";
+import { mentionQuery } from "@nw/richtext";
 import { matchCase, namesToWords } from "@nw/spell/tokenizer";
-import type { Message } from "@nw/types";
+import type { MentionDataItem, MentionTab, Message } from "@nw/types";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -27,6 +23,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Avatar } from "@/components/avatar";
 import { applyFormat, FormatBar } from "@/components/chat/format-bar";
 import { MarkdownInput } from "@/components/chat/markdown-input";
+import { MentionList } from "@/components/editor/mention-list";
+import { messageToWire } from "@/lib/chat-mentions";
 import { MediaTray, type TrayTab } from "@/components/chat/media-tray";
 import { mediaLabel } from "@/components/chat/message-actions";
 import { MessageThumb, messageMediaOf } from "@/components/chat/message-media";
@@ -132,6 +130,7 @@ const NO_FLAGS: readonly SpellFlag[] = [];
 export const Composer = memo(function Composer({
   conversationId,
   disabled,
+  mentionTabs,
   onCancelReply,
   onInsetChange,
   onSelectSender,
@@ -145,6 +144,8 @@ export const Composer = memo(function Composer({
 }: {
   conversationId: string | undefined;
   disabled?: boolean;
+  /** Who `@` can name here. A stable array: this component is memoised. */
+  mentionTabs?: MentionTab[];
   onCancelReply?: () => void;
   /**
    * How much of the screen's foot the composer, the keyboard and the tray
@@ -255,6 +256,48 @@ export const Composer = memo(function Composer({
    */
   const selectionRef = useRef({ end: 0, start: 0 });
   const [caret, setCaret] = useState<{ end: number; start: number }>();
+
+  /*
+   * Mentions. The draft stays plain text, so a pick is `@Name` in the field and
+   * is remembered here until the send turns it into a chip (`chat-mentions`).
+   * The caret and the text change in separate events, in an order that differs
+   * between platforms, so each event re-reads both.
+   */
+  const [mention, setMention] = useState<{ at: number; query: string } | null>(
+    null,
+  );
+  const mentions = useRef<MentionDataItem[]>([]);
+  const readMention = useCallback(() => {
+    const next = mentionTabs?.length
+      ? mentionQuery(draftRef.current, selectionRef.current.start)
+      : null;
+    setMention((current) =>
+      current?.at === next?.at && current?.query === next?.query
+        ? current
+        : next,
+    );
+  }, [mentionTabs]);
+
+  const pickMention = useCallback(
+    (item: MentionDataItem) => {
+      if (!mention) return;
+      const text = draftRef.current;
+      const name = `@${item.displayName} `;
+      const end = mention.at + 1 + mention.query.length;
+      const next = mention.at + name.length;
+      setDraft(text.slice(0, mention.at) + name + text.slice(end));
+      selectionRef.current = { end: next, start: next };
+      setCaret({ end: next, start: next });
+      mentions.current = [
+        ...mentions.current.filter(
+          (known) => known.displayName !== item.displayName,
+        ),
+        item,
+      ];
+      setMention(null);
+    },
+    [mention],
+  );
 
   /*
    * Spelling: the field underlines misspelled words (`MarkdownInput`
@@ -498,15 +541,17 @@ export const Composer = memo(function Composer({
     const accepted = await onSend({
       attachments: attachments.length ? attachments : null,
       // Converted only when there is something to convert; see the note above.
-      text: hasMarkdown(text) ? markdownToHtml(text) : text,
+      text: messageToWire(text, mentions.current),
     });
 
     // The attachments are cleared *after* acceptance rather than alongside the
     // text. A rejected send puts the words back in the field, and the pictures
     // have to still be under them — there is nowhere else for them to come
     // from, and re-picking them means re-uploading them.
-    if (accepted) media.clear();
-    else setDraft(text);
+    if (accepted) {
+      media.clear();
+      mentions.current = [];
+    } else setDraft(text);
   }, [canSend, media, onSend, trimmed]);
 
   /*
@@ -571,6 +616,16 @@ export const Composer = memo(function Composer({
           style={StyleSheet.absoluteFill}
           variant="bar"
         />
+
+        {mention && mentionTabs?.length ? (
+          <View style={styles.mentions}>
+            <MentionList
+              onSelect={pickMention}
+              query={mention.query}
+              tabs={mentionTabs}
+            />
+          </View>
+        ) : null}
 
         {/* A pill, not a stray line of grey. A sentence floating above the
             input reads as part of the draft; a chip reads as the app talking. */}
@@ -894,6 +949,8 @@ export const Composer = memo(function Composer({
               onChangeText={(text) => {
                 typingAt.current = Date.now();
                 setDraft(text);
+                draftRef.current = text;
+                readMention();
               }}
               onFocus={() => {
                 refocusing.current = false;
@@ -902,6 +959,7 @@ export const Composer = memo(function Composer({
               }}
               onSelectionChange={(event) => {
                 selectionRef.current = event.nativeEvent.selection;
+                readMention();
                 spell.refresh();
                 // Handing the caret back to the platform: it has been placed,
                 // and holding it would pin the cursor there.
@@ -1044,6 +1102,7 @@ const ActionButton = ({
 /** Chips straight on media: web's `MEDIA_CHIP`, no blur. */
 
 const styles = StyleSheet.create({
+  mentions: { paddingBottom: space.xs, paddingHorizontal: space.sm },
   action: { alignItems: "center", flex: 1, gap: space.xxs },
   actionIcon: {
     alignItems: "center",

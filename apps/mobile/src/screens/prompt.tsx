@@ -2,7 +2,7 @@ import { getPrompt } from "@nw/api/endpoints/prompt";
 import { queryKeys, useApi } from "@nw/features";
 import type { Prompt } from "@nw/types";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { PromptCard } from "@/components/feed/prompt-card";
 import { EmptyScene } from "@/components/empty-feed";
@@ -39,6 +39,7 @@ export const PromptScreen = () => {
   const theme = useAppTheme();
   const api = useApi();
   const queryClient = useQueryClient();
+  const router = useRouter();
   const { promptId } = useLocalSearchParams<{ promptId: string }>();
 
   const query = useQuery({
@@ -69,7 +70,12 @@ export const PromptScreen = () => {
     queryKey: queryKeys.prompt(promptId ?? ""),
   });
 
-  const actions = usePromptFeedActions();
+  const actions = usePromptFeedActions({
+    // Nothing left to read here; web routes away too.
+    onDeleted: () => {
+      if (router.canGoBack()) router.back();
+    },
+  });
   const { cardProps, expandedIds, unfoldedIds } = actions;
   const prompt = query.data ?? null;
 

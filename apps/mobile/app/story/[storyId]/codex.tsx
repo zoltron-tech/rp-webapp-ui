@@ -1,6 +1,13 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useSession } from "@nw/features";
-import type { CodexEntry, CodexRelationship, StoryBoardEvent } from "@nw/types";
+import type {
+  CodexCategory,
+  CodexEntry,
+  CodexGroup,
+  CodexRelationship,
+  StoryBoardEvent,
+  StoryCharacter,
+} from "@nw/types";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import {
@@ -21,6 +28,13 @@ import {
   type StoryFace,
   useStoryFaces,
 } from "@/components/story/character-sheet";
+import { CharacterEditor } from "@/components/story/character-editor";
+import {
+  CategoriesSheet,
+  CategorySheet,
+  EntryEditor,
+  GroupSheet,
+} from "@/components/story/codex-editors";
 import { EntryGlyph, EntrySheet } from "@/components/story/entry-sheet";
 import { RelationshipRow, ToneLegend } from "@/components/story/relationship-bits";
 import { RelationshipSheet } from "@/components/story/relationship-sheet";
@@ -34,13 +48,16 @@ import { buildTonePalette, resolveTone } from "@/lib/story-mesh";
 import { border, fontSize, radius, space, type, useAppTheme } from "@/theme";
 
 /**
- * The codex — web's `StoryCodexView`, read-only.
+ * The codex — web's `StoryCodexView`.
  *
  * A row of tabs, Characters first and then the story's own categories (Places,
  * Items, Lore and whatever its authors added). Characters shows both pools:
  * the cast, which is muses speaking in the prose, and the characters the story
  * owns. A category shows its entries as cards with a preview and the chapters
  * they are used in; a card opens the entry to be read in full.
+ *
+ * A story member writes all of it. The bar under the tabs offers what the tab
+ * can add, and the reading sheets and the group cards lead to their editors.
  */
 
 const CAST_TAB = "__cast";
@@ -81,6 +98,21 @@ export default function CodexScreen() {
     relationship: CodexRelationship | null;
   } | null>(null);
 
+  // The editors: a value here opens one, `null` inside it means a new one.
+  const [entryEditor, setEntryEditor] = useState<{
+    entry: CodexEntry | null;
+  } | null>(null);
+  const [characterEditor, setCharacterEditor] = useState<{
+    character: StoryCharacter | null;
+  } | null>(null);
+  const [groupEditor, setGroupEditor] = useState<{
+    group: CodexGroup | null;
+  } | null>(null);
+  const [categoryEditor, setCategoryEditor] = useState<{
+    category: CodexCategory | null;
+  } | null>(null);
+  const [managingCategories, setManagingCategories] = useState(false);
+
   const chapters = useMemo(
     () =>
       [...(story.data?.events ?? [])].sort((a, b) => a.ordinal - b.ordinal),
@@ -99,6 +131,13 @@ export default function CodexScreen() {
     (entry) => entry.categoryId === tab,
   );
   const active = categories.find((category) => category.id === tab);
+  const entryCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const entry of codex.data?.entries ?? []) {
+      counts.set(entry.categoryId, (counts.get(entry.categoryId) ?? 0) + 1);
+    }
+    return counts;
+  }, [codex.data?.entries]);
 
   const openChapter = (eventId: string) => {
     setOpenEntry(null);
@@ -202,6 +241,40 @@ export default function CodexScreen() {
         </View>
 
         <View style={styles.body}>
+          {canEdit ? (
+            <View style={styles.meshActions}>
+              {tab === CAST_TAB ? (
+                <>
+                  <PillButton
+                    icon="add"
+                    label="New character"
+                    onPress={() => setCharacterEditor({ character: null })}
+                    tone="accent"
+                  />
+                  <PillButton
+                    icon="people-outline"
+                    label="New group"
+                    onPress={() => setGroupEditor({ group: null })}
+                  />
+                </>
+              ) : tab !== MESH_TAB ? (
+                <PillButton
+                  icon="add"
+                  label="New entry"
+                  onPress={() => setEntryEditor({ entry: null })}
+                  tone="accent"
+                />
+              ) : null}
+              {tab !== MESH_TAB ? (
+                <PillButton
+                  icon="reorder-three-outline"
+                  label="Categories"
+                  onPress={() => setManagingCategories(true)}
+                />
+              ) : null}
+            </View>
+          ) : null}
+
           {tab === CAST_TAB ? (
             <>
               {muses.length > 0 ? (
@@ -247,8 +320,11 @@ export default function CodexScreen() {
                       )
                       .filter((face): face is StoryFace => Boolean(face));
                     return (
-                      <View
+                      <Pressable
+                        accessibilityRole={canEdit ? "button" : undefined}
+                        disabled={!canEdit}
                         key={group.id}
+                        onPress={() => setGroupEditor({ group })}
                         style={[
                           styles.groupCard,
                           {
@@ -279,7 +355,7 @@ export default function CodexScreen() {
                             </Pressable>
                           ))}
                         </View>
-                      </View>
+                      </Pressable>
                     );
                   })}
                 </View>
@@ -367,6 +443,14 @@ export default function CodexScreen() {
         chapters={chapters}
         entry={openEntry}
         onClose={() => setOpenEntry(null)}
+        onEdit={
+          canEdit
+            ? (entry) => {
+                setOpenEntry(null);
+                setEntryEditor({ entry });
+              }
+            : undefined
+        }
         onOpenChapter={openChapter}
       />
       <CharacterSheet
@@ -374,6 +458,14 @@ export default function CodexScreen() {
         face={openFace}
         faces={faces}
         onClose={() => setOpenFace(null)}
+        onEdit={
+          canEdit
+            ? (character) => {
+                setOpenFace(null);
+                setCharacterEditor({ character });
+              }
+            : undefined
+        }
         onOpenMuse={(museId) => {
           setOpenFace(null);
           router.push({ params: { museId }, pathname: "/muse/[museId]" });
@@ -388,6 +480,65 @@ export default function CodexScreen() {
         tones={tones}
         visible={relationshipSheet !== null}
       />
+      {canEdit ? (
+        <>
+          <EntryEditor
+            categories={categories}
+            chapters={chapters}
+            defaultCategoryId={active?.id ?? null}
+            edit={edit}
+            entry={entryEditor?.entry ?? null}
+            onClose={() => setEntryEditor(null)}
+            onSaved={(saved) => {
+              setEntryEditor(null);
+              // Follow the entry if it was filed under another category.
+              setTab(saved.categoryId);
+            }}
+            visible={entryEditor !== null}
+          />
+          <CharacterEditor
+            character={characterEditor?.character ?? null}
+            edit={edit}
+            onClose={() => setCharacterEditor(null)}
+            onDeleted={() => setCharacterEditor(null)}
+            onSaved={() => setCharacterEditor(null)}
+            storyId={storyId}
+            visible={characterEditor !== null}
+          />
+          <GroupSheet
+            edit={edit}
+            faces={faces}
+            group={groupEditor?.group ?? null}
+            onClose={() => setGroupEditor(null)}
+            takenColors={(codex.data.groups ?? []).map((group) => group.color)}
+            visible={groupEditor !== null}
+          />
+          <CategoriesSheet
+            categories={categories}
+            edit={edit}
+            entryCounts={entryCounts}
+            onClose={() => setManagingCategories(false)}
+            onEdit={(category) => {
+              setManagingCategories(false);
+              setCategoryEditor({ category });
+            }}
+            onNew={() => {
+              setManagingCategories(false);
+              setCategoryEditor({ category: null });
+            }}
+            visible={managingCategories}
+          />
+          <CategorySheet
+            category={categoryEditor?.category ?? null}
+            edit={edit}
+            entryCount={
+              entryCounts.get(categoryEditor?.category?.id ?? "") ?? 0
+            }
+            onClose={() => setCategoryEditor(null)}
+            visible={categoryEditor !== null}
+          />
+        </>
+      ) : null}
     </View>
   );
 }

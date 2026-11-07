@@ -14,12 +14,15 @@ import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 export const FontSheet = ({
   active,
   onClose,
+  onDismissed,
   onSelect,
   visible,
 }: {
   /** The current family, or undefined for the default. */
   active: string | undefined;
   onClose: () => void;
+  /** Once the sheet has fully gone — when a focus can land again. */
+  onDismissed?: () => void;
   /** `undefined` is the default face. */
   onSelect: (family: string | undefined) => void;
   visible: boolean;
@@ -32,6 +35,7 @@ export const FontSheet = ({
       ignoreKeyboard
       maxHeightRatio={0.7}
       onClose={onClose}
+      onDismissed={onDismissed}
       subtitle="For the selected words, or what you type next"
       title="Font"
       visible={visible}

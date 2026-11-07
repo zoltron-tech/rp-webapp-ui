@@ -38,7 +38,12 @@ import {
 } from "@/components/muse/media-viewer";
 import { Notice, PillButton, SettingsGroup } from "@/components/settings";
 import { useMuseMedia, useMuseMediaMetadata } from "@/hooks/use-muse";
-import { MAX_GALLERY_BYTES, pickMedia, uploadFile } from "@/lib/media-upload";
+import {
+  alertMediaRejected,
+  MAX_GALLERY_BYTES,
+  pickMedia,
+  uploadFile,
+} from "@/lib/media-upload";
 import { fontSize, radius, space, type, useAppTheme } from "@/theme";
 
 /**
@@ -135,9 +140,11 @@ const Gallery = ({ muse }: { muse: Muse }) => {
 
     setProgress({ done: 0, total: accepted.length });
     const urls: string[] = [];
+    let rejected = 0;
     for (const file of accepted) {
-      const url = await uploadFile(api, file, id);
-      if (url) urls.push(url);
+      const result = await uploadFile(api, file, id);
+      if (result.url) urls.push(result.url);
+      if (result.rejected) rejected += 1;
       setProgress((current) =>
         current ? { ...current, done: current.done + 1 } : current,
       );
@@ -151,7 +158,9 @@ const Gallery = ({ muse }: { muse: Muse }) => {
         setMedia((list) => [...list, ...urls]);
       }
     }
-    if (urls.length < accepted.length) {
+    if (rejected > 0) {
+      alertMediaRejected();
+    } else if (urls.length < accepted.length) {
       Alert.alert("Upload failed", "Some files did not upload. Try again.");
     }
     setProgress(null);
@@ -379,10 +388,14 @@ const Gallery = ({ muse }: { muse: Muse }) => {
                         </View>
                       ) : null}
                       {labels.length > 0 ? (
-                        <View style={styles.inUse}>
-                          <Text numberOfLines={1} style={styles.badgeLabel}>
-                            {labels[0].toUpperCase()}
-                          </Text>
+                        <View style={styles.inUseStack}>
+                          {labels.map((label) => (
+                            <View key={label} style={styles.inUse}>
+                              <Text numberOfLines={1} style={styles.badgeLabel}>
+                                {label.toUpperCase()}
+                              </Text>
+                            </View>
+                          ))}
                         </View>
                       ) : null}
                       {selection.selecting ? (
@@ -468,15 +481,19 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingRight: space.xs,
   },
+  inUseStack: {
+    alignItems: "flex-start",
+    gap: 2,
+    left: 4,
+    maxWidth: "70%",
+    position: "absolute",
+    top: 4,
+  },
   inUse: {
     backgroundColor: "rgba(0,0,0,0.6)",
     borderRadius: radius.xs,
-    left: 4,
-    maxWidth: "70%",
     paddingHorizontal: 5,
     paddingVertical: 1,
-    position: "absolute",
-    top: 4,
   },
   spinner: { paddingVertical: space.lg },
   tile: { borderRadius: radius.sm, overflow: "hidden" },

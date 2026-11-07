@@ -4,6 +4,11 @@ export interface Activity {
   id: string;
   source: ActivitySource;
   target: ActivityTarget;
+  /**
+   * The novelist whose doing this was — in their own name or through one of
+   * their characters. The only one the server lets delete it.
+   */
+  novelistId?: string;
   activityText: string;
   date: number;
   /** Heart reaction count and whether the viewer reacted. PROMPT/COMMENT/REPLY share the

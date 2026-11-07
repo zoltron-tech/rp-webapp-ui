@@ -1,8 +1,11 @@
 import { Stack, useRouter } from "expo-router";
 import { ambientScreenLayout } from "@/components/ambient-background";
 import { TabHeaderTitle } from "@/components/header-title";
-import { MenuButton } from "@/components/menu-button";
-import { tabStackBack } from "@/components/stack-back-button";
+import { HeaderActions } from "@/components/header-actions";
+import {
+  StackBackButton,
+  tabStackBack,
+} from "@/components/stack-back-button";
 import { useAppTheme } from "@/theme";
 import { glassHeaderOptions } from "@/theme/header";
 
@@ -34,7 +37,7 @@ export default function NotificationsStackLayout() {
       screenLayout={ambientScreenLayout}
       screenOptions={(screen) => ({
         contentStyle: { backgroundColor: theme.background },
-        headerRight: () => <MenuButton />,
+        headerRight: () => <HeaderActions />,
         ...glassHeaderOptions(theme),
         // A page that arrived first in this stack (a link from another tab,
         // from a chat, from a story) still needs a way back on iOS.
@@ -49,7 +52,16 @@ export default function NotificationsStackLayout() {
       <Stack.Screen
         name="index"
         options={{
-          headerTitle: () => <TabHeaderTitle title="Notifications" />,
+          // The list has no column in the tab bar — the header bell opens it
+          // from another tab — so it carries its way back, on both platforms.
+          // Back walks the tab history; opened cold from a push, it goes Home.
+          headerLeft: () => <StackBackButton fallback="/(tabs)/(home)" />,
+          // No bell on the page the bell opens. The screens pushed from here
+          // keep it: from a thread it is the way back to this list.
+          headerRight: () => <HeaderActions bell={false} />,
+          headerTitle: () => (
+            <TabHeaderTitle back bell={false} title="Notifications" />
+          ),
           title: "Notifications",
         }}
       />

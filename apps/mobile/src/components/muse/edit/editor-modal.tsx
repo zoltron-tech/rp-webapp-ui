@@ -9,7 +9,7 @@ import {
 import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useKeyboardOffset } from "@/hooks/use-keyboard-height";
-import { fontSize, radius, space, useAppTheme } from "@/theme";
+import { AccentProvider, fontSize, radius, space, useAppTheme } from "@/theme";
 import { IconButton } from "@/components/icon-button";
 
 /**
@@ -25,20 +25,18 @@ import { IconButton } from "@/components/icon-button";
  * `tray` is laid beside the page at the foot of the window, as the composer
  * lays its media drawer: while it is open (`trayOpen`) the page stops riding
  * the keyboard, because the tray does that itself.
+ *
+ * Always in the viewer's own accent. These open from a muse page, which is
+ * painted in its author's palette, but a form is the viewer doing something:
+ * web's dialogs portal out of that page's accent for the same effect.
  */
-export const EditorModal = ({
-  busy = false,
-  canConfirm = true,
-  children,
-  confirmLabel,
-  error,
-  onClose,
-  onConfirm,
-  title,
-  tray,
-  trayOpen = false,
-  visible,
-}: {
+export const EditorModal = (props: EditorModalProps) => (
+  <AccentProvider palette={undefined}>
+    <EditorModalView {...props} />
+  </AccentProvider>
+);
+
+interface EditorModalProps {
   busy?: boolean;
   canConfirm?: boolean;
   children: ReactNode;
@@ -51,7 +49,21 @@ export const EditorModal = ({
   tray?: ReactNode;
   trayOpen?: boolean;
   visible: boolean;
-}) => {
+}
+
+const EditorModalView = ({
+  busy = false,
+  canConfirm = true,
+  children,
+  confirmLabel,
+  error,
+  onClose,
+  onConfirm,
+  title,
+  tray,
+  trayOpen = false,
+  visible,
+}: EditorModalProps) => {
   const theme = useAppTheme();
   const insets = useSafeAreaInsets();
   const keyboardOffset = useKeyboardOffset(insets.bottom);
@@ -78,10 +90,7 @@ export const EditorModal = ({
           ]}
         >
           <View
-            style={[
-              styles.topBar,
-              { borderBottomColor: theme.material.edge },
-            ]}
+            style={[styles.topBar, { borderBottomColor: theme.material.edge }]}
           >
             <IconButton
               accessibilityLabel="Close"

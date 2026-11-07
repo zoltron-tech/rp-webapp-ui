@@ -1,4 +1,5 @@
 import { createApiClient, createRefreshCoordinator } from "@nw/api";
+import { decodeJwt } from "@nw/utils/jwt";
 import { env } from "@/lib/env";
 import {
   clearSession,
@@ -125,6 +126,39 @@ const refresh = createRefreshCoordinator(async () => {
 
 export const refreshSessionNow = (): Promise<boolean> => refresh();
 
+/** How close to its expiry a token is renewed: a request needs time to land. */
+const EXPIRY_MARGIN_MS = 30 * 1000;
+
+/** A just-issued token that already read as expired: this phone's clock is off. */
+let clockDistrusted: string | null = null;
+
+const looksExpired = (token: string): boolean => {
+  const expiry = decodeJwt(token)?.exp;
+  return (
+    Boolean(expiry) && (expiry as number) * 1000 - Date.now() < EXPIRY_MARGIN_MS
+  );
+};
+
+/**
+ * The access token, renewed first if it is about to run out.
+ *
+ * The client's own renewal waits for a 401, and a private story's reads never
+ * send one: an expired token reads as a stranger, a stranger gets a 404, and the
+ * reader was told "This chapter was torn out". Anything that answers strangers
+ * differently from members has the same shape, so it is fixed here, before the
+ * request, and not at each read. A failed renewal sends the old token, which
+ * leaves the 401 path as it always was.
+ */
+const freshAccessToken = async (): Promise<string | null> => {
+  const token = readAccessToken();
+  if (!token || refreshKnownDead) return token;
+  if (token === clockDistrusted || !looksExpired(token)) return token;
+  await refresh();
+  const next = readAccessToken();
+  if (next && next !== token && looksExpired(next)) clockDistrusted = next;
+  return next;
+};
+
 const shared = {
   authHeaderName: "X-NW-AUTH-TOKEN",
   baseUrl: env.RP_SERVICE_URL,
@@ -143,7 +177,7 @@ const shared = {
    * presents the refresh token in a header it had never been given.
    */
   defaultHeaders: NATIVE_CLIENT_HEADER,
-  getToken: () => readAccessToken(),
+  getToken: freshAccessToken,
   log: (label: string, status: number) => {
     if (__DEV__) console.log(`api:${label}`, status);
   },

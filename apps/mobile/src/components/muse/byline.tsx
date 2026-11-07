@@ -49,7 +49,9 @@ export const Byline = ({
 
   return (
     <View style={styles.bar}>
-      <View style={[styles.rule, { backgroundColor: withAlpha(tint, 0.35) }]} />
+      <View
+        style={[styles.rule, { backgroundColor: withAlpha(tint, 0.35) }]}
+      />
       {author ? (
         <Pressable
           accessibilityHint="Opens the novelist who writes this character"
@@ -102,20 +104,26 @@ export const Byline = ({
           </View>
         </Pressable>
       ) : null}
-      <View style={[styles.rule, { backgroundColor: withAlpha(tint, 0.35) }]} />
+      <View
+        style={[styles.rule, { backgroundColor: withAlpha(tint, 0.35) }]}
+      />
     </View>
   );
 };
 
-/** The signature's `minHeight` under the bar's top padding. */
-const BYLINE_HEIGHT = space.xs + 28;
+/** The signature's `minHeight` between the bar's top padding and web's 8px foot. */
+const BYLINE_HEIGHT = space.xs + 28 + space.sm;
 
 const styles = StyleSheet.create({
+  /* Web's `BylineInner` at ≤950px: 440 wide at most, 16 in from each side. */
   bar: {
     alignItems: "center",
+    alignSelf: "center",
     flexDirection: "row",
     gap: space.ms,
+    maxWidth: 440,
     minHeight: BYLINE_HEIGHT,
+    paddingBottom: space.sm,
     paddingHorizontal: space.md,
     paddingTop: space.xs,
     width: "100%",

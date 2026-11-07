@@ -1,10 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
-import type { CodexEntry, StoryMapPin } from "@nw/types";
+import { useSession } from "@nw/features";
+import type { CodexEntry, StoryMap, StoryMapPin } from "@nw/types";
 import { wsrvImage } from "@nw/utils";
 import { Image } from "@/components/image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Alert,
   Animated,
   type LayoutChangeEvent,
   PanResponder,
@@ -17,16 +19,19 @@ import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ListStatus } from "@/components/list-status";
 import { MapSkeleton } from "@/components/sheet-skeletons";
+import { PillButton } from "@/components/settings";
 import { ChapterChips } from "@/components/story/chapter-chips";
 import { EntryGlyph, EntrySheet } from "@/components/story/entry-sheet";
+import { MapSheet, PinEditor } from "@/components/story/map-editors";
 import { useStory, useStoryCodex, useStoryMaps } from "@/hooks/use-story";
+import { useStoryMapEdit } from "@/hooks/use-story-map-edit";
 import { asColor } from "@/lib/color";
-import { plainText } from "@/lib/story";
+import { isStoryMember, plainText } from "@/lib/story";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 import { IconButton } from "@/components/icon-button";
 
 /**
- * The map — web's `StoryMapView`, read-only.
+ * The map — web's `StoryMapView`.
  *
  * The authors' map image, fitted to the stage, with its pins on top. Pinch to
  * zoom about the fingers, drag to pan, or use the buttons. Pin coordinates are
@@ -37,6 +42,15 @@ import { IconButton } from "@/components/icon-button";
  * Tapping a pin opens its card over the foot of the stage: the codex entry it
  * points at, a preview, and the chapters it is used in — or, for a plain
  * marker, just its label.
+ *
+ * ## Placing a pin
+ *
+ * For a story member. A crosshair sits fixed in the middle of the stage and
+ * the map moves under it, with the pan and pinch the stage already has, and the
+ * tick drops the pin where the crosshair is. Moving a pin is the same, starting
+ * with the map centred on it. A drag on the pin itself would be a third gesture
+ * on a stage where one finger already means pan, and a fingertip covers the
+ * point being placed.
  */
 
 const MAX_ZOOM = 6;
@@ -68,6 +82,22 @@ export default function MapScreen() {
   const active = sorted.find((map) => map.id === activeId) ?? sorted[0] ?? null;
   const [selectedPinId, setSelectedPinId] = useState<string | null>(null);
   const [readEntry, setReadEntry] = useState<CodexEntry | null>(null);
+
+  const { novelist, status } = useSession();
+  const canEdit =
+    status === "signed-in" && isStoryMember(story.data, novelist?.username);
+  const edit = useStoryMapEdit(storyId);
+  const [mapSheet, setMapSheet] = useState<{ map: StoryMap | null } | null>(
+    null,
+  );
+  /** A pin being placed: a new one, or `pin` being moved. */
+  const [placing, setPlacing] = useState<{ pin: StoryMapPin | null } | null>(
+    null,
+  );
+  const [pinEditor, setPinEditor] = useState<{
+    pin: StoryMapPin | null;
+    point: { x: number; y: number } | null;
+  } | null>(null);
 
   const entriesById = useMemo(
     () => new Map((codex.data?.entries ?? []).map((entry) => [entry.id, entry])),
@@ -222,6 +252,39 @@ export default function MapScreen() {
   const zoomBy = (factor: number) =>
     settle(zoomAbout({ x: 0, y: 0 }, pose.current, pose.current.s * factor));
 
+  /** The image point under the stage's centre, as percentages of the image. */
+  const pointAtCrosshair = () => {
+    const { s, tx, ty } = pose.current;
+    return {
+      x: clamp(((cw / 2 - tx / s) / cw) * 100, 0, 100),
+      y: clamp(((ch / 2 - ty / s) / ch) * 100, 0, 100),
+    };
+  };
+
+  const startMove = (pin: StoryMapPin) => {
+    setSelectedPinId(null);
+    setPlacing({ pin });
+    const s = Math.max(pose.current.s, 2);
+    settle({
+      s,
+      tx: (0.5 - pin.x / 100) * cw * s,
+      ty: (0.5 - pin.y / 100) * ch * s,
+    });
+  };
+
+  const confirmPlacing = async () => {
+    const moving = placing?.pin;
+    const point = pointAtCrosshair();
+    setPlacing(null);
+    if (!moving) {
+      setPinEditor({ pin: null, point });
+      return;
+    }
+    if (!active?.id) return;
+    const saved = await edit.savePin(active.id, { ...moving, ...point });
+    if (!saved) Alert.alert("Not moved", "The pin stayed where it was.");
+  };
+
   if (!maps.data) {
     return (
       <View style={styles.fill}>
@@ -243,6 +306,27 @@ export default function MapScreen() {
         <Text style={[styles.emptyText, { color: theme.textGray }]}>
           This story's authors haven't drawn its world yet.
         </Text>
+        {canEdit && storyId ? (
+          <>
+            <PillButton
+              icon="add"
+              label="Upload a map"
+              onPress={() => setMapSheet({ map: null })}
+            />
+            <MapSheet
+              edit={edit}
+              map={null}
+              onClose={() => setMapSheet(null)}
+              onDeleted={() => setMapSheet(null)}
+              onSaved={(saved) => {
+                setMapSheet(null);
+                setActiveId(saved.id);
+              }}
+              storyId={storyId}
+              visible={mapSheet !== null}
+            />
+          </>
+        ) : null}
       </View>
     );
   }
@@ -287,6 +371,30 @@ export default function MapScreen() {
             );
           })}
         </ScrollView>
+      ) : null}
+
+      {canEdit && !placing ? (
+        <View style={styles.tools}>
+          <PillButton
+            icon="location-outline"
+            label="Add pin"
+            onPress={() => {
+              setSelectedPinId(null);
+              setPlacing({ pin: null });
+            }}
+            tone="accent"
+          />
+          <PillButton
+            icon="create-outline"
+            label="Edit map"
+            onPress={() => setMapSheet({ map: active })}
+          />
+          <PillButton
+            icon="add"
+            label="New map"
+            onPress={() => setMapSheet({ map: null })}
+          />
+        </View>
       ) : null}
 
       <View
@@ -409,6 +517,43 @@ export default function MapScreen() {
           ))}
         </View>
 
+        {placing ? (
+          <>
+            <View pointerEvents="none" style={styles.crosshair}>
+              <Ionicons color={theme.accent.solid} name="add-circle-outline" size={44} />
+            </View>
+            <View
+              style={[
+                styles.placingBar,
+                {
+                  backgroundColor: theme.material.fill,
+                  borderColor: theme.material.edge,
+                },
+              ]}
+            >
+              <Text style={[styles.placingText, { color: theme.text }]}>
+                {placing.pin
+                  ? "Move the map under the crosshair"
+                  : "Bring the place under the crosshair"}
+              </Text>
+              <IconButton
+                accessibilityLabel="Cancel"
+                icon="close"
+                onPress={() => setPlacing(null)}
+                size={36}
+                tone="surface"
+              />
+              <IconButton
+                accessibilityLabel={placing.pin ? "Move pin here" : "Pin here"}
+                icon="checkmark"
+                onPress={() => void confirmPlacing()}
+                size={36}
+                tone="primary"
+              />
+            </View>
+          </>
+        ) : null}
+
         {selectedPin ? (
           <View
             style={[
@@ -475,6 +620,22 @@ export default function MapScreen() {
                 </Pressable>
               </>
             ) : null}
+            {canEdit ? (
+              <View style={styles.cardActions}>
+                <PillButton
+                  icon="create-outline"
+                  label="Edit"
+                  onPress={() =>
+                    setPinEditor({ pin: selectedPin, point: null })
+                  }
+                />
+                <PillButton
+                  icon="move-outline"
+                  label="Move"
+                  onPress={() => startMove(selectedPin)}
+                />
+              </View>
+            ) : null}
           </View>
         ) : null}
       </View>
@@ -485,7 +646,9 @@ export default function MapScreen() {
           { color: theme.textGray, paddingBottom: insets.bottom + space.sm },
         ]}
       >
-        Pinch to zoom · drag to pan · tap a pin
+        {placing
+          ? "Pinch to zoom · drag to pan"
+          : "Pinch to zoom · drag to pan · tap a pin"}
       </Text>
 
       <EntrySheet
@@ -501,6 +664,39 @@ export default function MapScreen() {
           router.push({ params: { eventId }, pathname: "/story/chapter/[eventId]" });
         }}
       />
+
+      {canEdit && storyId ? (
+        <>
+          <MapSheet
+            edit={edit}
+            map={mapSheet?.map ?? null}
+            onClose={() => setMapSheet(null)}
+            onDeleted={() => {
+              setMapSheet(null);
+              setActiveId(null);
+            }}
+            onSaved={(saved) => {
+              setMapSheet(null);
+              setActiveId(saved.id);
+            }}
+            storyId={storyId}
+            visible={mapSheet !== null}
+          />
+          <PinEditor
+            categories={codex.data?.categories ?? []}
+            edit={edit}
+            entries={codex.data?.entries ?? []}
+            mapId={active.id}
+            onClose={() => {
+              setPinEditor(null);
+              setSelectedPinId(null);
+            }}
+            pin={pinEditor?.pin ?? null}
+            point={pinEditor?.point ?? null}
+            visible={pinEditor !== null}
+          />
+        </>
+      ) : null}
     </View>
   );
 }
@@ -515,6 +711,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: space.m,
   },
+  cardActions: { flexDirection: "row", gap: space.sm, marginTop: space.ms },
   cardBody: { fontSize: fontSize.label, lineHeight: 19, marginTop: space.sm },
   cardCategory: { fontSize: fontSize.caption, textTransform: "uppercase" },
   cardHead: { alignItems: "center", flexDirection: "row", gap: space.ms },
@@ -522,6 +719,15 @@ const styles = StyleSheet.create({
   cardText: { flex: 1, minWidth: 0 },
   content: { position: "absolute" },
   controls: { gap: space.sm, position: "absolute", right: space.m, top: space.m },
+  crosshair: {
+    alignItems: "center",
+    bottom: 0,
+    justifyContent: "center",
+    left: 0,
+    position: "absolute",
+    right: 0,
+    top: 0,
+  },
   empty: { alignItems: "center", flex: 1, gap: space.sm, justifyContent: "center", padding: space.xl },
   emptyText: { fontSize: fontSize.body, textAlign: "center" },
   emptyTitle: { fontSize: fontSize.title, fontWeight: "700" },
@@ -543,6 +749,19 @@ const styles = StyleSheet.create({
   },
   pinDot: { borderRadius: radius.xs, height: 8, width: 8 },
   pinLabel: { fontSize: fontSize.caption, fontWeight: "700" },
+  placingBar: {
+    alignItems: "center",
+    borderRadius: radius.md + 4,
+    borderWidth: border.edge,
+    bottom: space.m,
+    flexDirection: "row",
+    gap: space.sm,
+    left: space.m,
+    padding: space.sm,
+    position: "absolute",
+    right: space.m,
+  },
+  placingText: { flex: 1, fontSize: fontSize.label, fontWeight: "600" },
   readMore: {
     alignItems: "center",
     alignSelf: "flex-start",
@@ -567,4 +786,11 @@ const styles = StyleSheet.create({
   tabLabel: { fontSize: fontSize.label, fontWeight: "600" },
   tabs: { gap: space.sm, paddingHorizontal: space.m, paddingVertical: space.sm },
   tabsBar: { flexGrow: 0 },
+  tools: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: space.sm,
+    paddingHorizontal: space.m,
+    paddingTop: space.sm,
+  },
 });

@@ -125,9 +125,11 @@ export const SelectMark = ({
 );
 
 /**
- * The bar that stands in for a section's title while selecting: the count,
- * select all or none, delete, and a way out. `dark` draws it in the muse
- * panel's whites; otherwise in the settings screen's theme.
+ * The bar that stands in for a section's tools while selecting: the count and
+ * a way out on one line, select all and delete under it. Two lines because the
+ * muse panel is narrow: on one, the title wrapped and the buttons sat on each
+ * other. `dark` draws it in the muse panel's whites; otherwise in the settings
+ * screen's theme.
  */
 export const SelectionBar = ({
   busy,
@@ -166,9 +168,25 @@ export const SelectionBar = ({
         },
       ]}
     >
-      <Text style={[styles.count, { color: text }]}>
-        {count === 0 ? "Select files" : `${count} selected`}
-      </Text>
+      <View style={styles.barHead}>
+        <Text numberOfLines={1} style={[styles.count, { color: text }]}>
+          {count === 0 ? "Select files" : `${count} selected`}
+        </Text>
+        <Pressable
+          accessibilityLabel="Stop selecting"
+          accessibilityRole="button"
+          disabled={busy}
+          hitSlop={space.sm}
+          onPress={onCancel}
+          style={({ pressed }) => [
+            styles.close,
+            { backgroundColor: pill, borderColor: pillEdge },
+            pressed && styles.pressed,
+          ]}
+        >
+          <Ionicons color={muted} name="close" size={18} />
+        </Pressable>
+      </View>
       <View style={styles.actions}>
         <Pressable
           accessibilityRole="button"
@@ -182,7 +200,7 @@ export const SelectionBar = ({
           ]}
         >
           <Text style={[styles.pillLabel, { color: text }]}>
-            {all ? "None" : "All"}
+            {all ? "Clear" : "Select all"}
           </Text>
         </Pressable>
         <Pressable
@@ -220,22 +238,12 @@ export const SelectionBar = ({
             Delete
           </Text>
         </Pressable>
-        <Pressable
-          accessibilityLabel="Stop selecting"
-          accessibilityRole="button"
-          disabled={busy}
-          hitSlop={space.xs}
-          onPress={onCancel}
-          style={({ pressed }) => [styles.close, pressed && styles.pressed]}
-        >
-          <Ionicons color={muted} name="close" size={18} />
-        </Pressable>
       </View>
     </View>
   );
 };
 
-/** The way into select mode: a small outlined pill beside the section title. */
+/** The way into select mode: a small outlined pill, at the end of its row. */
 export const SelectButton = ({
   dark,
   onPress,
@@ -266,26 +274,29 @@ export const SelectButton = ({
 };
 
 const styles = StyleSheet.create({
-  actions: { alignItems: "center", flexDirection: "row", gap: space.s },
+  actions: { flexDirection: "row", gap: space.sm },
   bar: {
-    alignItems: "center",
-    borderRadius: radius.md,
+    borderRadius: radius.field,
     borderWidth: StyleSheet.hairlineWidth,
+    gap: space.m,
+    padding: space.m,
+  },
+  barHead: {
+    alignItems: "center",
     flexDirection: "row",
-    gap: space.sm,
+    gap: space.m,
     justifyContent: "space-between",
-    paddingLeft: space.m,
-    paddingRight: space.s,
-    paddingVertical: space.s,
   },
   close: {
     alignItems: "center",
-    height: 30,
+    borderRadius: radius.full,
+    borderWidth: 1,
+    height: 32,
     justifyContent: "center",
-    width: 30,
+    width: 32,
   },
-  count: { flexShrink: 1, fontSize: fontSize.label, fontWeight: "700" },
-  delete: { flexDirection: "row", gap: space.xs },
+  count: { flex: 1, fontSize: fontSize.body, fontWeight: "700" },
+  delete: { flexDirection: "row", gap: space.s },
   mark: {
     alignItems: "center",
     borderRadius: radius.full,
@@ -309,11 +320,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: radius.full,
     borderWidth: 1,
+    flex: 1,
     justifyContent: "center",
-    minHeight: 30,
+    minHeight: 40,
     paddingHorizontal: space.m,
   },
-  pillLabel: { fontSize: fontSize.caption, fontWeight: "700" },
+  pillLabel: { fontSize: fontSize.label, fontWeight: "700" },
   pressed: { opacity: 0.7 },
   select: {
     alignItems: "center",
@@ -322,7 +334,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: space.xs,
     paddingHorizontal: space.ms,
-    paddingVertical: 3,
+    paddingVertical: space.xs,
   },
-  selectLabel: { fontSize: fontSize.meta, fontWeight: "600" },
+  selectLabel: { fontSize: fontSize.caption, fontWeight: "600" },
 });

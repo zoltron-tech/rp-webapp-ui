@@ -2,6 +2,8 @@ import type {
   AuthenticateResponsePayload,
   AuthSession,
   DiscordConnection,
+  LinkProvider,
+  LinkTicketPayload,
   LoginPayload,
   LoginResponsePayload,
   SessionsResponsePayload,
@@ -172,6 +174,46 @@ export const exchangeNativeOAuthCode = async (
   return (await response.json()) as LoginResponsePayload;
 };
 
+/**
+ * Sign in with Apple from the iOS app: what the native sheet returned, traded
+ * for a session. user-service checks the identity token and redeems the
+ * authorization code at Apple (`AppleSignInService`). `nonce` is the raw value;
+ * the request to Apple carried its SHA-256 in hex.
+ *
+ * A refusal carries a `reason` (`invalid_token`, `no_email`,
+ * `unverified_email`, `already_linked`, `username_unavailable`,
+ * `apple_unavailable`) for the caller to explain.
+ */
+export const signInWithAppleNative = async (
+  api: ApiClient,
+  payload: {
+    identityToken: string;
+    authorizationCode: string;
+    nonce: string;
+    givenName?: string;
+    familyName?: string;
+    referralUser?: string;
+  },
+): Promise<LoginResponsePayload & { reason?: string }> => {
+  const response = await api.raw(`${ACCOUNT}/oauth/apple/native`, {
+    anonymous: true,
+    body: payload,
+    label: "signInWithAppleNative",
+    method: "POST",
+  });
+
+  if (!response.ok) {
+    const failure = (await response.json().catch(() => null)) as {
+      reason?: string;
+    } | null;
+    return {
+      message: API_MESSAGE.UncategorizedError,
+      reason: failure?.reason,
+    };
+  }
+  return (await response.json()) as LoginResponsePayload;
+};
+
 export const signUp = async (
   api: ApiClient,
   payload: SignUpPayload & { referralUser?: string },
@@ -297,6 +339,29 @@ export const unlinkDiscord = (api: ApiClient) =>
 
 export const unlinkSpotify = (api: ApiClient) =>
   unlink(api, `${ACCOUNT}/spotify`, "unlinkSpotifyAction");
+
+/**
+ * The mobile app's first step in linking an account: a one-time ticket it
+ * then opens `${ACCOUNT}/{provider}/link/start?ticket=…` with in a browser
+ * sheet. The web never needs this — its link start is a cookie-carrying
+ * navigation. Null when the server refuses (bad redirect URI, no session).
+ */
+export const issueNativeLinkTicket = async (
+  api: ApiClient,
+  provider: LinkProvider,
+  payload: { redirectUri: string; state: string },
+): Promise<string | null> => {
+  const response = await api.raw(`${ACCOUNT}/${provider}/link/native`, {
+    body: payload,
+    label: "issueNativeLinkTicket",
+    method: "POST",
+  });
+
+  if (!response.ok) return null;
+
+  const result = (await response.json()) as LinkTicketPayload;
+  return result.ticket ?? null;
+};
 
 export const finishOnboarding = async (
   api: ApiClient,

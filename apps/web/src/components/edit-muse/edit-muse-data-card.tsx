@@ -9,6 +9,7 @@ import { AppearanceSection } from "./appearance-section";
 import { ConnectionsSection } from "./connections-section";
 import { CreateInitialSection } from "./create-initial-section";
 import { GallerySection } from "./gallery-section";
+import { HeadcanonsSection } from "./headcanons-section";
 import { InformationSection } from "./information-section";
 import { LandingSection } from "./landing-section";
 import { useMuseState } from "./muse.store";
@@ -20,7 +21,8 @@ type SectionView =
   | "information"
   | "story"
   | "gallery"
-  | "connections";
+  | "connections"
+  | "headcanons";
 type View = "landing" | "create-initial" | SectionView;
 
 const WIZARD_STEPS: SectionView[] = ["appearance", "information", "story"];
@@ -122,6 +124,10 @@ export default function EditMuseDataCard({ verseParentMuse }: Props) {
 
       {view === "connections" && (
         <ConnectionsSection onBack={() => setView("landing")} />
+      )}
+
+      {view === "headcanons" && (
+        <HeadcanonsSection onBack={() => setView("landing")} />
       )}
 
       {view === "story" && (

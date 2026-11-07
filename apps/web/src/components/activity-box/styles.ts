@@ -280,6 +280,15 @@ export const PrimaryAction = styled.button`
   }
 `;
 
+/** The right-hand cluster of the action row: share, and — on your own — delete. */
+export const SecondaryActions = styled.div`
+  grid-column: 3;
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+`;
+
 export const ShareButton = styled.button`
   all: unset;
   box-sizing: border-box;

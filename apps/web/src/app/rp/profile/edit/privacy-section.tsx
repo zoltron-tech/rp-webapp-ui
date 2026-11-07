@@ -2,10 +2,14 @@
 
 import type { ProfilePrivacy, ProfilePrivacyLevel } from "@nw/types/books";
 import { Separator } from "radix-ui";
-import { useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import { BsArrowLeft } from "react-icons/bs";
 import { IoBookOutline } from "react-icons/io5";
-import { MdOutlineInfo, MdOutlineLock } from "react-icons/md";
+import {
+  MdOutlineHistory,
+  MdOutlineInfo,
+  MdOutlineLock,
+} from "react-icons/md";
 import { RiGroupLine } from "react-icons/ri";
 import {
   getProfilePrivacyAction,
@@ -25,13 +29,16 @@ const LEVELS: { value: ProfilePrivacyLevel; label: string }[] = [
   { label: "Only me", value: "ONLY_ME" },
 ];
 
-type LevelKey = Exclude<keyof ProfilePrivacy, "shelfOnProfile">;
+/** The three "who can see" knobs, each a level. */
+type LevelKey = Exclude<keyof ProfilePrivacy, SwitchKey>;
+/** The two on/off knobs. */
+type SwitchKey = Extract<keyof ProfilePrivacy, "shelfOnProfile" | "recordActivity">;
 
 const ROWS: {
   key: LevelKey;
   label: string;
   hint: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
 }[] = [
   {
     hint: "The books you've read, are reading and want to read, and your favorites.",
@@ -53,9 +60,54 @@ const ROWS: {
   },
 ];
 
+/** One on/off row: label and hint on the left, the switch on the right. */
+function SwitchRow({
+  checked,
+  disabled,
+  hint,
+  icon,
+  label,
+  onToggle,
+}: {
+  checked: boolean;
+  disabled: boolean;
+  hint: ReactNode;
+  icon: ReactNode;
+  label: string;
+  onToggle: () => void;
+}) {
+  return (
+    <S.PrivacyRow>
+      <S.PrivacyRowMain>
+        <S.PrivacyRowLabel>
+          {icon}
+          {label}
+        </S.PrivacyRowLabel>
+        <S.PrivacyRowHint>{hint}</S.PrivacyRowHint>
+      </S.PrivacyRowMain>
+      <S.Switch
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-label={label}
+        disabled={disabled}
+        onClick={onToggle}
+      >
+        <span />
+      </S.Switch>
+    </S.PrivacyRow>
+  );
+}
+
 /**
- * Profile privacy (BOOKSHELF_PLAN.md §1.4, §4.4): one knob each for the
- * bookshelf, the character roster and About me. Saves on change.
+ * Profile privacy (BOOKSHELF_PLAN.md §1.4, §4.4), in three groups: who can
+ * see each part of the profile, whether what you do is recorded as activity
+ * at all, and what the profile page itself shows. Saves on change.
+ *
+ * The activity switch lives here rather than under Account because it is a
+ * question of what other people see of you, the same question as the rows
+ * above it; and here rather than on the Activity tab because it governs
+ * what gets written, not what is shown.
  */
 export function PrivacySection({ onBack }: Props) {
   const { successToast, errorToast } = useUIContext();
@@ -100,12 +152,9 @@ export function PrivacySection({ onBack }: Props) {
     save({ ...privacy, [key]: value }, key);
   };
 
-  const toggleShelfOnProfile = () => {
+  const toggle = (key: SwitchKey) => {
     if (!privacy) return;
-    save(
-      { ...privacy, shelfOnProfile: !privacy.shelfOnProfile },
-      "shelfOnProfile",
-    );
+    save({ ...privacy, [key]: !privacy[key] }, key);
   };
 
   return (
@@ -163,32 +212,32 @@ export function PrivacySection({ onBack }: Props) {
 
         <S.AccountGroup>
           <S.AccountGroupHeading>
+            <MdOutlineHistory />
+            Your activity
+          </S.AccountGroupHeading>
+          <SwitchRow
+            checked={privacy?.recordActivity ?? true}
+            disabled={!privacy || saving === "recordActivity"}
+            hint="On, what you do — posts, characters, stories, uploads, profile edits — shows on your profile's Activity tab and in your friends' feeds. Off stops new entries. What is already there stays until you delete it from your Activity tab."
+            icon={<MdOutlineHistory />}
+            label="Record my activity"
+            onToggle={() => toggle("recordActivity")}
+          />
+        </S.AccountGroup>
+
+        <S.AccountGroup>
+          <S.AccountGroupHeading>
             <IoBookOutline />
             On your profile
           </S.AccountGroupHeading>
-          <S.PrivacyRow>
-            <S.PrivacyRowMain>
-              <S.PrivacyRowLabel>
-                <IoBookOutline />
-                Show bookshelf on profile
-              </S.PrivacyRowLabel>
-              <S.PrivacyRowHint>
-                Off hides the Bookshelf section from your profile page for
-                everyone, whatever the setting above. Your shelf is still
-                reachable from the menu and by link, under that setting.
-              </S.PrivacyRowHint>
-            </S.PrivacyRowMain>
-            <S.Switch
-              type="button"
-              role="switch"
-              aria-checked={privacy?.shelfOnProfile ?? true}
-              aria-label="Show bookshelf on profile"
-              disabled={!privacy || saving === "shelfOnProfile"}
-              onClick={toggleShelfOnProfile}
-            >
-              <span />
-            </S.Switch>
-          </S.PrivacyRow>
+          <SwitchRow
+            checked={privacy?.shelfOnProfile ?? true}
+            disabled={!privacy || saving === "shelfOnProfile"}
+            hint="Off hides the Bookshelf section from your profile page for everyone, whatever the setting above. Your shelf is still reachable from the menu and by link, under that setting."
+            icon={<IoBookOutline />}
+            label="Show bookshelf on profile"
+            onToggle={() => toggle("shelfOnProfile")}
+          />
         </S.AccountGroup>
       </S.AccountSectionBody>
     </>

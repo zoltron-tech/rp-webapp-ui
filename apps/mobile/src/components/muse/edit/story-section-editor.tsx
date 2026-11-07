@@ -4,6 +4,7 @@ import {
   updateMuseAboutSection,
 } from "@nw/api/endpoints/muse";
 import { queryKeys, useApi } from "@nw/features";
+import { getAttachmentKind } from "@nw/chat";
 import { imageSources } from "@nw/richtext";
 import type { MuseAboutSection } from "@nw/types";
 import { useQueryClient } from "@tanstack/react-query";
@@ -19,10 +20,19 @@ import {
   RichTextEditor,
   type RichTextEditorHandle,
 } from "@/components/editor/rich-text-editor";
+import { ActionMenu } from "@/components/action-menu";
 import { EditorModal } from "@/components/muse/edit/editor-modal";
 import { isVideoUrl } from "@/components/muse/media-viewer";
 import { useComposerMedia } from "@/hooks/use-composer-media";
 import { useKeyboardHeight } from "@/hooks/use-keyboard-height";
+import {
+  MAX_GALLERY_BYTES,
+  MEDIA_REJECTED_MESSAGE,
+  type PickedMedia,
+  pickAudio,
+  pickMedia,
+  uploadFile,
+} from "@/lib/media-upload";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
@@ -72,6 +82,8 @@ export const StorySectionEditor = ({
     section?.image ?? null,
   );
   const [trayTab, setTrayTab] = useState<TrayTab | null>(null);
+  const [attaching, setAttaching] = useState(false);
+  const [attachMenu, setAttachMenu] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -113,7 +125,34 @@ export const StorySectionEditor = ({
     else editor.current?.insertImage(url);
   };
 
-  const canConfirm = html.trim().length > 0 && !media.isUploading;
+  /** A clip or a track from the phone, as web's form accepts: above the text. */
+  const attachFile = async (
+    pick: () => Promise<{ fileSize: number } | null | undefined>,
+    limit: number,
+  ) => {
+    setError(null);
+    const file = (await pick().catch(() => undefined)) as
+      | PickedMedia
+      | null
+      | undefined;
+    if (file === undefined) {
+      setError("Attaching audio needs the newest version of the app.");
+      return;
+    }
+    if (!file) return;
+    if (file.fileSize > limit) {
+      setError("That file is too large.");
+      return;
+    }
+    setAttaching(true);
+    const { rejected, url } = await uploadFile(api, file, museId);
+    setAttaching(false);
+    if (url) setAttachment(url);
+    else if (rejected) setError(MEDIA_REJECTED_MESSAGE);
+    else setError("That file could not be uploaded. Try again.");
+  };
+
+  const canConfirm = html.trim().length > 0 && !media.isUploading && !attaching;
 
   const save = async () => {
     if (!canConfirm || busy) return;
@@ -224,13 +263,49 @@ export const StorySectionEditor = ({
             GIF
           </Text>
         </Pressable>
-        <Text
-          numberOfLines={2}
-          style={[styles.hint, { color: theme.textGray }]}
+        <Pressable
+          accessibilityLabel="Attach a video or audio file"
+          accessibilityRole="button"
+          disabled={attaching}
+          onPress={() => setAttachMenu(true)}
+          style={({ pressed }) => [
+            styles.action,
+            {
+              backgroundColor: pressed
+                ? theme.material.fillPressed
+                : theme.material.fill,
+              borderColor: theme.material.edge,
+            },
+          ]}
         >
-          Pictures and GIFs go into the text where the cursor is.
-        </Text>
+          <Ionicons color={theme.text} name="film-outline" size={18} />
+          <Text style={[styles.actionLabel, { color: theme.text }]}>
+            {attaching ? "Uploading…" : "File"}
+          </Text>
+        </Pressable>
       </View>
+
+      <ActionMenu
+        items={[
+          {
+            icon: "videocam-outline",
+            label: "Video",
+            onSelect: () =>
+              void attachFile(
+                async () => (await pickMedia(1))[0] ?? null,
+                MAX_GALLERY_BYTES,
+              ),
+          },
+          {
+            icon: "musical-notes-outline",
+            label: "Audio",
+            onSelect: () => void attachFile(pickAudio, MAX_GALLERY_BYTES),
+          },
+        ]}
+        onClose={() => setAttachMenu(false)}
+        title="Attach to this section"
+        visible={attachMenu}
+      />
 
       {attachment ? (
         <View
@@ -242,7 +317,8 @@ export const StorySectionEditor = ({
             },
           ]}
         >
-          {isVideoUrl(attachment) ? (
+          {isVideoUrl(attachment) ||
+          getAttachmentKind(attachment) === "audio" ? (
             <View
               style={[
                 styles.thumb,
@@ -266,7 +342,9 @@ export const StorySectionEditor = ({
           >
             {isVideoUrl(attachment)
               ? "Clip attached"
-              : "Picture above this section"}
+              : getAttachmentKind(attachment) === "audio"
+                ? "Audio attached"
+                : "Picture above this section"}
           </Text>
           <Pressable
             accessibilityLabel="Remove attachment"

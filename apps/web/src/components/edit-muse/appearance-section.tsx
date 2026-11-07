@@ -1237,6 +1237,7 @@ export function AppearanceSection({
                     }
                     song={featuredSong}
                     block
+                    accent={useAccent ? (accent ?? undefined) : undefined}
                   />
                 </S.SongPreview>
               )}

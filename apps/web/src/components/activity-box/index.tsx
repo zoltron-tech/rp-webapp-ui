@@ -1,6 +1,7 @@
 "use client";
 
 import type { Muse, Prompt, StoryBoard } from "@nw/types";
+import { API_MESSAGE } from "@nw/types";
 import type { Activity } from "@nw/types/activity";
 import { formatTime } from "@nw/utils";
 import classNames from "classnames";
@@ -22,14 +23,15 @@ import {
   FaStreetView,
   FaUser,
 } from "react-icons/fa6";
-import { FiMaximize2 } from "react-icons/fi";
+import { FiMaximize2, FiTrash2 } from "react-icons/fi";
 import { IoIosShareAlt } from "react-icons/io";
 import { PiBookOpenUserDuotone } from "react-icons/pi";
+import { deleteActivityAction } from "@/app/rp/home/actions";
 import { getMuseAction } from "@/app/rp/muse/actions";
 import { getPromptAction } from "@/app/rp/prompt/actions";
 import { getStoryboardAction } from "@/app/rp/story/actions";
 import { useGlobalState } from "@/context/store/stores";
-import { useCustomEvents } from "@/hooks";
+import { useCustomEvents, useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useToggleLike } from "@/hooks/use-toggle-like";
 import {
@@ -43,6 +45,7 @@ import { pluralize, toFormattedDateFromUnix } from "@/utils/helpers";
 import { Logger } from "@/utils/services";
 import { ShouldRender } from "../common";
 import * as ChatPlayerS from "../common/chat-bubble/styles";
+import { AppAlertDialog } from "../dialog";
 import { AppImageViewer } from "../image-viewer/AppImageViewer";
 import { VideoViewer } from "../image-viewer/VideoViewer";
 import { MarkdownLite } from "../markdown-lite";
@@ -57,6 +60,12 @@ const STORY_BOARD_TYPES = ["STORY_BOARD", "STORY_BOARD_EVENT"];
 
 type Props = React.HTMLProps<HTMLDivElement> & {
   activity?: Activity | null;
+  /**
+   * The viewer deleted this activity (it was their own — the trash button
+   * only shows when `activity.novelistId` is the signed-in novelist, and only
+   * when this is given). The list drops it; the server already has.
+   */
+  onDeleted?: (activityId: string) => void;
 };
 
 const videoExtensions = ["mp4", "mov", "quicktime"];
@@ -134,9 +143,22 @@ const getMediaTypeFromUrl = (
   }
 };
 
-export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
+export const ActivityBox: FC<Props> = ({
+  activity,
+  className,
+  onDeleted,
+  ...rest
+}) => {
   const { routeToPage, baseDataLoader } = usePageRouter();
   const user = useGlobalState("user");
+  const novelist = useGlobalState("novelist");
+  const { successToast, errorToast } = useUIContext();
+  // Only the novelist whose doing it was; the server refuses anyone else.
+  const canDelete = Boolean(
+    onDeleted && activity?.novelistId && novelist?.id === activity.novelistId,
+  );
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const mediaType = useMemo(
     () =>
       activity?.target.url ? getMediaTypeFromUrl(activity.target.url) : "",
@@ -289,6 +311,19 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
     e.stopPropagation();
     if (reactionCount <= 0) return;
     setLikersOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!activity || deleting) return;
+    setDeleting(true);
+    const result = await deleteActivityAction(activity.id).catch(() => null);
+    setDeleting(false);
+    if (result?.message !== API_MESSAGE.Success) {
+      errorToast("Couldn't delete that activity. Try again.");
+      return;
+    }
+    successToast("Activity deleted");
+    onDeleted?.(activity.id);
   };
 
   const handleShare = async (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -681,17 +716,44 @@ export const ActivityBox: FC<Props> = ({ activity, className, ...rest }) => {
           {kind.icon}
           {kind.actionLabel}
         </S.PrimaryAction>
-        <ShouldRender if={canShare}>
-          <S.ShareButton
-            type="button"
-            onClick={handleShare}
-            disabled={shareLoading}
-            aria-label="Share"
-          >
-            <IoIosShareAlt />
-          </S.ShareButton>
+        <ShouldRender if={canShare || canDelete}>
+          <S.SecondaryActions>
+            <ShouldRender if={canShare}>
+              <S.ShareButton
+                type="button"
+                onClick={handleShare}
+                disabled={shareLoading}
+                aria-label="Share"
+              >
+                <IoIosShareAlt />
+              </S.ShareButton>
+            </ShouldRender>
+            <ShouldRender if={canDelete}>
+              <S.ShareButton
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDeleteOpen(true);
+                }}
+                disabled={deleting}
+                aria-label="Delete activity"
+              >
+                <FiTrash2 />
+              </S.ShareButton>
+            </ShouldRender>
+          </S.SecondaryActions>
         </ShouldRender>
       </S.ActionRow>
+      <ShouldRender if={canDelete}>
+        <AppAlertDialog
+          heading="Delete this activity?"
+          text="It leaves your profile and your friends' feeds. What it was about — the post, character, story or upload — stays."
+          open={deleteOpen}
+          onOpenChange={setDeleteOpen}
+          onConfirm={() => void handleDelete()}
+          actionButtonLabel="Delete"
+        />
+      </ShouldRender>
       <ShouldRender if={Boolean(isMedia && mediaType === "video")}>
         <VideoViewer
           src={activity.target.url || ""}

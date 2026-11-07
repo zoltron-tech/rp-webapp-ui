@@ -132,26 +132,63 @@ const declaration = (style: string, property: string): string | undefined => {
   return match ? match[1].trim() : undefined;
 };
 
-/** `font-size: var(--font-size-h2)` or `font-size: 20px` → pixels. */
+/**
+ * `font-size: var(--font-size-h2)` or `font-size: 20px` → pixels, the Normal
+ * size included.
+ *
+ * Normal (16px) is kept here, not dropped: it is still a size the cascade has
+ * to honour. `<p style="font-size: 28px"><span style="font-size: 16px">` is
+ * normal text in a big line, and reading the span's 16 as "no size" let the
+ * paragraph's 28 reach it — the whole line came out big. [asSize] turns 16
+ * into "unstyled" only once the cascade has been resolved.
+ */
 const fontSizeFromStyle = (style: string | undefined): number | undefined => {
   const value = style && declaration(style, "font-size");
   if (!value) return undefined;
 
   const token = /^var\(\s*(--[a-z0-9-]+)/i.exec(value);
-  if (token) {
-    const px = FONT_SIZE_TOKENS[token[1].toLowerCase()];
-    return px && px !== DEFAULT_FONT_SIZE_PX ? px : undefined;
-  }
+  if (token) return FONT_SIZE_TOKENS[token[1].toLowerCase()] || undefined;
 
   const px = /^([0-9.]+)px$/i.exec(value);
   if (px) {
     const size = Number.parseFloat(px[1]);
-    return Number.isFinite(size) && size !== DEFAULT_FONT_SIZE_PX
-      ? size
-      : undefined;
+    return Number.isFinite(size) && size > 0 ? size : undefined;
   }
 
   return undefined;
+};
+
+/** A resolved size as the document stores it: Normal is no size at all. */
+const asSize = (px: number | undefined): number | undefined =>
+  px && px !== DEFAULT_FONT_SIZE_PX ? px : undefined;
+
+/**
+ * Marks the web editor writes as styles rather than tags: `execCommand` with
+ * `styleWithCSS` saves `<span style="font-style: italic">`,
+ * `font-weight: bold` and `text-decoration: underline line-through`. They
+ * were ignored, so a reply's italic and bold words read plain on the phone.
+ */
+const marksFromStyle = (style: string | undefined): RichMark[] => {
+  if (!style) return [];
+  const marks: RichMark[] = [];
+  const weight = declaration(style, "font-weight")?.toLowerCase();
+  if (
+    weight &&
+    (weight === "bold" ||
+      weight === "bolder" ||
+      Number.parseInt(weight, 10) >= 600)
+  ) {
+    marks.push("bold");
+  }
+  const slant = declaration(style, "font-style")?.toLowerCase();
+  if (slant === "italic" || slant === "oblique") marks.push("italic");
+  const decoration = (
+    declaration(style, "text-decoration-line") ??
+    declaration(style, "text-decoration")
+  )?.toLowerCase();
+  if (decoration?.includes("underline")) marks.push("underline");
+  if (decoration?.includes("line-through")) marks.push("strike");
+  return marks;
 };
 
 /** The highlight the editor paints behind text. */
@@ -534,7 +571,8 @@ export const parseRichText = (html: string | null | undefined): RichNode[] => {
     if (background) run.background = background;
     if (color) run.color = color;
     if (fontFamily) run.fontFamily = fontFamily;
-    if (fontSize) run.fontSize = fontSize;
+    const size = asSize(fontSize);
+    if (size) run.fontSize = size;
     if (href) run.href = href;
     push(run);
   };
@@ -678,7 +716,7 @@ export const parseRichText = (html: string | null | undefined): RichNode[] => {
     }
 
     const align = alignFromStyle(attributes.style) ?? inheritedAlign();
-    const blockFontSize = fontSizeFromStyle(attributes.style);
+    const blockFontSize = asSize(fontSizeFromStyle(attributes.style));
 
     if (tag === "li") {
       const list = ordered[ordered.length - 1];
@@ -731,7 +769,10 @@ export const parseRichText = (html: string | null | undefined): RichNode[] => {
             : undefined),
         fontSize: fontSizeFromStyle(attributes.style),
         href: tag === "a" ? attributes.href : undefined,
-        marks: mark ? [mark] : [],
+        marks: [
+          ...(mark ? [mark] : []),
+          ...marksFromStyle(attributes.style).filter((m) => m !== mark),
+        ],
         mention: isMention
           ? {
               id: attributes["data-id"] ?? "",

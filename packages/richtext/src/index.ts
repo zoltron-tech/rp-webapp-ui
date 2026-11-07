@@ -91,6 +91,7 @@ export {
 } from "./render";
 export {
   fontSizeToCss,
+  mentionToHtml,
   richTextIsEmpty,
   serializeRichText,
 } from "./serialize";

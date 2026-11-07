@@ -400,14 +400,15 @@ export const SocialButton = styled.button`
 
   /* Google — Sign In With Google brand guidelines
      https://developers.google.com/identity/branding-guidelines
-     White background, 1px #DADCE0 border, official colored Google G logo, #3C4043 text */
+     Light scheme: white fill, 1px #747775 stroke, official four-colour G
+     (assets/logos/google-logo.tsx), #1F1F1F text. */
   &.google {
     background-color: #ffffff;
-    border: 1px solid #dadce0;
+    border: 1px solid #747775;
     box-shadow: 0 1px 2px rgba(60, 64, 67, 0.1);
 
     span {
-      color: #3c4043;
+      color: #1f1f1f;
       letter-spacing: 0.25px;
     }
 
@@ -428,6 +429,48 @@ export const SocialButton = styled.button`
     }
   }
 
+  /* Apple — Sign in with Apple HIG
+     https://developer.apple.com/design/human-interface-guidelines/sign-in-with-apple
+     Black style: black fill, white logo, white system-font title "Continue
+     with Apple". The logo is Apple's own image (appleid.cdn-apple.com button
+     image API, logo-only, black) with its black backing made transparent —
+     assets/logos/apple-logo-white.png — so the hover and pressed fills show
+     through instead of leaving a black square. Its shape, size and the padding
+     Apple builds into the image are untouched: drawn at the button's height,
+     as Apple sizes it. The negative margins only trim that built-in padding so
+     logo and title sit centred as one group, like the Google button. */
+  &.apple {
+    background-color: #000000;
+    border: none;
+    gap: 0;
+
+    span {
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+    }
+
+    img {
+      flex-shrink: 0;
+      width: 40px;
+      height: 40px;
+      margin-inline: -13px -6px;
+    }
+
+    &:hover {
+      background-color: #1c1c1e;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    &:active {
+      background-color: #2c2c2e;
+      box-shadow: none;
+    }
+  }
+
   /* Discord — Discord brand guidelines (https://discord.com/branding)
      Blurple (#5865F2) background, unmodified white Discord mark, white text.
      Do not recolor or distort the Discord logo. */
@@ -440,9 +483,9 @@ export const SocialButton = styled.button`
     }
 
     svg {
-      width: 20px;
-      height: 20px;
-      fill: #ffffff;
+      width: 22px;
+      height: 22px;
+      color: #ffffff;
     }
 
     &:hover {

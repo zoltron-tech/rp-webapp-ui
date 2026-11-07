@@ -1,8 +1,10 @@
 "use client";
 
+import { headcanonIdInUrl } from "@nw/types/headcanon";
 import type { NovelistWorldLink } from "@nw/utils/nw-links";
 import type { FC } from "react";
 import { ChapterEmbed } from "../chapter-embed";
+import { HeadcanonEmbed } from "../headcanon-embed";
 import { MuseEmbed } from "../muse-embed";
 import { NovelistEmbed } from "../novelist-embed";
 import { PromptEmbed } from "../prompt-embed";
@@ -20,8 +22,15 @@ export const NovelistWorldLinkEmbed: FC<{ link: NovelistWorldLink }> = ({
   link,
 }) => {
   switch (link.kind) {
-    case "muse":
+    case "muse": {
+      // A headcanon's link is its muse page opened at the card
+      // (`?headcanon=<id>`), so older clients still unfurl the character.
+      const headcanonId = headcanonIdInUrl(link.url);
+      if (headcanonId) {
+        return <HeadcanonEmbed headcanonId={headcanonId} href={link.url} />;
+      }
       return <MuseEmbed href={link.url} museId={link.id} />;
+    }
     case "prompt":
       return <PromptEmbed href={link.url} promptId={link.id} />;
     case "thread":

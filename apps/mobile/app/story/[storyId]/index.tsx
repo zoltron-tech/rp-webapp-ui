@@ -61,6 +61,7 @@ import {
 import { useStoryWrite } from "@/hooks/use-story-edit";
 import { useStoryReaction } from "@/hooks/use-story-reaction";
 import { asColor, withAlpha } from "@/lib/color";
+import { alertReportSent } from "@/lib/report";
 import {
   fandomLabel,
   isStoryMember,
@@ -280,13 +281,14 @@ export default function StoryScreen() {
             const result = await report(api, storyId, "", "STORY_BOARD").catch(
               () => ({ message: API_MESSAGE.Error }),
             );
-            const sent = result.message === API_MESSAGE.Success;
-            Alert.alert(
-              sent ? "Reported" : "Could not report",
-              sent
-                ? "Thank you. Our team will review this story."
-                : "The report was not sent. Please try again.",
-            );
+            if (result.message === API_MESSAGE.Success) {
+              alertReportSent();
+            } else {
+              Alert.alert(
+                "Could not report",
+                "The report was not sent. Please try again.",
+              );
+            }
           },
           style: "destructive",
           text: "Report",
@@ -634,6 +636,19 @@ export default function StoryScreen() {
           ) : null}
 
           <SettingsGroup title="World">
+            {canWrite ? (
+              <SettingsRow
+                icon="document-text-outline"
+                label="Notes"
+                onPress={() =>
+                  router.push({
+                    params: { storyId },
+                    pathname: "/story/[storyId]/notes",
+                  })
+                }
+                subtitle="A shared corkboard for the co-authors"
+              />
+            ) : null}
             <SettingsRow
               icon="library-outline"
               label="Codex"

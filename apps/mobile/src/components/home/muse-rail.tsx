@@ -39,8 +39,8 @@ import { space, useAppTheme } from "@/theme";
 
 /** Web's `MUSES_PAGE_SIZE`. */
 const PAGE_SIZE = 8;
-/** The card's share of the screen; see the note above. */
-const CARD_SHARE = 0.46;
+/** The card's share of the screen; see the note above. 0.46 until 2026-11-04, when the user asked for slightly smaller cards. */
+const CARD_SHARE = 0.42;
 const SHIMMER = [0, 1];
 
 /** A muse the server sent has an id; the type allows null for drafts. */

@@ -3,6 +3,7 @@ import { toFormattedDate } from "@nw/utils";
 import { FlatList, StyleSheet, View } from "react-native";
 import { BadgeCrest, hasVisibleBadges } from "@/components/badges";
 import { BottomSheet } from "@/components/sheet";
+import { PillButton } from "@/components/settings";
 import { Text } from "@/components/text";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
@@ -35,11 +36,14 @@ import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 export const BadgeSheet = ({
   badges,
   onClose,
+  onSeeAll,
   ownerName,
   visible,
 }: {
   badges: Badge[] | undefined;
   onClose: () => void;
+  /** The way to the catalogue: what else there is to earn. */
+  onSeeAll?: () => void;
   /** Whose they are, for the heading. */
   ownerName?: string | null;
   visible: boolean;
@@ -65,6 +69,15 @@ export const BadgeSheet = ({
           <Text style={[styles.empty, { color: theme.textGray }]}>
             No badges earned yet.
           </Text>
+        }
+        ListFooterComponent={
+          onSeeAll ? (
+            <PillButton
+              icon="ribbon-outline"
+              label="See all badges"
+              onPress={onSeeAll}
+            />
+          ) : null
         }
         renderItem={({ item }) => <BadgeSheetRow badge={item} />}
         showsVerticalScrollIndicator={false}

@@ -28,7 +28,9 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import { AudioCard } from "@/components/chat/audio-card";
 import { ClipPlayer } from "@/components/chat/clip-player";
+import { LinkPreview } from "@/components/chat/link-preview";
 import { cachedThumbnail, thumbnailFor } from "@/components/feed/feed-media";
 import { Image } from "@/components/image";
 import { parseLink } from "@/lib/link-embeds";
@@ -278,24 +280,25 @@ const MediaImage = ({
         onPressIn={() => prefetchForViewer(uri)}
         style={({ pressed }) => ({ opacity: pressed ? 0.82 : 1 })}
       >
-      <Image
-        autoplay
-        cachePolicy="memory-disk"
-        contentFit="contain"
-        onError={() => setFailed(true)}
-        onLoad={({ source }) => {
-          if (!source?.width || !source?.height) return;
-          const size = { h: source.height, w: source.width };
-          NATURAL_SIZES.set(uri, size);
-          if (natural?.w !== size.w || natural?.h !== size.h) setNatural(size);
-        }}
-        placeholder={placeholder}
-        placeholderContentFit="contain"
-        recyclingKey={uri}
-        source={source}
-        style={[styles.image, box]}
-        transition={0}
-      />
+        <Image
+          autoplay
+          cachePolicy="memory-disk"
+          contentFit="contain"
+          onError={() => setFailed(true)}
+          onLoad={({ source }) => {
+            if (!source?.width || !source?.height) return;
+            const size = { h: source.height, w: source.width };
+            NATURAL_SIZES.set(uri, size);
+            if (natural?.w !== size.w || natural?.h !== size.h)
+              setNatural(size);
+          }}
+          placeholder={placeholder}
+          placeholderContentFit="contain"
+          recyclingKey={uri}
+          source={source}
+          style={[styles.image, box]}
+          transition={0}
+        />
       </Pressable>
     </View>
   );
@@ -383,50 +386,13 @@ const ClipStill = ({
   );
 };
 
-/** A link that is not media: opened in the browser, never previewed. */
-const LinkChip = ({ url }: { url: string }) => {
-  const theme = useAppTheme();
-
-  return (
-    <Pressable
-      onPress={() => openExternalLink(url)}
-      style={({ pressed }) => [
-        styles.chip,
-        {
-          backgroundColor: pressed
-            ? theme.material.fillPressed
-            : theme.glass.field,
-          borderColor: theme.material.edge,
-        },
-      ]}
-    >
-      <Ionicons color={theme.accent.text} name="link-outline" size={14} />
-      <Text
-        numberOfLines={1}
-        style={[styles.chipLabel, { color: theme.accent.text }]}
-      >
-        {getFileNameFromUrl(url)}
-      </Text>
-    </Pressable>
-  );
-};
-
 /**
- * A file or an audio clip.
- *
- * Rendered as a card that opens the system handler rather than an inline
- * player. Audio needs a transport UI of its own — a scrub bar, a duration, a
- * play head — and a card that plainly hands off is better than a player that
- * looks like it works and does not.
+ * A file, or a video linked among words: a card that hands off to the system.
+ * Audio plays in the bubble (`AudioCard`).
  */
 const MediaCard = ({ kind, url }: { kind: AttachmentKind; url: string }) => {
   const theme = useAppTheme();
-  const icon =
-    kind === "video"
-      ? "play-circle-outline"
-      : kind === "audio"
-        ? "musical-notes-outline"
-        : "document-outline";
+  const icon = kind === "video" ? "play-circle-outline" : "document-outline";
 
   return (
     <Pressable
@@ -452,9 +418,7 @@ const MediaCard = ({ kind, url }: { kind: AttachmentKind; url: string }) => {
         <Text style={[styles.cardKind, { color: theme.textGray }]}>
           {kind === "video"
             ? "Video · opens externally"
-            : kind === "audio"
-              ? "Audio · opens externally"
-              : "File · opens externally"}
+            : "File · opens externally"}
         </Text>
       </View>
       <Ionicons color={theme.textGray} name="open-outline" size={16} />
@@ -555,7 +519,9 @@ export const MessageTextMedia = ({
   const lone = drawn.some(isDirectVideoUrl);
   // A link back into Novelist World is drawn as a card by the bubble itself
   // (`LinkEmbed`), so it gets no chip here.
-  const shown = (hasMarkup(text) ? drawn : urls).filter((url) => !parseLink(url));
+  const shown = (hasMarkup(text) ? drawn : urls).filter(
+    (url) => !parseLink(url),
+  );
   if (shown.length === 0) return null;
 
   return (
@@ -581,10 +547,13 @@ export const MessageTextMedia = ({
         if (isDirectVideoUrl(url) && lone) {
           return <ClipStill key={url} onLongPress={onLongPress} url={url} />;
         }
-        if (kind === "video" || kind === "audio") {
+        if (kind === "audio") {
+          return <AudioCard key={url} onLongPress={onLongPress} url={url} />;
+        }
+        if (kind === "video") {
           return <MediaCard key={url} kind={kind} url={url} />;
         }
-        return <LinkChip key={url} url={url} />;
+        return <LinkPreview key={url} onLongPress={onLongPress} url={url} />;
       })}
     </View>
   );
@@ -709,8 +678,11 @@ export const MessageThumb = ({
 /** Attached files that are not pictures or clips: a card each. */
 export const MessageAttachments = ({
   attachments,
+  onLongPress,
 }: {
   attachments: Attachment[];
+  /** The message's long press, for a card that is itself a button. */
+  onLongPress?: () => void;
 }) => {
   const files = attachments.filter((attachment) => {
     const kind = getAttachmentKind(attachment.url);
@@ -720,13 +692,21 @@ export const MessageAttachments = ({
 
   return (
     <View style={styles.stack}>
-      {files.map((attachment) => (
-        <MediaCard
-          key={attachment.id || attachment.url}
-          kind={getAttachmentKind(attachment.url)}
-          url={attachment.url}
-        />
-      ))}
+      {files.map((attachment) =>
+        getAttachmentKind(attachment.url) === "audio" ? (
+          <AudioCard
+            key={attachment.id || attachment.url}
+            onLongPress={onLongPress}
+            url={attachment.url}
+          />
+        ) : (
+          <MediaCard
+            key={attachment.id || attachment.url}
+            kind={getAttachmentKind(attachment.url)}
+            url={attachment.url}
+          />
+        ),
+      )}
     </View>
   );
 };

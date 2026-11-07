@@ -78,6 +78,8 @@ export interface PostActionsTarget {
 
 export const PostActions = ({
   onClose,
+  concluded,
+  onConclude,
   onDelete,
   onEdit,
   onReport,
@@ -85,6 +87,10 @@ export const PostActions = ({
   target,
 }: {
   onClose: () => void;
+  /** Whether the thread is closed, for what `onConclude` is called. */
+  concluded?: boolean;
+  /** Present for the opening comment, to its author and the prompt's owner. */
+  onConclude?: () => void;
   onDelete: () => void;
   /** Opens the composer on this post. Omitted, the row says it cannot. */
   onEdit?: () => void;
@@ -134,6 +140,19 @@ export const PostActions = ({
       ]
     : [];
 
+  const conclude: ActionItem[] = onConclude
+    ? [
+        {
+          icon: concluded ? "arrow-undo-outline" : "checkbox-outline",
+          label: concluded ? "Reopen thread" : "Mark as concluded",
+          onPress: () => {
+            onClose();
+            onConclude();
+          },
+        },
+      ]
+    : [];
+
   const items: ActionItem[] = !target
     ? []
     : target.owned
@@ -176,7 +195,7 @@ export const PostActions = ({
 
   return (
     <ActionMenu
-      items={items}
+      items={[...conclude, ...items]}
       onClose={onClose}
       title={target ? `This ${noun}` : "Options"}
       visible={target !== null}

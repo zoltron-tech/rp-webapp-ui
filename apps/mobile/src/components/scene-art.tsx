@@ -33,6 +33,8 @@ import {
   SilentBellScene,
   TORN_THREAD_VIEW_BOX,
   TornThreadScene,
+  UNLIT_BULB_VIEW_BOX,
+  UnlitBulbScene,
   VANISHED_MUSE_VIEW_BOX,
   VanishedMuseScene,
 } from "@nw/animations";
@@ -121,7 +123,8 @@ export type SceneName =
   | "muse-bond"
   | "open-book"
   | "open-starter"
-  | "silent-bell";
+  | "silent-bell"
+  | "unlit-bulb";
 
 /**
  * Web's frame sizes, from `book-art/styles.ts`, so the art is the same size on
@@ -225,6 +228,12 @@ const SCENES: Record<
     Scene: SilentBellScene,
     viewBox: SILENT_BELL_VIEW_BOX,
     width: 120,
+  },
+  "unlit-bulb": {
+    height: 94,
+    Scene: UnlitBulbScene,
+    viewBox: UNLIT_BULB_VIEW_BOX,
+    width: 124,
   },
   "torn-thread": {
     height: 116,

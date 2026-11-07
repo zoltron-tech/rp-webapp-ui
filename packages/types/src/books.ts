@@ -140,6 +140,12 @@ export type ProfilePrivacy = {
   muses: ProfilePrivacyLevel;
   /** Show the bookshelf section on the profile at all. Independent of `shelf`. */
   shelfOnProfile: boolean;
+  /**
+   * Write what the novelist does to the activity feeds (their Activity tab,
+   * their friends' Home feed). Off stops new entries; existing ones stay until
+   * deleted one by one.
+   */
+  recordActivity: boolean;
 };
 
 /** Error reasons the shelf endpoints answer with (BaseResponseModel.message). */
@@ -155,6 +161,22 @@ export const SHELF_ERROR = {
 
 export const FAVORITES_CAP = 20;
 export const SHELF_CAP = 1000;
+
+/** What the soft caps say, for whichever client hit them. */
+export const SHELF_REASON_COPY: Record<string, string> = {
+  [SHELF_ERROR.FavoritesFull]: `Favorites are full (${FAVORITES_CAP}). Unfavorite one first.`,
+  [SHELF_ERROR.NotFavoritable]:
+    "Only books you've read or are reading can be favorites.",
+  [SHELF_ERROR.ShelfFull]: `Your shelf is full (${SHELF_CAP.toLocaleString()}). Remove a book first.`,
+  [SHELF_ERROR.UpstreamUnavailable]:
+    "Open Library is busy. Try again in a moment.",
+};
+
+export const BOOK_STATUS_LABEL: Record<BookStatus, string> = {
+  READ: "Read",
+  READING: "Reading",
+  WANT_TO_READ: "Want to read",
+};
 
 /** A book may only be a favorite once it has been opened. */
 export const isFavoritable = (status: BookStatus) => status !== "WANT_TO_READ";
@@ -183,6 +205,19 @@ export const toShelfSnapshot = (doc: OpenLibraryBook): OpenLibraryBook => ({
   numberOfPagesMedian: doc.numberOfPagesMedian,
   subject: doc.subject,
   subtitle: doc.subtitle,
+  title: doc.title,
+});
+
+/** A search document viewed as a book, so one cover draws both. */
+export const docToBook = (doc: OpenLibraryBook): Book => ({
+  authors: doc.authorName ?? [],
+  coverId: doc.coverI ?? null,
+  firstYear: doc.firstPublishYear ?? null,
+  olKey: doc.key,
+  pagesMedian: doc.numberOfPagesMedian ?? null,
+  spineHex: null,
+  subjects: doc.subject ?? [],
+  subtitle: doc.subtitle ?? null,
   title: doc.title,
 });
 

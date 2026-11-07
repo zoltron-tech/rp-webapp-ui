@@ -1,12 +1,18 @@
-import { deletePrompt, report } from "@nw/api/endpoints/thread";
+import { deleteComment, deletePrompt, report } from "@nw/api/endpoints/thread";
 import { queryKeys, useApi, useSession } from "@nw/features";
 import {
   API_MESSAGE,
+  type Comment,
+  type Friend,
   type Prompt,
   type PromptSource,
   type SubmitPromptType,
 } from "@nw/types";
-import { type InfiniteData, useQueryClient } from "@tanstack/react-query";
+import {
+  type InfiniteData,
+  type QueryKey,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { type ReactNode, useCallback, useMemo, useRef, useState } from "react";
 import { Alert } from "react-native";
@@ -19,9 +25,11 @@ import {
   novelistToSource,
 } from "@/components/compose/sources";
 import { discardOutbox, getStore, useOutboxPosts } from "@/lib/local-store";
+import { alertReportSent } from "@/lib/report";
 import { LikersSheet } from "@/components/feed/likers-sheet";
 import type { PromptReaction } from "@/components/feed/prompt-card";
 import { ShareSheet } from "@/components/feed/share-sheet";
+import { SharedWithSheet } from "@/components/feed/shared-with-sheet";
 import {
   PostActions,
   type PostActionsTarget,
@@ -67,15 +75,13 @@ export const EMPTY_SET: ReadonlySet<string> = new Set();
 /** One page of an infinite feed, as the cache holds it. */
 type Pages = InfiniteData<Prompt[], number> | undefined;
 
-/** Either of the two feeds' keys. */
-type FeedKey =
-  | ReturnType<typeof queryKeys.explorePrompts>
-  | ReturnType<typeof queryKeys.oocPosts>;
-
-const FEED_KEYS = (): FeedKey[] => [
-  queryKeys.explorePrompts(),
-  queryKeys.oocPosts(),
-];
+/**
+ * Every root a list of prompts is cached under: the two discovery feeds, a
+ * novelist's prompts and posts, a character's prompts. A card edited in one
+ * has to change in the others, which is why a write walks them all rather than
+ * the feed the reader happens to be on.
+ */
+const FEED_ROOTS = [["explore"], ["novelist"], ["muse"]] as const;
 
 /** Web's rule for which feed a new post belongs to. */
 const feedKeyFor = (source: PromptSource) =>
@@ -85,9 +91,12 @@ const feedKeyFor = (source: PromptSource) =>
 
 /** The props a `PromptCard` takes from this hook, ready to spread. */
 export interface PromptCardActions {
+  onCommentMore?: (comment: Comment) => void;
   onCompose?: (prompt: Prompt) => void;
   onMore?: (prompt: Prompt) => void;
   onShare: (prompt: Prompt) => void;
+  onShowCommentLikers: (comment: Comment) => void;
+  onShowSharedWith: (prompt: Prompt) => void;
   onOpenThread: (threadId: string) => void;
   onReacted: (promptId: string, next: PromptReaction) => void;
   onShowLikers: (prompt: Prompt) => void;
@@ -95,11 +104,20 @@ export interface PromptCardActions {
   onUnfold: (promptId: string) => void;
 }
 
-export const usePromptFeedActions = () => {
+export const usePromptFeedActions = ({
+  onDeleted,
+}: {
+  /** The prompt was deleted — for a screen that showed only that prompt. */
+  onDeleted?: () => void;
+} = {}) => {
   const api = useApi();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { novelist, status } = useSession();
+
+  /** Read through a ref, so a screen's inline callback does not move `runDelete`. */
+  const onDeletedRef = useRef(onDeleted);
+  onDeletedRef.current = onDeleted;
 
   // Only a signed-in novelist can write, report or edit; a signed-out reader
   // gets neither button rather than a sheet with nothing in it.
@@ -138,7 +156,7 @@ export const usePromptFeedActions = () => {
 
   /** One feed's pages, rewritten. `undefined` back leaves the cache alone. */
   const editFeed = useCallback(
-    (key: FeedKey, edit: (pages: Prompt[][]) => Prompt[][] | undefined) => {
+    (key: QueryKey, edit: (pages: Prompt[][]) => Prompt[][] | undefined) => {
       queryClient.setQueryData(key, (data: Pages) => {
         if (!data) return data;
         const pages = edit(data.pages);
@@ -149,74 +167,86 @@ export const usePromptFeedActions = () => {
   );
 
   /**
-   * Write a settled heart back into whichever feed holds that prompt.
+   * The same rewrite across every paged list under `FEED_ROOTS`.
    *
-   * Returning the original object when nothing matched is what keeps this from
-   * invalidating a feed the prompt is not in: react-query compares by identity,
-   * and a rebuilt-but-identical page array would re-render every card there.
+   * Answering `undefined` when nothing matched is what keeps this from touching
+   * a list the prompt is not in: react-query skips the write, so no card there
+   * re-renders and no list is marked fresh for a change it never had.
    */
-  const handleReacted = useCallback(
-    (promptId: string, next: PromptReaction) => {
-      for (const key of FEED_KEYS()) {
-        editFeed(key, (pages) => {
-          let touched = false;
-          const out = pages.map((page) => {
-            if (!page.some((prompt) => prompt.id === promptId)) return page;
-            touched = true;
-            return page.map((prompt) =>
-              prompt.id === promptId ? { ...prompt, ...next } : prompt,
-            );
-          });
-          return touched ? out : undefined;
+  const editFeeds = useCallback(
+    (edit: (pages: Prompt[][]) => Prompt[][] | undefined) => {
+      for (const queryKey of FEED_ROOTS) {
+        queryClient.setQueriesData<Pages>({ queryKey }, (data) => {
+          if (!data?.pages?.every(Array.isArray)) return undefined;
+          const pages = edit(data.pages);
+          return pages ? { ...data, pages } : undefined;
         });
       }
     },
-    [editFeed],
+    [queryClient],
   );
 
   /** Web's `handlePromptSent`: the new post at the head of its own feed. */
   const prependPrompt = useCallback(
     (prompt: Prompt) => {
-      editFeed(feedKeyFor(prompt.source), (pages) =>
+      const prepend = (pages: Prompt[][]) =>
         pages.length === 0
           ? [[prompt]]
-          : [[prompt, ...pages[0]], ...pages.slice(1)],
-      );
+          : [[prompt, ...pages[0]], ...pages.slice(1)];
+      editFeed(feedKeyFor(prompt.source), prepend);
+      // And the writer's own list, when it has been opened.
+      if (novelist) {
+        editFeed(
+          prompt.source.sourceType === "NOVELIST"
+            ? queryKeys.novelistPosts(novelist.id)
+            : queryKeys.novelistPrompts(novelist.id),
+          prepend,
+        );
+      }
     },
-    [editFeed],
+    [editFeed, novelist],
   );
 
   const patchPrompt = useCallback(
     (promptId: string, patch: (prompt: Prompt) => Prompt) => {
-      for (const key of FEED_KEYS()) {
-        editFeed(key, (pages) => {
-          let touched = false;
-          const next = pages.map((page) => {
-            if (!page.some((prompt) => prompt.id === promptId)) return page;
-            touched = true;
-            return page.map((prompt) =>
-              prompt.id === promptId ? patch(prompt) : prompt,
-            );
-          });
-          return touched ? next : undefined;
+      editFeeds((pages) => {
+        let touched = false;
+        const next = pages.map((page) => {
+          if (!page.some((prompt) => prompt.id === promptId)) return page;
+          touched = true;
+          return page.map((prompt) =>
+            prompt.id === promptId ? patch(prompt) : prompt,
+          );
         });
-      }
+        return touched ? next : undefined;
+      });
+      // The prompt page reads its own entry, not any of the lists.
+      queryClient.setQueryData(
+        queryKeys.prompt(promptId),
+        (prompt: Prompt | null | undefined) => prompt && patch(prompt),
+      );
     },
-    [editFeed],
+    [editFeeds, queryClient],
   );
 
   const dropPrompt = useCallback(
     (promptId: string) => {
-      for (const key of FEED_KEYS()) {
-        editFeed(key, (pages) => {
-          if (!pages.some((page) => page.some((p) => p.id === promptId))) {
-            return undefined;
-          }
-          return pages.map((page) => page.filter((p) => p.id !== promptId));
-        });
-      }
+      editFeeds((pages) => {
+        if (!pages.some((page) => page.some((p) => p.id === promptId))) {
+          return undefined;
+        }
+        return pages.map((page) => page.filter((p) => p.id !== promptId));
+      });
+      queryClient.setQueryData(queryKeys.prompt(promptId), null);
     },
-    [editFeed],
+    [editFeeds, queryClient],
+  );
+
+  /** Write a settled heart back into whichever lists hold that prompt. */
+  const handleReacted = useCallback(
+    (promptId: string, next: PromptReaction) =>
+      patchPrompt(promptId, (prompt) => ({ ...prompt, ...next })),
+    [patchPrompt],
   );
 
   // ─── Writing ─────────────────────────────────────────────────────────────
@@ -229,6 +259,12 @@ export const usePromptFeedActions = () => {
   const [menu, setMenu] = useState<
     (PostActionsTarget & { prompt: Prompt }) | null
   >(null);
+  const [commentMenu, setCommentMenu] = useState<
+    (PostActionsTarget & { comment: Comment }) | null
+  >(null);
+  const [sharedWith, setSharedWith] = useState<Friend[] | null>(null);
+  /** The prompt of the comment being edited, for the list to refresh after. */
+  const editedCommentPrompt = useRef<string | null>(null);
 
   /** Web's share button on the footer — the same sheet the menu opens. */
   const openShare = useCallback((prompt: Prompt) => setSharing(prompt), []);
@@ -265,6 +301,27 @@ export const usePromptFeedActions = () => {
     if (source.sourceId === current.id) return true;
     return (current.muses ?? []).some((muse) => muse.id === source.sourceId);
   }, []);
+
+  const openCommentMenu = useCallback(
+    (comment: Comment) =>
+      setCommentMenu({
+        comment,
+        owned: ownedBy(comment.source),
+        variant: "comment",
+      }),
+    [ownedBy],
+  );
+
+  const openCommentLikers = useCallback(
+    (comment: Comment) =>
+      setLikers({ count: comment.reactions, id: comment.id }),
+    [],
+  );
+
+  const openSharedWith = useCallback(
+    (prompt: Prompt) => setSharedWith(prompt.sharedWith ?? []),
+    [],
+  );
 
   const openCompose = useCallback(() => {
     if (!novelist) return;
@@ -329,9 +386,19 @@ export const usePromptFeedActions = () => {
   );
 
   const handleEdited = useCallback(
-    (id: string, html: string) =>
-      patchPrompt(id, (entry) => ({ ...entry, text: html })),
-    [patchPrompt],
+    (id: string, html: string, type: SubmitPromptType) => {
+      if (type === "prompt") {
+        patchPrompt(id, (entry) => ({ ...entry, text: html }));
+        return;
+      }
+      const promptId = editedCommentPrompt.current;
+      if (promptId) {
+        void queryClient.invalidateQueries({
+          queryKey: queryKeys.promptComments(promptId),
+        });
+      }
+    },
+    [patchPrompt, queryClient],
   );
 
   const runDelete = useCallback(
@@ -345,8 +412,47 @@ export const usePromptFeedActions = () => {
         return;
       }
       dropPrompt(prompt.id);
+      onDeletedRef.current?.();
     },
     [api, dropPrompt],
+  );
+
+  const runCommentDelete = useCallback(
+    async (comment: Comment) => {
+      const result = await deleteComment(api, comment.id).catch(() => null);
+      if (result?.message !== API_MESSAGE.Success) {
+        Alert.alert(
+          "Could not delete",
+          "There was an issue while deleting this. Please try again.",
+        );
+        return;
+      }
+      patchPrompt(comment.promptId, (entry) => ({
+        ...entry,
+        commentCount: Math.max(entry.commentCount - 1, 0),
+      }));
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.promptComments(comment.promptId),
+      });
+    },
+    [api, patchPrompt, queryClient],
+  );
+
+  const runCommentReport = useCallback(
+    async (comment: Comment) => {
+      const result = await report(api, comment.id, "", "COMMENT").catch(
+        () => null,
+      );
+      if (result?.message === API_MESSAGE.Success) {
+        alertReportSent();
+        return;
+      }
+      Alert.alert(
+        "Could not report",
+        "There was an issue while reporting this. Please try again.",
+      );
+    },
+    [api],
   );
 
   const runReport = useCallback(
@@ -355,7 +461,7 @@ export const usePromptFeedActions = () => {
         () => null,
       );
       if (result?.message === API_MESSAGE.Success) {
-        Alert.alert("Reported", "Thank you. Our team will review this.");
+        alertReportSent();
         return;
       }
       Alert.alert(
@@ -410,13 +516,16 @@ export const usePromptFeedActions = () => {
 
   const cardProps = useMemo<PromptCardActions>(
     () => ({
+      onCommentMore: canAct ? openCommentMenu : undefined,
       onCompose: canAct ? openComment : undefined,
       onDiscardQueued: discardQueued,
       onMore: canAct ? openMenu : undefined,
       onOpenThread: openThread,
       onReacted: handleReacted,
       onShare: openShare,
+      onShowCommentLikers: openCommentLikers,
       onShowLikers: openLikers,
+      onShowSharedWith: openSharedWith,
       onToggleComments: toggleComments,
       onUnfold: unfold,
     }),
@@ -425,9 +534,12 @@ export const usePromptFeedActions = () => {
       discardQueued,
       handleReacted,
       openComment,
+      openCommentLikers,
+      openCommentMenu,
       openLikers,
       openMenu,
       openShare,
+      openSharedWith,
       openThread,
       toggleComments,
       unfold,
@@ -472,6 +584,32 @@ export const usePromptFeedActions = () => {
           if (menu) setSharing(menu.prompt);
         }}
         target={menu}
+      />
+
+      <PostActions
+        onClose={() => setCommentMenu(null)}
+        onDelete={() => {
+          if (commentMenu) void runCommentDelete(commentMenu.comment);
+        }}
+        onEdit={() => {
+          if (!commentMenu) return;
+          editedCommentPrompt.current = commentMenu.comment.promptId;
+          setComposer({
+            html: commentMenu.comment.text,
+            id: commentMenu.comment.id,
+            kind: "edit",
+            type: "comment",
+          });
+        }}
+        onReport={() => {
+          if (commentMenu) void runCommentReport(commentMenu.comment);
+        }}
+        target={commentMenu}
+      />
+
+      <SharedWithSheet
+        friends={sharedWith}
+        onClose={() => setSharedWith(null)}
       />
     </>
   );

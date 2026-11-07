@@ -9,6 +9,7 @@ import { BadgeDetailSheet } from "@/components/badge-detail-sheet";
 import { BadgeCrest } from "@/components/badges";
 import { BadgeShelfSkeleton } from "@/components/list-skeletons";
 import { ListStatus } from "@/components/list-status";
+import { Notice } from "@/components/settings";
 import { Text } from "@/components/text";
 import { useTabBarContentStyle, useTabBarScroll } from "@/context/tab-bar";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
@@ -51,6 +52,20 @@ const CREST = 64;
 /** One empty list, so "no data yet" is not a new array on every render. */
 const NO_BADGES: Badge[] = [];
 
+interface SyncOutcome {
+  text: string;
+  tone: "error" | "info" | "success";
+}
+
+/** Web's wording, for how many badges a check turned up. */
+const syncOutcome = (gained: number): SyncOutcome => {
+  if (gained <= 0) return { text: "Badges are up to date.", tone: "info" };
+  return {
+    text: gained === 1 ? "New badge earned!" : `${gained} new badges earned!`,
+    tone: "success",
+  };
+};
+
 const keyExtractor = (item: Badge) => item.code;
 
 export const BadgeShelf = () => {
@@ -63,21 +78,38 @@ export const BadgeShelf = () => {
     queryKey: queryKeys.myBadges(),
   });
 
-  const sync = useMutation({
-    mutationFn: () => syncMyBadges(api),
-    onSuccess: (badges) => {
-      // The sync answers with the refreshed catalogue, so the list is written
-      // straight back rather than invalidated into a second request.
-      queryClient.setQueryData(queryKeys.myBadges(), badges);
-    },
-  });
-
   const badges = query.data ?? NO_BADGES;
 
   const earned = useMemo(
     () => badges.filter((badge) => badge.earned).length,
     [badges],
   );
+
+  /** What the last check found, said in place. */
+  const [outcome, setOutcome] = useState<SyncOutcome | null>(null);
+
+  const sync = useMutation({
+    mutationFn: async () => {
+      const result = await syncMyBadges(api);
+      // The endpoint answers `[]` when the call fails; the catalogue is never
+      // empty, so that is a failure and not a shelf with nothing on it.
+      if (result.length === 0) throw new Error("sync failed");
+      return result;
+    },
+    onError: () =>
+      setOutcome({
+        text: "Could not check your badges. Please try again.",
+        tone: "error",
+      }),
+    onMutate: () => setOutcome(null),
+    onSuccess: (next) => {
+      const gained = next.filter((badge) => badge.earned).length - earned;
+      // The sync answers with the refreshed catalogue, so the list is written
+      // straight back rather than invalidated into a second request.
+      queryClient.setQueryData(queryKeys.myBadges(), next);
+      setOutcome(syncOutcome(gained));
+    },
+  });
 
   /** The badge the tray is open on. */
   const [selected, setSelected] = useState<Badge | null>(null);
@@ -111,38 +143,45 @@ export const BadgeShelf = () => {
         }
         ListHeaderComponent={
           badges.length > 0 ? (
-            <View style={styles.header}>
-              <Text style={[styles.count, { color: theme.text }]}>
-                {earned} of {badges.length} earned
-              </Text>
-
-              <Pressable
-                accessibilityLabel="Check for new badges"
-                accessibilityRole="button"
-                accessibilityState={{ busy: sync.isPending }}
-                disabled={sync.isPending}
-                hitSlop={space.sm}
-                onPress={() => sync.mutate()}
-                style={({ pressed }) => [
-                  styles.refresh,
-                  {
-                    backgroundColor: pressed
-                      ? theme.material.fillPressed
-                      : theme.material.fill,
-                    borderColor: theme.material.edge,
-                    opacity: sync.isPending ? 0.6 : 1,
-                  },
-                ]}
-              >
-                <Ionicons
-                  color={theme.textGray}
-                  name="refresh-outline"
-                  size={14}
-                />
-                <Text style={[styles.refreshLabel, { color: theme.textGray }]}>
-                  {sync.isPending ? "Checking…" : "Check again"}
+            <View style={styles.headerGroup}>
+              <View style={styles.header}>
+                <Text style={[styles.count, { color: theme.text }]}>
+                  {earned} of {badges.length} earned
                 </Text>
-              </Pressable>
+
+                <Pressable
+                  accessibilityLabel="Check for new badges"
+                  accessibilityRole="button"
+                  accessibilityState={{ busy: sync.isPending }}
+                  disabled={sync.isPending}
+                  hitSlop={space.sm}
+                  onPress={() => sync.mutate()}
+                  style={({ pressed }) => [
+                    styles.refresh,
+                    {
+                      backgroundColor: pressed
+                        ? theme.material.fillPressed
+                        : theme.material.fill,
+                      borderColor: theme.material.edge,
+                      opacity: sync.isPending ? 0.6 : 1,
+                    },
+                  ]}
+                >
+                  <Ionicons
+                    color={theme.textGray}
+                    name="refresh-outline"
+                    size={14}
+                  />
+                  <Text
+                    style={[styles.refreshLabel, { color: theme.textGray }]}
+                  >
+                    {sync.isPending ? "Checking…" : "Check again"}
+                  </Text>
+                </Pressable>
+              </View>
+              {outcome ? (
+                <Notice tone={outcome.tone}>{outcome.text}</Notice>
+              ) : null}
             </View>
           ) : null
         }
@@ -212,6 +251,7 @@ const BadgeTile = memo(function BadgeTile({
 });
 
 const styles = StyleSheet.create({
+  headerGroup: { gap: space.sm },
   column: { gap: space.sm },
   content: { gap: space.ms, padding: space.md },
   count: { fontSize: fontSize.body, fontWeight: "700" },

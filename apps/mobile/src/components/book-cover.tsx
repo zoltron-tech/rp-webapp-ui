@@ -1,10 +1,18 @@
+import { Ionicons } from "@expo/vector-icons";
 import { type Book, bookCoverUrl } from "@nw/types/books";
-import { memo } from "react";
+import { memo, useState } from "react";
 import { Platform, StyleSheet, View, type ViewStyle } from "react-native";
 import { Image } from "@/components/image";
 import { Text } from "@/components/text";
-import { contrastRatio } from "@/lib/color";
+import { contrastRatio, mixWithBlack } from "@/lib/color";
 import { border, fontSize, radius, useAppTheme } from "@/theme";
+
+/**
+ * Web's `MARKER_FILL`, for the shelf's small markers (the Reading ribbon, the
+ * heart tab): the accent's solid step a quarter of the way to black, so white
+ * 11pt text clears 4.5:1 on every accent.
+ */
+export const useMarkerFill = () => mixWithBlack(useAppTheme().accent.solid, 0.75);
 
 /**
  * A book as the shelf draws it (BOOKSHELF_PLAN.md §1.3).
@@ -137,14 +145,22 @@ export const PaperCover = memo(function PaperCover({
  */
 export const BookCover = memo(function BookCover({
   book,
+  favorite = false,
+  quality = "M",
   style,
   width,
 }: {
   book: Book;
+  /** A heart in the corner: this one is among the novelist's favorites. */
+  favorite?: boolean;
+  /** Open Library's cover size. Large for a cover shown on its own. */
+  quality?: "L" | "M";
   style?: ViewStyle;
   width: number;
 }) {
   const theme = useAppTheme();
+  // A cover id can point at nothing, which only the load can tell.
+  const [failed, setFailed] = useState(false);
 
   return (
     <View
@@ -158,17 +174,23 @@ export const BookCover = memo(function BookCover({
         style,
       ]}
     >
-      {book.coverId ? (
+      {book.coverId && !failed ? (
         <Image
           accessibilityIgnoresInvertColors
           contentFit="cover"
-          source={{ uri: bookCoverUrl(book.coverId, "M") }}
+          onError={() => setFailed(true)}
+          source={{ uri: bookCoverUrl(book.coverId, quality) }}
           style={StyleSheet.absoluteFill}
           transition={120}
         />
       ) : (
         <PaperCover book={book} width={width} />
       )}
+      {favorite ? (
+        <View style={styles.heart}>
+          <Ionicons color="#ffffff" name="heart" size={11} />
+        </View>
+      ) : null}
     </View>
   );
 });
@@ -181,11 +203,18 @@ export const BookCover = memo(function BookCover({
  * reads top to bottom, as an English spine does. The layout box overflows
  * the spine before the transform, which is why the spine never clips.
  */
-export const BookSpine = memo(function BookSpine({ book }: { book: Book }) {
+export const BookSpine = memo(function BookSpine({
+  book,
+  favorite = false,
+}: {
+  book: Book;
+  favorite?: boolean;
+}) {
   const fill = spineColor(book);
   const width = spineWidth(book.pagesMedian);
   const ink = inkOn(fill);
   const length = SPINE_HEIGHT - 14;
+  const marker = useMarkerFill();
 
   return (
     <View
@@ -214,11 +243,44 @@ export const BookSpine = memo(function BookSpine({ book }: { book: Book }) {
         {book.title}
       </Text>
       <View style={[styles.spineBandFoot, { backgroundColor: ink }]} />
+      {/* Web's `SpineHeart`: a small tab hanging from the head of the spine. */}
+      {favorite ? (
+        <View style={[styles.spineHeart, { backgroundColor: marker }]}>
+          <Ionicons color="#ffffff" name="heart" size={8} />
+        </View>
+      ) : null}
     </View>
   );
 });
 
 const styles = StyleSheet.create({
+  heart: {
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.55)",
+    borderRadius: radius.full,
+    height: 20,
+    justifyContent: "center",
+    position: "absolute",
+    right: 4,
+    top: 4,
+    width: 20,
+  },
+  spineHeart: {
+    alignItems: "center",
+    alignSelf: "center",
+    borderBottomLeftRadius: 4,
+    borderBottomRightRadius: 4,
+    elevation: 3,
+    height: 18,
+    justifyContent: "center",
+    position: "absolute",
+    shadowColor: "#000000",
+    shadowOffset: { height: 2, width: 0 },
+    shadowOpacity: 0.35,
+    shadowRadius: 2,
+    top: 0,
+    width: 16,
+  },
   cover: {
     borderRadius: radius.xs,
     borderWidth: border.edge,

@@ -95,6 +95,7 @@ export const CharacterSheet = ({
   face,
   faces,
   onClose,
+  onEdit,
   onOpenMuse,
 }: {
   codex: Codex | null | undefined;
@@ -102,6 +103,8 @@ export const CharacterSheet = ({
   /** Every face in the story, to name the other end of a relationship. */
   faces: StoryFace[];
   onClose: () => void;
+  /** Given to a story member: only the story's own characters are theirs. */
+  onEdit?: (character: StoryCharacter) => void;
   onOpenMuse: (museId: string) => void;
 }) => {
   const theme = useAppTheme();
@@ -167,7 +170,9 @@ export const CharacterSheet = ({
               </Text>
               <View style={styles.chips}>
                 <Chip
-                  label={shown.refType === "MUSE" ? "Character" : "Story character"}
+                  label={
+                    shown.refType === "MUSE" ? "Character" : "Story character"
+                  }
                   tone={shown.refType === "MUSE" ? "accent" : "neutral"}
                 />
                 {character?.gender ? (
@@ -176,6 +181,16 @@ export const CharacterSheet = ({
               </View>
             </View>
           </View>
+
+          {onEdit && character ? (
+            <View style={styles.chips}>
+              <PillButton
+                icon="create-outline"
+                label="Edit character"
+                onPress={() => onEdit(character)}
+              />
+            </View>
+          ) : null}
 
           {groups.length > 0 ? (
             <View style={styles.chips}>

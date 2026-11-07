@@ -109,7 +109,7 @@ export const ShareSheet = ({
         ) : null
       }
       share={share}
-      subtitle="Post it to the NW Discord community or copy its link."
+      subtitle="Send it to a chat or Discord, or copy its link."
       successBody="The prompt is now live in the NW Community channel."
       title="Share prompt"
       url={url}

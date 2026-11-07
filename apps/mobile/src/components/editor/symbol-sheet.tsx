@@ -17,6 +17,7 @@ import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 export const SymbolSheet = ({
   categories,
   onClose,
+  onDismissed,
   onSelect,
   selected,
   subtitle,
@@ -25,6 +26,8 @@ export const SymbolSheet = ({
 }: {
   categories: SymbolCategory[];
   onClose: () => void;
+  /** Once the sheet has fully gone — when a focus can land again. */
+  onDismissed?: () => void;
   onSelect: (value: string) => void;
   selected?: string | null;
   subtitle?: string;
@@ -39,6 +42,7 @@ export const SymbolSheet = ({
       fill
       maxHeightRatio={0.7}
       onClose={onClose}
+      onDismissed={onDismissed}
       subtitle={subtitle}
       title={title}
       visible={visible}

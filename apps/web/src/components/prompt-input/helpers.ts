@@ -6,7 +6,7 @@ import type {
   SubmitPromptInput,
   SubmitPromptType,
 } from "@nw/types";
-import { personName } from "@nw/utils";
+import { personName, tooManyMediaMessage } from "@nw/utils";
 import { useEffect } from "react";
 import { useCustomEvents } from "@/hooks";
 import { API_MESSAGE } from "@/utils/constants";
@@ -89,8 +89,12 @@ export const getParentIdKeyFromPromptType = (
 
 export const apiMessageToInfoMessage = (
   message: API_MESSAGE | null,
+  /** What was being sent, for the media-limit line. */
+  type: SubmitPromptType = "prompt",
 ): string => {
   switch (message) {
+    case API_MESSAGE.TooManyMedia:
+      return tooManyMediaMessage(type);
     case API_MESSAGE.Success:
       return "Operation completed successfully.";
     case API_MESSAGE.Error:

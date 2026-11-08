@@ -86,7 +86,7 @@ export const PASSAGE_GUIDE: UserGuide = {
       body: "The paperclip attaches a picture from your device; the GIF button searches for one. Both land where the cursor is, and upload as you keep writing.",
       id: "media",
       points: [
-        "Pictures up to 10MB.",
+        "Pictures have a size limit, listed under Storage in your account settings.",
         "Remove one before saving and it is deleted again — nothing is left behind.",
       ],
       stage: <ComposerStage flow={["tool:attach", "tool:gif", "editor"]} />,

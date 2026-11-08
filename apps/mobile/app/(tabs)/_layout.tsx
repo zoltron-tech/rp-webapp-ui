@@ -8,6 +8,7 @@ import { TabBar } from "@/components/tab-bar";
 import { TabBarChromeProvider } from "@/context/tab-bar";
 import { useUnreadReplyCount } from "@/hooks/use-unread-reply-count";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
+import { usePrimeUploadLimits } from "@/hooks/use-upload-caps";
 import { readAccessToken } from "@/lib/session-store";
 import { useWelcomeBack } from "@/lib/welcome-back";
 import { radius, useAppTheme } from "@/theme";
@@ -64,6 +65,8 @@ export default function TabsLayout() {
   const unreadReplies = useUnreadReplyCount();
   // Push registration, tap routing and the icon's number.
   usePushNotifications();
+  // The service's upload limits: media hosts for `toMediaUrl`, picker caps.
+  usePrimeUploadLimits(status === "signed-in");
 
   // Never nothing: a session that does not resolve gets a way out. See
   // `StartupFallback`.

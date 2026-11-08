@@ -949,6 +949,7 @@ export const StoryCodexView: FC<Props> = ({
       <EntrySheet
         open={entrySheet.open}
         entry={entrySheet.entry}
+        storyboardId={storyboardId}
         defaultCategoryId={activeCategory?.id ?? categories[0]?.id ?? null}
         categories={categories}
         chapters={chapters}
@@ -973,6 +974,7 @@ export const StoryCodexView: FC<Props> = ({
       <CharacterSheet
         open={characterSheet.open}
         character={characterSheet.character}
+        storyboardId={storyboardId}
         onClose={() => setCharacterSheet({ character: null, open: false })}
         onSave={handleSaveCharacter}
         onDelete={handleDeleteCharacter}

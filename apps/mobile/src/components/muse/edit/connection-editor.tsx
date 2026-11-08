@@ -37,7 +37,7 @@ import { TextField } from "@/components/text-field";
 import { useKeyboardHeight } from "@/hooks/use-keyboard-height";
 import {
   alertMediaRejected,
-  MAX_IMAGE_BYTES,
+  pickedOversizeMessage,
   pickImage,
   uploadFile,
 } from "@/lib/media-upload";
@@ -252,14 +252,19 @@ const ConnectionEditorView = ({
   const attachImage = async () => {
     const file = await pickImage();
     if (!file) return;
-    if (file.fileSize > MAX_IMAGE_BYTES) {
-      Alert.alert("Picture is too large", "Maximum file size is 10 MB.");
+    const tooLarge = await pickedOversizeMessage(api, file);
+    if (tooLarge) {
+      Alert.alert("Picture is too large", tooLarge);
       return;
     }
     const local = file.uri;
     setUploading((current) => new Set(current).add(local));
     editor.current?.insertImage(local);
-    const { rejected, url } = await uploadFile(api, file, "muse-connection");
+    const { refused, rejected, url } = await uploadFile(
+      api,
+      file,
+      "muse-connection",
+    );
     setUploading((current) => {
       const next = new Set(current);
       next.delete(local);
@@ -268,7 +273,7 @@ const ConnectionEditorView = ({
     if (!url) {
       editor.current?.removeImageBySrc(local);
       if (rejected) alertMediaRejected();
-      else Alert.alert("Upload failed", "Please try again.");
+      else if (!refused) Alert.alert("Upload failed", "Please try again.");
       return;
     }
     editor.current?.replaceImageSrc(local, url);

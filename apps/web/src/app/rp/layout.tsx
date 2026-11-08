@@ -16,6 +16,7 @@ import {
   getGroupCountAction,
   getUnreadConversationIdsAction,
 } from "@/app/rp/conversations/actions";
+import { getUploadLimits, refreshUploadUsage } from "@/app/rp/profile/actions";
 import { GlobalMusicPlayer } from "@/components/global-music-player";
 import { AppUpdatePrompt } from "@/components/app-update-prompt";
 import { InstallAppPrompt } from "@/components/install-app-prompt";
@@ -131,6 +132,20 @@ const PageContainer: FC<HTMLProps<HTMLDivElement>> = ({ children }) => {
       });
     });
   }, [authState, setGlobalState]);
+
+  // The service's upload limits (AWS_COST_SECURITY_PLAN.md §2.2, §3.2): read
+  // once after login so the media hosts reach `toMediaUrl` and the caps are
+  // ready for the first picker. Signing out drops the cached usage, which is
+  // the account's own.
+  useEffect(() => {
+    if (authState !== "LOGGED_IN") {
+      refreshUploadUsage();
+      return;
+    }
+    return runWhenIdle(() => {
+      void getUploadLimits().catch(() => null);
+    });
+  }, [authState]);
 
   useEffect(() => {
     if (!lastIncomingMessage) return;

@@ -1,8 +1,21 @@
-import type { Comment, Prompt } from "@nw/types";
+import { API_MESSAGE, type Comment, type Prompt } from "@nw/types";
 import type { DataType, ErrorType, WithMessage } from "@nw/types/common";
 import type { ApiClient } from "../client";
 
 const BASE = "/rp/portfolio/prompt";
+
+/**
+ * Whether a save came back as the service's 422 `too_many_media`: a prompt,
+ * comment or reply with more media than it may carry (`MAX_POST_MEDIA`).
+ * Reads both shapes — `submitPrompt`'s `{ message: TooManyMedia }` and the
+ * generic error's `{ message: "error", code: "too_many_media" }` from
+ * {@link updatePrompt} / {@link updatePromptComment}.
+ */
+export const isTooManyMedia = (result: unknown): boolean => {
+  if (!result || typeof result !== "object") return false;
+  const { code, message } = result as { code?: unknown; message?: unknown };
+  return code === "too_many_media" || message === API_MESSAGE.TooManyMedia;
+};
 
 export const getPrompt = (
   api: ApiClient,

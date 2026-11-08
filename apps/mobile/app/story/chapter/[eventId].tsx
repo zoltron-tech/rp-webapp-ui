@@ -674,6 +674,7 @@ export default function ChapterScreen() {
           onClose={() => setComposing(null)}
           onSaved={onSaved}
           storyCharacters={characters.data ?? []}
+          storyId={event?.storyBoardId}
           thread={composing.thread}
         />
       ) : null}

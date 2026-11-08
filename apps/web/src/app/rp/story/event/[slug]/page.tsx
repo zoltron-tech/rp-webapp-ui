@@ -648,6 +648,7 @@ export default function StoryboardEventPage({}) {
       variant="inline"
       editorPlaceholder="Continue the story… @ to mention novelists or muses"
       storyBoardEventId={storyboardEventId}
+      storyBoardId={storyboardEvent?.storyBoardId ?? ""}
       storyCharacters={storyCharacters}
       onSend={() => {
         // Scroll to the bottom afterwards so the saved passage and the
@@ -665,6 +666,7 @@ export default function StoryboardEventPage({}) {
       key={editingThread.id}
       variant="inline"
       storyBoardEventId={storyboardEventId}
+      storyBoardId={storyboardEvent?.storyBoardId ?? ""}
       storyCharacters={storyCharacters}
       initialThread={editingThread}
       onSend={() => {

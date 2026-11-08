@@ -1,10 +1,9 @@
-import { requestPresignedUpload } from "@nw/api/endpoints/profile";
 import { useApi } from "@nw/features";
-import { API_MESSAGE } from "@nw/types";
-import * as FileSystem from "expo-file-system/legacy";
+import { capForType, formatBytes } from "@nw/utils";
 import * as ImagePicker from "expo-image-picker";
 import { useCallback, useRef, useState } from "react";
 import { Alert } from "react-native";
+import { loadUploadCaps, uploadFileDirect } from "@/lib/media-upload";
 
 /**
  * Picking images and videos off the phone and getting them into a message.
@@ -15,18 +14,13 @@ import { Alert } from "react-native";
  * bucket — an attachment sent from a phone is indistinguishable from one sent
  * from a browser, which is the point.
  *
- * ## Why `expo-file-system` and not `fetch`
- *
- * A presigned PUT needs the raw bytes as the request body. React Native's
- * `fetch` cannot send a local `file://` URI as a body: passing `{ uri }` works
- * only inside a `FormData` (multipart), which S3 would store verbatim,
- * boundaries and all, leaving a "JPEG" that no decoder will open.
- * `FileSystem.uploadAsync` with `BINARY_CONTENT` streams the file as the body,
- * which is exactly what the signature was issued for.
- *
- * The import is `expo-file-system/legacy` because SDK 54's new `File`/`Directory`
- * API has no upload of its own yet; the legacy module is still shipped and
- * still the documented way to do this.
+ * The steps (size off the disk, the shared pre-check, presign, the PUT through
+ * `expo-file-system` — `fetch` cannot send a `file://` URI as a raw body —
+ * and `/s3/moderate`) are `uploadFileDirect`'s, shared with every other upload
+ * on the phone. For chat media the confirm only records the real size and
+ * enforces the cap: private messages are not screened (owner decision,
+ * APP_STORE_REVIEW_PLAN.md H1), and the service answers 200 for chat-media/
+ * keys without looking.
  *
  * ## Uploads start immediately
  *
@@ -38,9 +32,12 @@ import { Alert } from "react-native";
  * hook deliberately does not make (see `remove`).
  */
 
-/** Matches the web composer, which the backend and the bucket are sized for. */
+/**
+ * Matches the web composer. Size is held to the service's cap for each file's
+ * family (`limits.caps` on `/s3/usage`, AWS_COST_SECURITY_PLAN.md D7); no
+ * number lives here.
+ */
 const MAX_FILES = 10;
-const MAX_BYTES = 50 * 1024 * 1024;
 
 /** What `CHAT_MEDIA` accepts, and what both message renderers can draw. */
 const ALLOWED = new Set([
@@ -57,6 +54,8 @@ export interface PendingAttachment {
   /** The local file, shown as the thumbnail before (and during) the upload. */
   localUri: string;
   contentType: string;
+  /** The picker's reported size, for the pre-check when the file cannot be measured. */
+  fileSize?: number | null;
   /** Set once S3 has the bytes. Null while uploading, and after a failure. */
   url: string | null;
   uploading: boolean;
@@ -81,33 +80,28 @@ export const useAttachments = (conversationId: string | undefined) => {
   const [attachments, setAttachments] = useState<PendingAttachment[]>([]);
   const counter = useRef(0);
 
+  /**
+   * The storage URL, or `null` on any failure. A refusal (the cap, today's
+   * limit — chat media counts toward the daily limit, not the storage total)
+   * has been shown by then; the tile reads as failed either way, with retry.
+   */
   const upload = useCallback(
-    async (entry: PendingAttachment) => {
-      const presigned = await requestPresignedUpload(api, {
-        contentType: entry.contentType,
-        mediaBucket: "CHAT_MEDIA",
-        // The same prefix web sends, so chat media from the two clients lands
-        // in the same place in the bucket rather than in two parallel trees.
-        prefix: conversationId ?? "chat-media",
-      });
-
-      if (presigned === API_MESSAGE.MediaError) return null;
-
-      const result = await FileSystem.uploadAsync(
-        presigned.uploadUrl,
-        entry.localUri,
+    async (entry: PendingAttachment): Promise<string | null> => {
+      const result = await uploadFileDirect(
+        api,
         {
-          headers: { "Content-Type": entry.contentType },
-          httpMethod: presigned.method as "PUT" | "POST",
-          uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+          contentType: entry.contentType,
+          fileSize: entry.fileSize,
+          uri: entry.localUri,
+        },
+        {
+          mediaBucket: "CHAT_MEDIA",
+          // The same prefix web sends, so chat media from the two clients
+          // lands in the same place in the bucket, not in two parallel trees.
+          prefix: conversationId ?? "chat-media",
         },
       );
-
-      if (result.status < 200 || result.status >= 300) return null;
-      // No NSFW screening here, deliberately: private messages are exempt by
-      // owner decision (APP_STORE_REVIEW_PLAN.md H1), and the service skips
-      // chat-media/ keys even if asked.
-      return presigned.fileUrl;
+      return result.url;
     },
     [api, conversationId],
   );
@@ -131,9 +125,11 @@ export const useAttachments = (conversationId: string | undefined) => {
   );
 
   const add = useCallback(
-    (assets: ImagePicker.ImagePickerAsset[]) => {
+    async (assets: ImagePicker.ImagePickerAsset[]) => {
       const room = MAX_FILES - attachments.length;
       const rejected: string[] = [];
+      // Unknown caps refuse nothing here; the upload check and service decide.
+      const caps = await loadUploadCaps(api);
 
       const accepted = assets.filter((asset) => {
         const type = contentTypeOf(asset);
@@ -141,8 +137,11 @@ export const useAttachments = (conversationId: string | undefined) => {
           rejected.push("Only PNG, JPG, GIF, WebP and MP4 can be sent.");
           return false;
         }
-        if ((asset.fileSize ?? 0) > MAX_BYTES) {
-          rejected.push(`"${asset.fileName ?? "That file"}" is over 50 MB.`);
+        const limit = capForType(type, caps);
+        if ((asset.fileSize ?? 0) > limit) {
+          rejected.push(
+            `"${asset.fileName ?? "That file"}" is over ${formatBytes(limit)}.`,
+          );
           return false;
         }
         return true;
@@ -160,6 +159,7 @@ export const useAttachments = (conversationId: string | undefined) => {
           return {
             contentType: contentTypeOf(asset),
             failed: false,
+            fileSize: asset.fileSize ?? null,
             id: `attachment-${Date.now()}-${counter.current}`,
             localUri: asset.uri,
             uploading: true,
@@ -170,7 +170,7 @@ export const useAttachments = (conversationId: string | undefined) => {
       setAttachments((previous) => [...previous, ...entries]);
       for (const entry of entries) start(entry);
     },
-    [attachments.length, start],
+    [api, attachments.length, start],
   );
 
   /**
@@ -214,7 +214,7 @@ export const useAttachments = (conversationId: string | undefined) => {
       selectionLimit: MAX_FILES - attachments.length,
     });
     if (result.canceled) return;
-    add(result.assets);
+    void add(result.assets);
   }, [add, attachments.length]);
 
   const capture = useCallback(async () => {
@@ -228,7 +228,7 @@ export const useAttachments = (conversationId: string | undefined) => {
     }
     const result = await ImagePicker.launchCameraAsync({ quality: 0.9 });
     if (result.canceled) return;
-    add(result.assets);
+    void add(result.assets);
   }, [add]);
 
   /**

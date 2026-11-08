@@ -1,6 +1,7 @@
 "use client";
 
 import type { MuseAboutSection } from "@nw/types/novelist";
+import { fileTooLargeMessage } from "@nw/utils";
 import { useCallback, useRef, useState } from "react";
 import { GrAttachment } from "react-icons/gr";
 import { IoCloseOutline } from "react-icons/io5";
@@ -17,6 +18,7 @@ import {
   type RichTextEditorHandle,
 } from "@/components/rich-text-editor-input";
 import { useUIContext } from "@/hooks/use-ui-context";
+import { useUploadCaps } from "@/hooks/use-upload-caps";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { API_MESSAGE } from "@/utils/constants";
 import * as S from "./styled";
@@ -40,6 +42,8 @@ export function MuseAboutSectionForm({
 }: MuseAboutSectionFormProps) {
   const { successToast, errorToast } = useUIContext();
   const { uploadMedia } = useUploadMedia();
+  // The service's cap for the file's family (AWS_COST_SECURITY_PLAN.md D7).
+  const { capFor } = useUploadCaps();
 
   const editorRef = useRef<RichTextEditorHandle>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -57,8 +61,6 @@ export function MuseAboutSectionForm({
   const [error, setError] = useState<string | null>(null);
   const [showGifPicker, setShowGifPicker] = useState(false);
 
-  const MAX_FILE_SIZE = 10 * 1024 * 1024;
-
   const handleGifSelect = useCallback((gifUrl: string) => {
     setShowGifPicker(false);
     editorRef.current?.insertGif(gifUrl);
@@ -70,8 +72,8 @@ export function MuseAboutSectionForm({
       const file = input.files?.[0] ?? null;
       input.value = "";
       if (!file) return;
-      if (file.size > MAX_FILE_SIZE) {
-        setError("File too large (max 10 MB)");
+      if (file.size > capFor(file.type)) {
+        setError(fileTooLargeMessage(capFor(file.type)));
         return;
       }
       setError(null);
@@ -115,7 +117,7 @@ export function MuseAboutSectionForm({
         setImageUploading(false);
       }
     },
-    [uploadMedia, tempUpload, MAX_FILE_SIZE],
+    [uploadMedia, tempUpload, capFor],
   );
 
   const handleRemoveAttachment = useCallback(async () => {

@@ -20,9 +20,10 @@
  * will have caught it.
  *
  * Consequence for consumers: an app bundling these packages for a browser MUST
- * declare every `process.env` key this code reads. Today that is exactly one —
- * `RP_BUCKET_NAME`, read in `@nw/utils/image` — and the Vite app supplies it
- * through `define` in `vite.config.ts`, reproducing what webpack does now.
+ * declare every `process.env` key this code reads. Today that is two, each
+ * under both spellings — `RP_BUCKET_NAME` and `RP_MEDIA_HOST` (plus their
+ * `EXPO_PUBLIC_` names), read in `@nw/utils/image` — and the Vite app supplies
+ * them through `define` in `vite.config.ts`, reproducing what webpack does now.
  * See REACT_MIGRATION_STEPS.md A1/B1.
  *
  * The better long-term shape is to stop reading an ambient global from shared

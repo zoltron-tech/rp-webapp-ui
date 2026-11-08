@@ -2,6 +2,7 @@
 
 import type { MuseAboutSection } from "@nw/types";
 import type { WithMessage } from "@nw/types/common";
+import { fileTooLargeMessage } from "@nw/utils";
 import { useCallback, useRef, useState } from "react";
 import { GrAttachment } from "react-icons/gr";
 import { IoCloseOutline } from "react-icons/io5";
@@ -20,6 +21,7 @@ import {
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
+import { useUploadCaps } from "@/hooks/use-upload-caps";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
@@ -41,6 +43,8 @@ export default function EditMuseAboutSectionDataCard() {
   const { successToast, errorToast } = useUIContext();
   const { routeToPage } = usePageRouter();
   const { uploadMedia } = useUploadMedia();
+  // The service's cap for the file's family (AWS_COST_SECURITY_PLAN.md D7).
+  const { capFor } = useUploadCaps();
 
   const [loading, setLoading] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
@@ -49,8 +53,6 @@ export default function EditMuseAboutSectionDataCard() {
   const [showGifPicker, setShowGifPicker] = useState(false);
   const editorRef = useRef<RichTextEditorHandle>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
   const handleTextChange = useCallback(
     (value: string) => {
@@ -70,8 +72,8 @@ export default function EditMuseAboutSectionDataCard() {
       const input = e.currentTarget;
       const file = input.files?.[0] ?? null;
       if (!file) return;
-      if (file.size > MAX_FILE_SIZE) {
-        setError("File too large (max 10 MB)");
+      if (file.size > capFor(file.type)) {
+        setError(fileTooLargeMessage(capFor(file.type)));
         return;
       }
       setImageUploading(true);
@@ -96,7 +98,7 @@ export default function EditMuseAboutSectionDataCard() {
       setImageUploading(false);
       input.value = "";
     },
-    [uploadMedia, setSectionState, tempUpload, MAX_FILE_SIZE],
+    [uploadMedia, setSectionState, tempUpload, capFor],
   );
 
   const handleRemoveAttachment = useCallback(async () => {

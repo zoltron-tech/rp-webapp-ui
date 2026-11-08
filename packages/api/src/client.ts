@@ -145,6 +145,18 @@ const parseErrorReason = (rawText: string): string | undefined => {
   }
 };
 
+/** The `code` off an error body (`{ "code": "too_many_media" }`), when it is JSON with one. */
+export const parseErrorCode = (rawText: string): string | undefined => {
+  try {
+    const parsed = JSON.parse(rawText);
+    return typeof parsed?.code === "string" && parsed.code
+      ? parsed.code
+      : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
 /**
  * What a caller gets when it required a token and there wasn't one.
  *
@@ -309,6 +321,19 @@ export const createApiClient = (config: ApiConfig): ApiClient => {
       }
 
       if (!response.ok) {
+        // A 422 carries a machine code worth handing on (`too_many_media`
+        // from the post saves); every other failure stays the plain shape.
+        if (response.status === 422) {
+          const rawText = await response.text().catch(() => "");
+          const code = parseErrorCode(rawText);
+          return {
+            ...errorResult(),
+            ...(code ? { code } : {}),
+            ...(options.withReason
+              ? { reason: parseErrorReason(rawText) }
+              : {}),
+          };
+        }
         if (!options.withReason) return errorResult();
         const rawText = await response.text().catch(() => "");
         return { ...errorResult(), reason: parseErrorReason(rawText) };

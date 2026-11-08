@@ -1,5 +1,6 @@
 "use client";
 
+import { formatBytes, uploadCapsHint } from "@nw/utils";
 import { Separator } from "radix-ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BsArrowLeft } from "react-icons/bs";
@@ -15,6 +16,7 @@ import { deleteMedia } from "@/app/rp/profile/actions";
 import { AppAlertDialog } from "@/components/dialog";
 import { classifyUrlForUpload } from "@/hooks/use-nsfw-check";
 import { useUIContext } from "@/hooks/use-ui-context";
+import { useUploadCaps } from "@/hooks/use-upload-caps";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { API_MESSAGE } from "@/utils/constants";
 import { useMuseState } from "./muse.store";
@@ -54,7 +56,6 @@ const VALID_TYPES = [
   "image/webp",
   "video/mp4",
 ];
-const MAX_FILE_SIZE = 30 * 1024 * 1024; // 30 MB
 
 type PendingFile = {
   file: File;
@@ -74,6 +75,9 @@ export function GallerySection({ onBack }: Props) {
   const cardBackground = useMuseState("cardBackground");
   const { successToast, errorToast } = useUIContext();
   const { uploadMedia } = useUploadMedia();
+  // The service's cap for the file's family (AWS_COST_SECURITY_PLAN.md D7).
+  const { capFor, caps } = useUploadCaps();
+  const capsHint = uploadCapsHint(caps, ["image", "video"]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [existingMedia, setExistingMedia] = useState<string[]>([]);
@@ -140,8 +144,9 @@ export function GallerySection({ onBack }: Props) {
           setError("Unsupported file type. Allowed: PNG, JPG, GIF, WEBP, MP4.");
           continue;
         }
-        if (file.size > MAX_FILE_SIZE) {
-          setError("A file exceeds the 30 MB limit.");
+        const cap = capFor(file.type);
+        if (file.size > cap) {
+          setError(`A file is over the ${formatBytes(cap)} limit.`);
           continue;
         }
         const isVideo = file.type === "video/mp4";
@@ -179,7 +184,7 @@ export function GallerySection({ onBack }: Props) {
         });
       }
     },
-    [existingMedia.length, pendingFiles.length],
+    [capFor, existingMedia.length, pendingFiles.length],
   );
 
   const removePending = useCallback((index: number) => {
@@ -347,7 +352,7 @@ export function GallerySection({ onBack }: Props) {
         {existingMedia.length < MAX_TOTAL
           ? `You can add up to ${
               MAX_TOTAL - existingMedia.length
-            } more file${MAX_TOTAL - existingMedia.length === 1 ? "" : "s"} (${MAX_TOTAL} total · PNG, JPG, GIF, WEBP, MP4 · max 30 MB each).`
+            } more file${MAX_TOTAL - existingMedia.length === 1 ? "" : "s"} (${MAX_TOTAL} total · PNG, JPG, GIF, WEBP, MP4${capsHint ? ` · ${capsHint}` : ""}).`
           : `Gallery full — ${MAX_TOTAL} files maximum. Delete some to upload more.`}
       </GalleryUploadNote>
 

@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { searchMentionMuses } from "@nw/api/endpoints/muse";
 import { submitPrompt } from "@nw/api/endpoints/profile";
-import { updatePromptComment } from "@nw/api/endpoints/prompt";
+import { isTooManyMedia, updatePromptComment } from "@nw/api/endpoints/prompt";
 import type { MessageSenderChoice } from "@nw/chat";
 import { useApi, useSession } from "@nw/features";
 import { imageSources, type RichDocument } from "@nw/richtext";
@@ -19,6 +19,7 @@ import {
   type SubmitPromptType,
 } from "@nw/types";
 import type { ProfileSong } from "@nw/types/music";
+import { MAX_POST_MEDIA, tooManyMediaMessage } from "@nw/utils";
 import {
   forwardRef,
   type ReactNode,
@@ -312,11 +313,17 @@ const ComposerScreen = ({
 
   // ─── Media ───────────────────────────────────────────────────────────────
 
+  // Post media: not the account's storage, and five items at most per
+  // prompt, comment or reply (owner decisions 2026-11-08).
+  const limitMessage = tooManyMediaMessage(type);
   const media = useComposerMedia({
+    limitMessage,
+    maxMedia: MAX_POST_MEDIA,
     onImageFailed: (local) => editor.current?.removeImageBySrc(local),
     onImageInserted: (local) => editor.current?.insertImage(local),
     onImageUploaded: (local, url) =>
       editor.current?.replaceImageSrc(local, url),
+    purpose: "post",
   });
 
   const openTray = useCallback((tab: TrayTab) => {
@@ -328,6 +335,8 @@ const ComposerScreen = ({
   const pickFromTray = useCallback(
     (url: string) => {
       setTrayTab(null);
+      // A clip takes the attachment's place; a GIF adds to the text.
+      if (!media.ensureRoom(trayTab === "clip")) return;
       if (trayTab === "clip") media.attachUrl(url, "video/mp4");
       else editor.current?.insertImage(url);
     },
@@ -439,7 +448,12 @@ const ComposerScreen = ({
       setSending(false);
 
       if (response.message !== API_MESSAGE.Success) {
-        Alert.alert("Could not send", submitErrorText(response.message));
+        Alert.alert(
+          "Could not send",
+          isTooManyMedia(response)
+            ? tooManyMediaMessage(type)
+            : submitErrorText(response.message),
+        );
         return;
       }
 
@@ -475,7 +489,12 @@ const ComposerScreen = ({
     );
     setSending(false);
     if (result.message !== API_MESSAGE.Success) {
-      Alert.alert("Could not save", submitErrorText(result.message));
+      Alert.alert(
+        "Could not save",
+        isTooManyMedia(result)
+          ? tooManyMediaMessage(type)
+          : submitErrorText(result.message),
+      );
       return;
     }
     media.commit();
@@ -847,10 +866,17 @@ const ComposerScreen = ({
                       <Pressable
                         hitSlop={space.xs}
                         accessibilityLabel="Attach a photo or video"
+                        accessibilityHint={
+                          media.atMediaLimit ? limitMessage : undefined
+                        }
                         accessibilityRole="button"
-                        onPress={() => setSheet("attach")}
+                        // At the cap it says why instead of opening.
+                        onPress={() => {
+                          if (media.ensureRoom()) setSheet("attach");
+                        }}
                         style={({ pressed }) => [
                           styles.iconButton,
+                          media.atMediaLimit && styles.iconButtonFull,
                           {
                             backgroundColor: media.attachment
                               ? theme.accent.surfaceActive
@@ -877,10 +903,16 @@ const ComposerScreen = ({
                       <Pressable
                         hitSlop={space.xs}
                         accessibilityLabel="Insert a GIF"
+                        accessibilityHint={
+                          media.atMediaLimit ? limitMessage : undefined
+                        }
                         accessibilityRole="button"
-                        onPress={() => openTray("gif")}
+                        onPress={() => {
+                          if (media.ensureRoom()) openTray("gif");
+                        }}
                         style={({ pressed }) => [
                           styles.iconButton,
+                          media.atMediaLimit && styles.iconButtonFull,
                           {
                             backgroundColor:
                               trayTab !== null
@@ -1298,6 +1330,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: 36,
   },
+  /** At the media limit: still pressable (it says why), but reads as spent. */
+  iconButtonFull: { opacity: 0.5 },
   lockedLabel: { fontSize: fontSize.meta, fontWeight: "700" },
   meta: {
     alignItems: "center",

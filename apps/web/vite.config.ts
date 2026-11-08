@@ -102,6 +102,12 @@ export default defineConfig(({ mode }) => {
       // crash the block above is about. Empty, so it folds to a constant and
       // `RP_BUCKET_NAME` remains the one web actually uses.
       "process.env.EXPO_PUBLIC_RP_BUCKET_NAME": JSON.stringify(""),
+      // The CloudFront media host `toMediaUrl` and `wsrvImage` rewrite stored
+      // S3 URLs to (AWS_COST_SECURITY_PLAN.md §3.2). Same pair as the bucket,
+      // for the same reason: both reads exist in the bundle and must be
+      // substituted. Empty (unset) keeps every media URL exactly as stored.
+      "process.env.RP_MEDIA_HOST": JSON.stringify(env.RP_MEDIA_HOST ?? ""),
+      "process.env.EXPO_PUBLIC_RP_MEDIA_HOST": JSON.stringify(""),
     },
 
     plugins: [

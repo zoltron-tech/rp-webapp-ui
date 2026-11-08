@@ -199,7 +199,7 @@ export const PromptTextField: FC<PromptTextFieldProps> = ({
 
   const errorMessage =
     mediaUploadError === "FILE_TOO_LARGE"
-      ? "Attachment is too large. Maximum file size is 10 MB."
+      ? "Attachment is too large to upload."
       : mediaUploadError === "INVALID_FILE_TYPE"
         ? "Invalid file type. Please upload an image, audio or video file."
         : mediaUploadError === "UPLOAD_FAILED"

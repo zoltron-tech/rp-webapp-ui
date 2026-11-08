@@ -402,10 +402,6 @@ export const routes: RouteObject[] = [
           },
           { lazy: page(() => import("./app/rp/terms/page")), path: "terms" },
           {
-            lazy: page(() => import("./app/rp/thread-generator/page")),
-            path: "thread-generator",
-          },
-          {
             lazy: page(() => import("./app/rp/thread/[slug]/page")),
             path: "thread/:slug",
           },

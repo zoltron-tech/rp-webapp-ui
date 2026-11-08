@@ -496,6 +496,7 @@ export const StoryNotesView: FC<Props> = ({ storyboardId, canEdit }) => {
       <NoteSheet
         open={sheet.open}
         note={sheet.note}
+        storyboardId={storyboardId}
         initialType={sheet.type}
         voting={voting}
         flagsPending={Boolean(sheet.note?.id && flagsPending.has(sheet.note.id))}

@@ -6,19 +6,22 @@ import {
   deleteFriendRequest as apiDeleteFriendRequest,
   deleteMedia as apiDeleteMedia,
   enhanceAvatar as apiEnhanceAvatar,
-  getPresignedFileUploadObject as apiGetPresignedFileUploadObject,
-  moderateUpload as apiModerateUpload,
+  getUploadCaps as apiGetUploadCaps,
+  getUploadLimits as apiGetUploadLimits,
   reportProfile as apiReportProfile,
   sendFeedbackMessage as apiSendFeedbackMessage,
   sendFriendRequest as apiSendFriendRequest,
   submitPrompt as apiSubmitPrompt,
   unfriendNovelist as apiUnfriendNovelist,
-  uploadMedia as apiUploadMedia,
+  type DirectUploadRequest,
   getBlacklistedNovelists,
   getBlockedNovelists,
   getReferredNovelists,
+  invalidateStorageUsage,
+  loadStorageUsage,
   unblacklistNovelist,
   unblockNovelist,
+  uploadMediaDirect,
 } from "@nw/api/endpoints/profile";
 import { disableAccount } from "@nw/api/endpoints/novelists";
 import type {
@@ -28,15 +31,29 @@ import type {
 } from "@nw/types";
 import { api, authedApi } from "@/lib/api";
 
-export const getPresignedFileUploadObject = (formData: FormData) =>
-  apiGetPresignedFileUploadObject(authedApi, formData);
+/**
+ * Every web upload, straight to storage: check, presign, PUT, confirm
+ * (AWS_COST_SECURITY_PLAN.md §2.1–2.2). Callers go through
+ * `utils/upload-media`, which prepares the file and shows a refusal.
+ */
+export const uploadMediaDirectAction = (request: DirectUploadRequest) =>
+  uploadMediaDirect(authedApi, request);
 
-export const uploadMedia = (formData: FormData) =>
-  apiUploadMedia(authedApi, formData);
+/**
+ * `GET /s3/usage`, read fresh — `null` when it fails (AWS_COST_SECURITY_PLAN.md
+ * §2.2). Refreshes the cache the upload checks read too.
+ */
+export const getStorageUsage = () =>
+  loadStorageUsage(authedApi, { fresh: true });
 
-/** The service's NSFW check on a presigned upload; `false` = refused and deleted. */
-export const moderateUpload = (fileUrl: string) =>
-  apiModerateUpload(authedApi, fileUrl);
+/** The service's upload limits (caps, enforcement, media hosts), cached briefly. */
+export const getUploadLimits = () => apiGetUploadLimits(authedApi);
+
+/** The service's per-family caps, cached; `null` when unknown — refuse nothing then. */
+export const getUploadCaps = () => apiGetUploadCaps(authedApi);
+
+/** Makes the next upload check read `/s3/usage` again. */
+export const refreshUploadUsage = () => invalidateStorageUsage();
 
 /** Unauthenticated by design — this endpoint never checked a token. */
 export const enhanceAvatar = (formData: FormData) =>

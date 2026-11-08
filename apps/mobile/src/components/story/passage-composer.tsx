@@ -90,6 +90,7 @@ export const PassageComposer = ({
   onClose,
   onSaved,
   storyCharacters,
+  storyId,
   thread,
 }: {
   eventId: string;
@@ -98,6 +99,11 @@ export const PassageComposer = ({
   onSaved: (created: boolean) => void;
   /** The story's own characters — dialog speakers beside the writer's muses. */
   storyCharacters: StoryCharacter[];
+  /**
+   * The story the chapter belongs to: pictures in a passage are storyboard
+   * media, stored under it and charged to its own limit.
+   */
+  storyId: string | null | undefined;
   /** The passage being edited, or null for a new one. */
   thread: StoryBoardEventThread | null;
 }) => {
@@ -202,6 +208,8 @@ export const PassageComposer = ({
     onImageInserted: (local) => editor.current?.insertImage(local),
     onImageUploaded: (local, url) =>
       editor.current?.replaceImageSrc(local, url),
+    purpose: "storyboard",
+    storyboardId: storyId,
   });
 
   const reconcileMedia = media.reconcile;

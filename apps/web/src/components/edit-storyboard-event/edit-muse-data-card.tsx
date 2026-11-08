@@ -2,7 +2,7 @@
 
 import { ShouldRender } from "@novelist-world/ui";
 import type { CreateUpdateMuse, Fandom } from "@nw/types";
-import { VALID_IMAGE_TYPES } from "@nw/utils";
+import { fileTooLargeMessage, VALID_IMAGE_TYPES } from "@nw/utils";
 import { Form, Separator } from "radix-ui";
 import {
   type FormEventHandler,
@@ -18,6 +18,7 @@ import { deleteMedia } from "@/app/rp/profile/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
+import { useUploadCaps } from "@/hooks/use-upload-caps";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
@@ -41,12 +42,8 @@ type ErrorKey = (typeof ErrorKeys)[number];
 
 const ERROR_MAP: Record<ErrorKey, ReactNode> = {
   [API_MESSAGE.UncategorizedError]: UNCATEGORIZED_ERROR_MESSAGE,
-  [API_MESSAGE.FileTooLarge]: (
-    <p>
-      The selected file is too large. Maximum allowed size is{" "}
-      <strong>10 MB</strong>.
-    </p>
-  ),
+  // The number, when known, is added where this renders (the service's cap).
+  [API_MESSAGE.FileTooLarge]: <p>The selected file is too large.</p>,
   [API_MESSAGE.MediaError]: (
     <p>
       File type is not supported. Allowed file types are{" "}
@@ -56,7 +53,8 @@ const ERROR_MAP: Record<ErrorKey, ReactNode> = {
 };
 
 export default function EditMuseDataCard() {
-  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+  // Pictures only, so the service's image cap (AWS_COST_SECURITY_PLAN.md D7).
+  const { capFor } = useUploadCaps();
   const novelist = useGlobalState("novelist");
   const user = useGlobalState("user");
   const id = useMuseState("id");
@@ -155,7 +153,7 @@ export default function EditMuseDataCard() {
 
   const checkFileSize = (file: File | undefined): boolean => {
     if (!file) return false;
-    if (file.size > MAX_FILE_SIZE) {
+    if (file.size > capFor(file.type)) {
       setMediaError(API_MESSAGE.FileTooLarge);
       return true;
     }
@@ -584,7 +582,12 @@ export default function EditMuseDataCard() {
             <ShouldRender if={Boolean(mediaError)}>
               <S.MediaErrorWrapper>
                 <ErrorBox className="error">
-                  {ERROR_MAP[mediaError!] || <p>Unknown error occurred.</p>}
+                  {mediaError === API_MESSAGE.FileTooLarge &&
+                  Number.isFinite(capFor("image/png")) ? (
+                    <p>{fileTooLargeMessage(capFor("image/png"))}</p>
+                  ) : (
+                    ERROR_MAP[mediaError!] || <p>Unknown error occurred.</p>
+                  )}
                 </ErrorBox>
               </S.MediaErrorWrapper>
             </ShouldRender>

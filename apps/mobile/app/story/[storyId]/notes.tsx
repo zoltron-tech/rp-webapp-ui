@@ -221,6 +221,7 @@ export default function NotesScreen() {
         note={editor?.note ?? null}
         onClose={() => setEditor(null)}
         onMove={sortable ? move : undefined}
+        storyId={storyId}
         visible={editor !== null}
       />
       <PollSheet

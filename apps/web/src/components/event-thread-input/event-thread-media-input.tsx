@@ -17,16 +17,15 @@ import {
   MediaTray,
   type TrayTab,
 } from "@/components/send-message-composer/media-tray";
+import { useUploadCaps } from "@/hooks/use-upload-caps";
 import { API_MESSAGE } from "@/utils/constants";
-import { uploadMedia } from "@/utils/upload-media";
+import { appendUploadPurpose, uploadMedia } from "@/utils/upload-media";
 import {
   useEventThreadInputState,
   useEventThreadInputStoreSet,
 } from "./event-thread-input.store";
 import { EventThreadEvent, useRunOn } from "./helpers";
 import * as S from "./styles";
-
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 /** Tracks whether the viewport is at a mobile width. */
 const useIsMobile = () => {
@@ -50,7 +49,10 @@ const useIsMobile = () => {
  */
 export const EventThreadMediaInput: FC = () => {
   const mediaUploadError = useEventThreadInputState("mediaUploadError");
+  const storyBoardId = useEventThreadInputState("storyBoardId");
   const set = useEventThreadInputStoreSet();
+  // The service's cap for the file's family (AWS_COST_SECURITY_PLAN.md D7).
+  const { capFor } = useUploadCaps();
 
   const isMobile = useIsMobile();
   const [showGifPicker, setShowGifPicker] = useState(false);
@@ -93,7 +95,7 @@ export const EventThreadMediaInput: FC = () => {
       if (fileInputRef.current) fileInputRef.current.value = "";
       if (file === null) return;
 
-      if (file.size > MAX_FILE_SIZE) {
+      if (file.size > capFor(file.type)) {
         set({ mediaUploadError: "FILE_TOO_LARGE", mediaUploading: false });
         return;
       }
@@ -105,6 +107,8 @@ export const EventThreadMediaInput: FC = () => {
 
       const formData = new FormData();
       formData.append("file", file);
+      // Storyboard media: stored under the story, on its own limit.
+      appendUploadPurpose(formData, "storyboard", storyBoardId);
       const uploaded = await uploadMedia(formData);
 
       if (uploaded === API_MESSAGE.MediaError) {
@@ -124,7 +128,7 @@ export const EventThreadMediaInput: FC = () => {
         uploadingImage: null,
       });
     },
-    [set],
+    [capFor, set, storyBoardId],
   );
 
   const handleGifSelect = useCallback(

@@ -9,7 +9,14 @@ import {
   BASIC_ACCENTS,
   MORE_ACCENTS,
 } from "@nw/types/theme";
-import { clamp, cropToEditorState, toCropFilter, VALID_IMAGE_TYPES } from "@nw/utils";
+import {
+  clamp,
+  cropToEditorState,
+  fileTooLargeMessage,
+  toCropFilter,
+  uploadCapsHint,
+  VALID_IMAGE_TYPES,
+} from "@nw/utils";
 import { RadioGroup, Separator } from "radix-ui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BsArrowLeft } from "react-icons/bs";
@@ -22,6 +29,7 @@ import BannerCropDialog from "@/components/dialog/banner-crop-dialog";
 import { ProfileSongPlayer } from "@/components/profile-song";
 import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks/use-ui-context";
+import { useUploadCaps } from "@/hooks/use-upload-caps";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import { API_MESSAGE } from "@/utils/constants";
@@ -37,8 +45,6 @@ import {
 import { SongPickerDialog } from "./song-picker-dialog";
 import * as S from "./styled";
 import { useProfileSave } from "./use-profile-save";
-
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 /**
  * Build an ImageCropFilter from background-position state.
@@ -64,6 +70,8 @@ export function AppearanceSection({ onBack }: Props) {
   const setProfileState = useProfileStoreSet();
   const { saveAll, loading } = useProfileSave();
   const { uploadMedia } = useUploadMedia();
+  // The service's cap for the file's family (AWS_COST_SECURITY_PLAN.md D7).
+  const { capFor, caps } = useUploadCaps();
   const { successToast, errorToast } = useUIContext();
 
   const [profileSong, setProfileSong] = useState<ProfileSong | null>(null);
@@ -178,8 +186,8 @@ export function AppearanceSection({ onBack }: Props) {
       setError("File type not supported. Allowed: .png, .jpg, .gif");
       return;
     }
-    if (file.size > MAX_FILE_SIZE) {
-      setError("File too large (max 10 MB).");
+    if (file.size > capFor(file.type)) {
+      setError(fileTooLargeMessage(capFor(file.type)));
       return;
     }
 
@@ -305,8 +313,8 @@ export function AppearanceSection({ onBack }: Props) {
       setError("File type not supported. Allowed: .png, .jpg, .gif");
       return;
     }
-    if (file.size > MAX_FILE_SIZE) {
-      setError("File too large (max 10 MB).");
+    if (file.size > capFor(file.type)) {
+      setError(fileTooLargeMessage(capFor(file.type)));
       return;
     }
 
@@ -538,7 +546,12 @@ export function AppearanceSection({ onBack }: Props) {
                     <MdOutlineImage size={32} />
                   </S.BannerEmptyIcon>
                   <S.BannerEmptyLabel>Upload a cover banner</S.BannerEmptyLabel>
-                  <S.BannerFormatLine>PNG, JPEG or GIF · Max 10 MB</S.BannerFormatLine>
+                  <S.BannerFormatLine>
+                    PNG, JPEG or GIF
+                    {uploadCapsHint(caps, ["image"])
+                      ? ` · ${uploadCapsHint(caps, ["image"])}`
+                      : ""}
+                  </S.BannerFormatLine>
                 </S.BannerEmptyContent>
               )}
               {displayBannerSrc && (

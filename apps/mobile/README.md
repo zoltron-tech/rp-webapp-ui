@@ -59,6 +59,7 @@ time**. [.env.example](.env.example) lists them with comments.
 | `EXPO_PUBLIC_CHAT_E2E_SECRET` | Every message reads "could not be decrypted". Must equal the web build's `VITE_CHAT_E2E_SECRET` |
 | `EXPO_PUBLIC_CHAT_E2E_ENABLED` | Chat encryption is off |
 | `EXPO_PUBLIC_RP_BUCKET_NAME` | Images download at full size |
+| `EXPO_PUBLIC_RP_MEDIA_HOST` | Media loads straight from S3 instead of the CloudFront media host (fine until that host is live) |
 | `EXPO_PUBLIC_OAUTH_REDIRECT_SCHEME` | Falls back to `novelistworld` (must match `scheme` in `app.json`) |
 | `EXPO_PUBLIC_DISCORD_INVITE_URL`, `EXPO_PUBLIC_SUPPORT_EMAIL`, `EXPO_PUBLIC_WEB_URL` | Those links are missing, or point at production |
 

@@ -6,6 +6,7 @@ import {
   BASIC_ACCENTS,
   MORE_ACCENTS,
 } from "@nw/types/theme";
+import { uploadCapsHint } from "@nw/utils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -28,6 +29,7 @@ import {
   SettingsRow,
 } from "@/components/settings";
 import { useProfileEdit } from "@/hooks/use-profile-edit";
+import { useUploadCaps } from "@/hooks/use-upload-caps";
 import { useProfileSong } from "@/hooks/use-profile-song";
 import { followPalette } from "@/lib/app-icon";
 import { setPalettePreview, usePalettePreview } from "@/lib/palette-preview";
@@ -109,6 +111,8 @@ const PaletteSwatch = ({
 
 export default function AppearanceScreen() {
   const theme = useAppTheme();
+  // The service's image cap, for the hint; left out while unknown.
+  const imageHint = uploadCapsHint(useUploadCaps(), ["image"]);
   const insets = useSafeAreaInsets();
   const { novelist, user } = useSession();
   const edit = useProfileEdit();
@@ -203,7 +207,7 @@ export default function AppearanceScreen() {
         ]}
       >
         <SettingsGroup
-          footer="Tap the cover, your photo or the note to change them. Images: PNG, JPEG or GIF, up to 10 MB."
+          footer={`Tap the cover, your photo or the note to change them. Images: PNG, JPEG or GIF${imageHint ? `, ${imageHint}` : ""}.`}
           title="Profile header"
         >
           <ProfileHeaderEditor edit={edit} novelist={novelist} />

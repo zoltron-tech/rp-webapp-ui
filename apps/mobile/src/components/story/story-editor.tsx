@@ -155,9 +155,11 @@ export const StoryEditor = ({
       setDirty(true);
       return true;
     },
-    // Beside the story's other media once it has an id; a draft's cover
-    // goes under the novelist until then, as web's does.
+    // Beside the story's other media once it has an id, on the storyboard's
+    // own limit; a draft's cover goes under the novelist (personal storage)
+    // until then, as web's does — there is no storyboard to charge yet.
     prefix: id,
+    storyboard: Boolean(id),
   });
 
   const catalogue = useQuery({

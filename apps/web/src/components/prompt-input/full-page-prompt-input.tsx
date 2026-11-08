@@ -429,7 +429,7 @@ const FullPageForm: FC<InnerFormProps> = ({
         <InfoModal
           open={Boolean(error)}
           type="error"
-          description={apiMessageToInfoMessage(error)}
+          description={apiMessageToInfoMessage(error, type)}
           onClose={() => setError(null)}
         />
       </Form.Root>

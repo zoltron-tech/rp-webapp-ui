@@ -12,6 +12,7 @@
     "./*": "./src/*.ts"
   },
   "scripts": {
+    "test": "node --import ../richtext/test/register.mjs --test \"test/**/*.test.ts\"",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {

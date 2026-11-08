@@ -1,6 +1,7 @@
 "use client";
 
 import type { MuseConnectionGroup } from "@nw/types";
+import { fileTooLargeMessage } from "@nw/utils";
 import classNames from "classnames";
 import {
   forwardRef,
@@ -30,6 +31,7 @@ import {
 } from "@/components/rich-text-editor-input";
 import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks/use-ui-context";
+import { useUploadCaps } from "@/hooks/use-upload-caps";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import { API_MESSAGE } from "@/utils/constants";
@@ -67,7 +69,6 @@ export type MuseConnectionFormProps = {
   onStateChange?: (state: MuseConnectionFormState) => void;
 };
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const MAX_TITLE_LENGTH = 25;
 const MAX_MUSES = 10;
 const MIN_MUSES = 2;
@@ -81,6 +82,8 @@ export const MuseConnectionForm = forwardRef<
 ) {
   const { successToast, errorToast } = useUIContext();
   const { uploadMedia } = useUploadMedia();
+  // The service's cap for the file's family (AWS_COST_SECURITY_PLAN.md D7).
+  const { capFor } = useUploadCaps();
   const novelist = useGlobalState("novelist");
   const theme = useGlobalState("theme");
   const accent = useGlobalState("accent");
@@ -259,8 +262,8 @@ export const MuseConnectionForm = forwardRef<
       const file = input.files?.[0] ?? null;
       input.value = "";
       if (!file) return;
-      if (file.size > MAX_FILE_SIZE) {
-        setError("File too large (max 10 MB)");
+      if (file.size > capFor(file.type)) {
+        setError(fileTooLargeMessage(capFor(file.type)));
         return;
       }
       if (!file.type.startsWith("image/")) {
@@ -286,7 +289,7 @@ export const MuseConnectionForm = forwardRef<
       editorRef.current?.replaceImageSrc(objectUrl, url);
       URL.revokeObjectURL(objectUrl);
     },
-    [uploadMedia],
+    [capFor, uploadMedia],
   );
 
   // A friend's muse needs approval → "request"; an all-own-muses connection is

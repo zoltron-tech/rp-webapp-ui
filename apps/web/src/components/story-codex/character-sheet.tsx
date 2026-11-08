@@ -1,7 +1,7 @@
 "use client";
 
 import type { NWImage, StoryCharacter } from "@nw/types";
-import { clamp } from "@nw/utils";
+import { clamp, fileTooLargeMessage } from "@nw/utils";
 import { type FC, useCallback, useEffect, useRef, useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { GrAttachment } from "react-icons/gr";
@@ -15,13 +15,12 @@ import {
   RichTextEditor,
   type RichTextEditorHandle,
 } from "@/components/rich-text-editor-input";
+import { useUploadCaps } from "@/hooks/use-upload-caps";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { API_MESSAGE } from "@/utils/constants";
+import { appendUploadPurpose } from "@/utils/upload-media";
 import { CODEX_COLORS } from "./icons";
 import * as S from "./styles";
-
-/** Matches the other in-editor attachment flows (codex entry, muse about). */
-const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 
 /** The zoom range the crop dialog offers. Mirrors the muse avatar's. */
 const ZOOM_MIN = 1;
@@ -72,6 +71,8 @@ type Props = {
   open: boolean;
   /** Null when creating a new character. */
   character: StoryCharacter | null;
+  /** The story the character belongs to; its portrait is stored under it. */
+  storyboardId: string;
   onClose: () => void;
   onSave: (character: StoryCharacter) => unknown;
   onDelete?: (character: StoryCharacter) => unknown;
@@ -89,6 +90,7 @@ type Props = {
 export const CharacterSheet: FC<Props> = ({
   open,
   character,
+  storyboardId,
   onClose,
   onSave,
   onDelete,
@@ -115,6 +117,8 @@ export const CharacterSheet: FC<Props> = ({
   const [editorKey, setEditorKey] = useState(0);
 
   const { uploadMedia } = useUploadMedia();
+  // The service's cap for the file's family (AWS_COST_SECURITY_PLAN.md D7).
+  const { capFor } = useUploadCaps();
   const editorRef = useRef<RichTextEditorHandle>(null);
   const [uploading, setUploading] = useState(false);
   const [mediaError, setMediaError] = useState<string | null>(null);
@@ -201,8 +205,8 @@ export const CharacterSheet: FC<Props> = ({
       const file = input.files?.[0] ?? null;
       input.value = "";
       if (!file) return;
-      if (file.size > MAX_ATTACHMENT_BYTES) {
-        setMediaError("That file is over 10 MB.");
+      if (file.size > capFor(file.type)) {
+        setMediaError(fileTooLargeMessage(capFor(file.type)));
         return;
       }
       setMediaError(null);
@@ -223,7 +227,8 @@ export const CharacterSheet: FC<Props> = ({
       const formData = new FormData();
       formData.append("file", file);
       formData.append("contentType", file.type);
-      formData.append("prefix", "story-character");
+      // Storyboard media: stored under the story, on its own limit.
+      appendUploadPurpose(formData, "storyboard", storyboardId);
 
       const url = await uploadMedia(formData);
       setUploading(false);
@@ -237,7 +242,7 @@ export const CharacterSheet: FC<Props> = ({
       // adjustment already in progress survives the handover.
       setCropSrc(url);
     },
-    [uploadMedia],
+    [capFor, storyboardId, uploadMedia],
   );
 
   /** Commits the framing as the character's avatar. */

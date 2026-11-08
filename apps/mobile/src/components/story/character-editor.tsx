@@ -125,7 +125,9 @@ export const CharacterEditor = ({
       dirtyAvatar.current = true;
       return true;
     },
+    // Storyboard media: under the story, on the storyboard's own limit.
     prefix: storyId,
+    storyboard: true,
   });
 
   const trimmed = firstName.trim();
@@ -379,6 +381,7 @@ export const CharacterEditor = ({
           setWriting(false);
         }}
         placeholder="Who are they in this story?"
+        storyboardId={storyId}
         title="About"
         visible={writing}
       />

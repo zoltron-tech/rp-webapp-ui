@@ -3,7 +3,13 @@
 import { ShouldRender } from "@novelist-world/ui";
 import type { ImageCropFilter, NWImage } from "@nw/types";
 import type { ProfileSong } from "@nw/types/music";
-import { clamp, cropToEditorState, toCropFilter, VALID_IMAGE_TYPES } from "@nw/utils";
+import {
+  clamp,
+  cropToEditorState,
+  fileTooLargeMessage,
+  toCropFilter,
+  VALID_IMAGE_TYPES,
+} from "@nw/utils";
 import { Form, Separator } from "radix-ui";
 import {
   type FormEventHandler,
@@ -31,6 +37,7 @@ import { deleteMedia } from "@/app/rp/profile/actions";
 import { SongPickerDialog } from "@/app/rp/profile/edit/song-picker-dialog";
 import { ProfileSongPlayer } from "@/components/profile-song";
 import { useUIContext } from "@/hooks/use-ui-context";
+import { useUploadCaps } from "@/hooks/use-upload-caps";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { API_MESSAGE } from "@/utils/constants";
 import { AvatarUploadField } from "../common/avatar-upload-field";
@@ -43,8 +50,6 @@ import { PromptPrivacySelect } from "../prompt-input/privacy-select";
 import { type MuseState, useMuseState, useMuseStoreSet } from "./muse.store";
 import * as S from "./styled";
 import { useMuseSave } from "./use-muse-save";
-
-const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
 const PRIVACY_LABELS: Record<string, string> = {
   CUSTOM: "Custom",
@@ -119,6 +124,8 @@ export function AppearanceSection({
   const setMuseState = useMuseStoreSet();
   const { save, loading } = useMuseSave();
   const { uploadMedia } = useUploadMedia();
+  // The service's image cap: pictures only here (AWS_COST_SECURITY_PLAN.md D7).
+  const { capFor } = useUploadCaps();
   const { successToast, errorToast } = useUIContext();
 
   const [songDialogOpen, setSongDialogOpen] = useState(false);
@@ -272,8 +279,8 @@ export function AppearanceSection({
         setMediaError("File type not supported. Allowed: .png, .jpg, .gif");
         return;
       }
-      if (file.size > MAX_FILE_SIZE) {
-        setMediaError("File too large (max 50 MB).");
+      if (file.size > capFor(file.type)) {
+        setMediaError(fileTooLargeMessage(capFor(file.type)));
         return;
       }
       setMediaError(null);
@@ -301,7 +308,7 @@ export function AppearanceSection({
       setAvatarTempUpload(url);
       setPendingAvatarSrc(url);
     },
-    [id, avatarTempUpload, uploadMedia],
+    [capFor, id, avatarTempUpload, uploadMedia],
   );
 
   // Dragging is handled imperatively inside AvatarCropDialog; it commits the
@@ -425,8 +432,8 @@ export function AppearanceSection({
         setMediaError("File type not supported. Allowed: .png, .jpg, .gif");
         return;
       }
-      if (file.size > MAX_FILE_SIZE) {
-        setMediaError("File too large (max 50 MB).");
+      if (file.size > capFor(file.type)) {
+        setMediaError(fileTooLargeMessage(capFor(file.type)));
         return;
       }
       setMediaError(null);
@@ -469,7 +476,7 @@ export function AppearanceSection({
       setMuseMedia((prev) => (prev.includes(url) ? prev : [url, ...prev]));
       setPickerTarget(null);
     },
-    [pickerTarget, tempFilterValues, id, uploadMedia],
+    [capFor, pickerTarget, tempFilterValues, id, uploadMedia],
   );
 
   const handleMediaSelect = useCallback(

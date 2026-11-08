@@ -494,6 +494,7 @@ export default function CodexScreen() {
               // Follow the entry if it was filed under another category.
               setTab(saved.categoryId);
             }}
+            storyId={storyId}
             visible={entryEditor !== null}
           />
           <CharacterEditor

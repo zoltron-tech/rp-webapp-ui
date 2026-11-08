@@ -5,6 +5,7 @@ import {
   type PromptSource,
   type SubmitPromptInput,
 } from "@nw/types";
+import { tooManyMediaMessage } from "@nw/utils";
 import { randomUUID } from "expo-crypto";
 
 /**
@@ -98,6 +99,8 @@ export const submitErrorText = (message: API_MESSAGE | string): string => {
       return "Invalid input provided. Please check your data.";
     case API_MESSAGE.AccessDenied:
       return "You do not have permission to perform this action.";
+    case API_MESSAGE.TooManyMedia:
+      return tooManyMediaMessage();
     default:
       return "An unexpected error occurred.";
   }

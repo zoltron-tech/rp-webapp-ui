@@ -1,4 +1,6 @@
+import { isTooManyMedia } from "@nw/api/endpoints/prompt";
 import type { MentionDataItem, MentionTab } from "@nw/types";
+import { tooManyMediaMessage } from "@nw/utils";
 import { type FC, useCallback, useEffect, useMemo, useState } from "react";
 import { searchMentionMusesAction } from "@/app/rp/muse/actions";
 import { updatePromptCommentAction } from "@/app/rp/prompt/actions";
@@ -110,7 +112,11 @@ export const UpdatePromptForm: FC<UpdatePromptProps> = ({
       setOpen(false);
     } else {
       // Stay open with the edit intact so it can be retried.
-      errorToast("There was an issue while updating this comment.");
+      errorToast(
+        isTooManyMedia(response)
+          ? tooManyMediaMessage(type)
+          : "There was an issue while updating this comment.",
+      );
     }
   };
 

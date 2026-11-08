@@ -8,6 +8,7 @@ import {
 import { queryKeys, useApi } from "@nw/features";
 import { API_MESSAGE } from "@nw/types";
 import type { Song } from "@nw/types/music";
+import { uploadCapsHint } from "@nw/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -35,8 +36,14 @@ import {
 import { Text, TextInput } from "@/components/text";
 import { useTabBarContentStyle, useTabBarScroll } from "@/context/tab-bar";
 import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
+import { useUploadCaps } from "@/hooks/use-upload-caps";
 import { withAlpha } from "@/lib/color";
-import { type PickedMedia, pickAudio, uploadFile } from "@/lib/media-upload";
+import {
+  type PickedMedia,
+  pickAudio,
+  pickedOversizeMessage,
+  uploadFile,
+} from "@/lib/media-upload";
 import { CODEX_COLORS } from "@/lib/story-mesh";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
@@ -51,9 +58,6 @@ import { border, fontSize, radius, space, useAppTheme } from "@/theme";
  * playback slot, rather than web's global player: a bar over every screen has
  * no room at this size, and leaving the screen stops a song as it stops a clip.
  */
-
-/** Web's limit. */
-const MAX_FILE_BYTES = 50 * 1024 * 1024;
 
 const keyExtractor = (song: Song) => song.id;
 
@@ -76,6 +80,8 @@ const SongEditor = ({
 }) => {
   const theme = useAppTheme();
   const api = useApi();
+  // The service's audio cap, for the hint; left out while unknown.
+  const audioHint = uploadCapsHint(useUploadCaps(), ["audio"]);
   const fieldStyle = useFieldStyle();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -106,8 +112,10 @@ const SongEditor = ({
       return;
     }
     if (!picked) return;
-    if (picked.fileSize > MAX_FILE_BYTES) {
-      setError("The selected file is too large. The maximum size is 50 MB.");
+    // The service's audio cap (AWS_COST_SECURITY_PLAN.md D7).
+    const tooLarge = await pickedOversizeMessage(api, picked);
+    if (tooLarge) {
+      setError(tooLarge);
       return;
     }
     setFile(picked);
@@ -137,11 +145,15 @@ const SongEditor = ({
     if (song) {
       result = await updateSong(api, song.id, input).catch(() => null);
     } else {
-      // Audio: never screened, so never `rejected`.
-      const url = file ? (await uploadFile(api, file)).url : null;
+      // Audio: never screened, so never `rejected`. A refusal (size cap,
+      // today's limit, storage full) has already been explained in an alert.
+      const uploaded = file ? await uploadFile(api, file) : null;
+      const url = uploaded?.url ?? null;
       if (!url) {
         setBusy(false);
-        setError("The song could not be uploaded. Please try again.");
+        if (!uploaded?.refused) {
+          setError("The song could not be uploaded. Please try again.");
+        }
         return;
       }
       result = await createSong(api, { ...input, url }).catch(() => null);
@@ -177,7 +189,7 @@ const SongEditor = ({
               label={file ? file.name : "Choose an audio file"}
               onPress={() => void choose()}
             />
-            <Hint>Up to 50 MB.</Hint>
+            {audioHint ? <Hint>{`Audio files, ${audioHint}.`}</Hint> : null}
             {/* APP_STORE_REVIEW_PLAN.md M12: uploads are the uploader's
                 responsibility, and they are told so before they pick a file. */}
             <Hint>

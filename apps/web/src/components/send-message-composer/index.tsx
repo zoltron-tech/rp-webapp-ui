@@ -2,7 +2,12 @@
 
 import type { MentionDataItem, Muse, Novelist } from "@nw/types";
 import type { Message } from "@nw/types/conversation";
-import { personName } from "@nw/utils";
+import {
+  capForType,
+  formatBytes,
+  personName,
+  type UploadCaps,
+} from "@nw/utils";
 import type { EmojiClickData } from "emoji-picker-react";
 import { Theme as EmojiTheme } from "emoji-picker-react";
 import type { FC, FormEvent } from "react";
@@ -24,6 +29,7 @@ import { GifPicker } from "@/components/gif-picker";
 import { StickerPicker } from "@/components/sticker-picker";
 import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks/use-ui-context";
+import { useUploadCaps } from "@/hooks/use-upload-caps";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { dynamic } from "@/lib/dynamic";
 import { namesToWords } from "@nw/spell/tokenizer";
@@ -43,7 +49,6 @@ export type ComposerSender = {
 };
 
 const MAX_MEDIA_FILES = 10;
-const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
 const ALLOWED_MEDIA_TYPES = new Set([
   "image/png",
   "image/jpeg",
@@ -55,7 +60,15 @@ const MEDIA_ACCEPT = "image/png,image/jpeg,image/gif,image/webp,video/mp4";
 
 type FileValidationResult = { valid: File[]; errors: string[] };
 
-const validateMediaFiles = (files: File[]): FileValidationResult => {
+/**
+ * Type and size, before anything uploads. Size is held to the service's cap
+ * for the file's family (`caps` from `/s3/usage`); with the caps unknown,
+ * nothing is refused on size here and the upload helper and service decide.
+ */
+const validateMediaFiles = (
+  files: File[],
+  caps: UploadCaps | null,
+): FileValidationResult => {
   const valid: File[] = [];
   const errors: string[] = [];
   for (const f of files) {
@@ -63,8 +76,10 @@ const validateMediaFiles = (files: File[]): FileValidationResult => {
       errors.push(
         `"${f.name}" — unsupported type. Allowed: PNG, JPG, GIF, WebP, MP4.`,
       );
-    } else if (f.size > MAX_FILE_SIZE_BYTES) {
-      errors.push(`"${f.name}" — exceeds the 50 MB size limit.`);
+    } else if (f.size > capForType(f.type, caps)) {
+      errors.push(
+        `"${f.name}" — exceeds the ${formatBytes(capForType(f.type, caps))} size limit.`,
+      );
     } else {
       valid.push(f);
     }
@@ -96,9 +111,10 @@ const MediaPickerBody: FC<MediaPickerBodyProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const remaining = MAX_MEDIA_FILES - mediaFiles.length;
   const [errors, setErrors] = useState<string[]>([]);
+  const { caps } = useUploadCaps();
 
   const applyValidated = (raw: File[]) => {
-    const { valid, errors: errs } = validateMediaFiles(raw);
+    const { valid, errors: errs } = validateMediaFiles(raw, caps);
     const allowed = valid.slice(0, remaining);
     const overflowErrors =
       valid.length > remaining
@@ -371,6 +387,7 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
   }, []);
 
   const { uploadMedia } = useUploadMedia();
+  const { caps: uploadCaps } = useUploadCaps();
   const { errorToast } = useUIContext();
 
   const addMediaFiles = useCallback(
@@ -649,6 +666,7 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
                     onChange={(e) => {
                       const { valid } = validateMediaFiles(
                         Array.from(e.target.files ?? []),
+                        uploadCaps,
                       );
                       const remaining = MAX_MEDIA_FILES - mediaFiles.length;
                       const allowed = valid.slice(0, remaining);

@@ -3,7 +3,7 @@
 import { ShouldRender } from "@novelist-world/ui";
 import type { Muse } from "@nw/types";
 import type { MediaMetadata } from "@nw/types/activity";
-import { pluralize } from "@nw/utils";
+import { formatBytes, pluralize, uploadCapsHint } from "@nw/utils";
 import { reverseWsrvUrl } from "@nw/utils/image";
 import classNames from "classnames";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -37,6 +37,7 @@ import { useGlobalState } from "@/context/store/stores";
 import { classifyUrlForUpload } from "@/hooks/use-nsfw-check";
 import { useToggleLike } from "@/hooks/use-toggle-like";
 import { useUIContext } from "@/hooks/use-ui-context";
+import { useUploadCaps } from "@/hooks/use-upload-caps";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { API_MESSAGE } from "@/utils/constants";
 import { getMuseAppearance } from "../appearance";
@@ -608,8 +609,6 @@ const VALID_TYPES = [
   "video/mp4",
   "video/quicktime",
 ];
-const MAX_FILE_SIZE = 30 * 1024 * 1024;
-
 type PendingFile = {
   file: File;
   previewUrl: string;
@@ -627,6 +626,9 @@ function UploadPanel({
   onUploaded: (urls: string[]) => void;
 }) {
   const { uploadMedia } = useUploadMedia();
+  // The service's caps per family (AWS_COST_SECURITY_PLAN.md D7).
+  const { capFor, caps } = useUploadCaps();
+  const capsHint = uploadCapsHint(caps, ["image", "video"]);
   const { successToast, errorToast } = useUIContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
@@ -655,8 +657,9 @@ function UploadPanel({
           setError("Unsupported type. Allowed: PNG, JPG, GIF, WEBP, MP4, MOV.");
           continue;
         }
-        if (file.size > MAX_FILE_SIZE) {
-          setError("A file exceeds the 30 MB limit.");
+        const cap = capFor(file.type);
+        if (file.size > cap) {
+          setError(`A file is over the ${formatBytes(cap)} limit.`);
           continue;
         }
         const isVideo =
@@ -694,7 +697,7 @@ function UploadPanel({
         });
       }
     },
-    [existingCount, pendingFiles.length],
+    [capFor, existingCount, pendingFiles.length],
   );
 
   const removePending = useCallback((index: number) => {
@@ -825,7 +828,7 @@ function UploadPanel({
 
       <UploadHint>
         {existingCount < MAX_TOTAL
-          ? `You can add up to ${MAX_TOTAL - existingCount} more file${MAX_TOTAL - existingCount === 1 ? "" : "s"} · PNG, JPG, GIF, WEBP, MP4, MOV · max 30 MB each`
+          ? `You can add up to ${MAX_TOTAL - existingCount} more file${MAX_TOTAL - existingCount === 1 ? "" : "s"} · PNG, JPG, GIF, WEBP, MP4, MOV${capsHint ? ` · ${capsHint}` : ""}`
           : `Gallery full — ${MAX_TOTAL} files maximum.`}
       </UploadHint>
 

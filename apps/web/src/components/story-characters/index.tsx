@@ -261,6 +261,7 @@ export const StoryCharacters: FC<Props> = ({ storyboardId, cast, canEdit }) => {
       <CharacterSheet
         open={editing !== null}
         character={editing}
+        storyboardId={storyboardId}
         onClose={() => setEditing(null)}
         onSave={handleSaveCharacter}
       />

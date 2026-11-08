@@ -57,6 +57,7 @@ export const EntryEditor = ({
   entry,
   onClose,
   onSaved,
+  storyId,
   visible,
 }: {
   categories: CodexCategory[];
@@ -68,6 +69,8 @@ export const EntryEditor = ({
   entry: CodexEntry | null;
   onClose: () => void;
   onSaved: (entry: CodexEntry) => void;
+  /** The story, where pictures in the description are stored. */
+  storyId: string | undefined;
   visible: boolean;
 }) => {
   const theme = useAppTheme();
@@ -237,6 +240,7 @@ export const EntryEditor = ({
           setWriting(false);
         }}
         placeholder="What is it, and why does it matter?"
+        storyboardId={storyId}
         title="Description"
         visible={writing}
       />

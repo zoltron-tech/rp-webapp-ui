@@ -3,6 +3,7 @@
 import { ShouldRender } from "@novelist-world/ui";
 import type { Tag } from "@nw/types/common";
 import type { Song } from "@nw/types/music";
+import { fileTooLargeMessage } from "@nw/utils";
 import { Form } from "radix-ui";
 import {
   type FormEventHandler,
@@ -22,6 +23,7 @@ import { syncMyBadgesAction } from "@/app/rp/profile/badges/actions";
 import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
+import { useUploadCaps } from "@/hooks/use-upload-caps";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { API_MESSAGE } from "@/utils/constants";
 import { SUPPORT_EMAIL_URL } from "@/utils/constants/common";
@@ -60,12 +62,8 @@ const ERROR_MAP: Record<ErrorKey, ReactNode> = {
       </p>
     </>
   ),
-  [API_MESSAGE.FileTooLarge]: (
-    <p>
-      The selected file is too large. Maximum allowed size is{" "}
-      <strong>20 MB</strong>.
-    </p>
-  ),
+  // The number, when known, is added where this renders (the service's cap).
+  [API_MESSAGE.FileTooLarge]: <p>The selected file is too large.</p>,
   [API_MESSAGE.MediaError]: (
     <p>
       File type is not supported. Allowed file types are{" "}
@@ -75,7 +73,8 @@ const ERROR_MAP: Record<ErrorKey, ReactNode> = {
 };
 
 export default function EditMusicDataCard() {
-  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+  // The service's audio cap (AWS_COST_SECURITY_PLAN.md D7).
+  const { capFor } = useUploadCaps();
   const novelist = useGlobalState("novelist");
   const id = useMusicState("id");
   const name = useMusicState("name");
@@ -101,7 +100,7 @@ export default function EditMusicDataCard() {
   //File management
   const checkFileSize = (file: File | undefined): boolean => {
     if (!file) return false;
-    if (file.size > MAX_FILE_SIZE) {
+    if (file.size > capFor(file.type)) {
       setMediaError(API_MESSAGE.FileTooLarge);
       return true;
     }
@@ -399,7 +398,14 @@ export default function EditMusicDataCard() {
         </S.FormSection>
 
         <ShouldRender if={mediaError != null}>
-          <ErrorBox>{ERROR_MAP[mediaError!]}</ErrorBox>
+          <ErrorBox>
+            {mediaError === API_MESSAGE.FileTooLarge &&
+            Number.isFinite(capFor("audio/mpeg")) ? (
+              <p>{fileTooLargeMessage(capFor("audio/mpeg"))}</p>
+            ) : (
+              ERROR_MAP[mediaError!]
+            )}
+          </ErrorBox>
         </ShouldRender>
 
         <ShouldRender if={mediaTypeError != null}>

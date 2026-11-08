@@ -316,6 +316,7 @@ export const NoteEditor = ({
   note,
   onClose,
   onMove,
+  storyId,
   visible,
 }: {
   board: StoryNotes;
@@ -325,6 +326,8 @@ export const NoteEditor = ({
   note: StoryNote | null;
   onClose: () => void;
   onMove?: (note: StoryNote, by: -1 | 1) => void;
+  /** The story, where pictures in the note are stored. */
+  storyId: string | undefined;
   visible: boolean;
 }) => {
   const theme = useAppTheme();
@@ -565,6 +568,7 @@ export const NoteEditor = ({
           setWriting(false);
         }}
         placeholder="Anything your co-authors should know…"
+        storyboardId={storyId}
         title={isPoll ? "Context" : "Note"}
         visible={writing}
       />

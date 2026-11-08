@@ -12,6 +12,12 @@ type MediaUploadError = "UPLOAD_FAILED" | "FILE_TOO_LARGE" | null;
 
 export type EventThreadInputState = {
   storyBoardEventId: string;
+  /**
+   * The storyboard the chapter belongs to: pictures in a passage are
+   * storyboard media, stored under it and charged to its own limit. Empty
+   * until known, and an upload then fails rather than land under the account.
+   */
+  storyBoardId: string;
   /** Set when editing an existing thread; null when composing a new one. */
   threadId: string | null;
   /** Rich text HTML (may contain embedded muse dialogs). */
@@ -39,6 +45,7 @@ export const INITIAL_STATE: EventThreadInputState = {
   mediaUploading: false,
   promptText: "",
   storyBoardEventId: "",
+  storyBoardId: "",
   threadId: null,
   uploadedImage: null,
   uploadFailedImage: null,

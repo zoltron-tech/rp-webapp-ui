@@ -1,6 +1,7 @@
 "use client";
 
 import type { StoryNote, StoryNoteType } from "@nw/types";
+import { fileTooLargeMessage } from "@nw/utils";
 import { type FC, useCallback, useEffect, useRef, useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { GrAttachment } from "react-icons/gr";
@@ -27,17 +28,16 @@ import {
 } from "@/components/rich-text-editor-input";
 import { RichTextRenderer } from "@/components/rich-text-editor-input/rich-test-renderer";
 import { PushPinIcon } from "@/components/user-menu/user-menu-icons";
+import { useUploadCaps } from "@/hooks/use-upload-caps";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import { API_MESSAGE } from "@/utils/constants";
 import { toFormattedDate } from "@/utils/helpers";
 import { toPlainText } from "@/utils/rich-text";
+import { appendUploadPurpose } from "@/utils/upload-media";
 import { Ballot, inBallotOrder, votesLabel } from "./ballot";
 import { NOTE_COLORS } from "./colors";
 import * as S from "./styles";
-
-/** Matches the other in-editor attachment flows (codex, muse about, profile). */
-const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 
 /** Mirrors the server's ballot rules, so the save button matches the backend. */
 const MIN_POLL_OPTIONS = 2;
@@ -81,6 +81,8 @@ type Props = {
   open: boolean;
   /** Null when composing a new note. */
   note: StoryNote | null;
+  /** The story the note is on; attachments are stored under it. */
+  storyboardId: string;
   /** What a brand-new sticky starts as. */
   initialType?: StoryNoteType;
   onClose: () => void;
@@ -113,6 +115,7 @@ type Props = {
 export const NoteSheet: FC<Props> = ({
   open,
   note,
+  storyboardId,
   initialType = "NOTE",
   onClose,
   onSave,
@@ -137,6 +140,8 @@ export const NoteSheet: FC<Props> = ({
   const [editorKey, setEditorKey] = useState(0);
 
   const { uploadMedia } = useUploadMedia();
+  // The service's cap for the file's family (AWS_COST_SECURITY_PLAN.md D7).
+  const { capFor } = useUploadCaps();
   const { width } = useWindowDimensions();
   const isNarrow = (width ?? 1024) <= 700;
   const editorRef = useRef<RichTextEditorHandle>(null);
@@ -173,8 +178,8 @@ export const NoteSheet: FC<Props> = ({
       const file = input.files?.[0] ?? null;
       input.value = "";
       if (!file) return;
-      if (file.size > MAX_ATTACHMENT_BYTES) {
-        setMediaError("That file is over 10 MB.");
+      if (file.size > capFor(file.type)) {
+        setMediaError(fileTooLargeMessage(capFor(file.type)));
         return;
       }
       setMediaError(null);
@@ -186,7 +191,8 @@ export const NoteSheet: FC<Props> = ({
       const formData = new FormData();
       formData.append("file", file);
       formData.append("contentType", file.type);
-      formData.append("prefix", "story-note");
+      // Storyboard media: stored under the story, on its own limit.
+      appendUploadPurpose(formData, "storyboard", storyboardId);
 
       const url = await uploadMedia(formData);
       setUploading(false);
@@ -200,7 +206,7 @@ export const NoteSheet: FC<Props> = ({
       editorRef.current?.replaceImageSrc(objectUrl, url);
       URL.revokeObjectURL(objectUrl);
     },
-    [uploadMedia],
+    [capFor, storyboardId, uploadMedia],
   );
 
   // A saved note is read first; only a brand-new one opens in the editor.

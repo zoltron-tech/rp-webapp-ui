@@ -19,14 +19,16 @@ import {
   MediaTray,
   type TrayTab,
 } from "@/components/send-message-composer/media-tray";
+import { useUploadCaps } from "@/hooks/use-upload-caps";
 import { API_MESSAGE } from "@/utils/constants";
-import { uploadMedia } from "@/utils/upload-media";
+import { appendUploadPurpose, uploadMedia } from "@/utils/upload-media";
 import { PromptEvent, useRunOn } from "./helpers";
 import {
   usePromptInputState,
   usePromptInputStoreSet,
 } from "./prompt-input.store";
 import * as S from "./styles";
+import { usePostMediaRoom } from "./use-post-media-room";
 
 /** Tracks whether the viewport is at a mobile width. */
 const useIsMobile = () => {
@@ -42,11 +44,15 @@ const useIsMobile = () => {
 };
 
 export const PromptMediaInput: FC = () => {
-  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+  // The service's cap for the file's family (AWS_COST_SECURITY_PLAN.md D7).
+  const { capFor } = useUploadCaps();
   const mediaUploadError = usePromptInputState("mediaUploadError");
   const media = usePromptInputState("media");
   const mediaUploading = usePromptInputState("mediaUploading");
   const set = usePromptInputStoreSet();
+  // Five media items at most per prompt, comment or reply.
+  const room = usePostMediaRoom();
+  const { ensureRoom } = room;
 
   const isMobile = useIsMobile();
   const [showGifPicker, setShowGifPicker] = useState(false);
@@ -98,9 +104,11 @@ export const PromptMediaInput: FC = () => {
       // Reset the input so the same file can be re-selected after an error
       if (fileInputRef.current) fileInputRef.current.value = "";
       if (file === null) return;
+      // The post's media limit, in case it filled while the picker was open.
+      if (!ensureRoom()) return;
 
       // 🔴 SIZE CHECK
-      if (file.size > MAX_FILE_SIZE) {
+      if (file.size > capFor(file.type)) {
         set({
           media: null,
           mediaUploadError: "FILE_TOO_LARGE",
@@ -118,6 +126,8 @@ export const PromptMediaInput: FC = () => {
 
         const formData = new FormData();
         formData.append("file", file);
+        // Post media: not the account's storage.
+        appendUploadPurpose(formData, "post");
         const uploaded = await uploadMedia(formData);
 
         if (uploaded === API_MESSAGE.MediaError) {
@@ -143,6 +153,8 @@ export const PromptMediaInput: FC = () => {
 
         const formData = new FormData();
         formData.append("file", file);
+        // Post media: not the account's storage.
+        appendUploadPurpose(formData, "post");
         const uploaded = await uploadMedia(formData);
 
         if (uploaded === API_MESSAGE.MediaError) {
@@ -154,7 +166,7 @@ export const PromptMediaInput: FC = () => {
         set({ mediaUploadError: null, mediaUploading: false });
       }
     },
-    [urlInputRef, set],
+    [urlInputRef, set, capFor, ensureRoom],
   );
 
   useEffect(() => {
@@ -165,27 +177,44 @@ export const PromptMediaInput: FC = () => {
 
   const handleGifSelect = useCallback(
     (gifUrl: string) => {
-      set({ gifToInsert: gifUrl });
       setShowGifPicker(false);
       setTrayTab(null);
+      // A GIF is a media item too.
+      if (!ensureRoom()) return;
+      set({ gifToInsert: gifUrl });
     },
-    [set],
+    [ensureRoom, set],
   );
 
   const handleGifButtonClick = useCallback(() => {
+    // Closing the tray is always allowed; opening a picker needs room.
+    if (isMobile && trayTab === "gif") {
+      setTrayTab(null);
+      return;
+    }
+    if (!ensureRoom()) return;
     if (isMobile) {
-      setTrayTab((prev) => (prev === "gif" ? null : "gif"));
+      setTrayTab("gif");
     } else {
       setShowGifPicker(true);
     }
-  }, [isMobile]);
+  }, [ensureRoom, isMobile, trayTab]);
 
   return (
     <>
       <S.MediaActions>
         <S.MediaSelect name="media">
           {showUploadButton && (
-            <Form.Label className="form-label" tabIndex={0}>
+            <Form.Label
+              className="form-label"
+              tabIndex={0}
+              aria-disabled={room.full || undefined}
+              title={room.full ? room.message : undefined}
+              // At the limit the file picker does not open; the toast says why.
+              onClick={(event) => {
+                if (!ensureRoom()) event.preventDefault();
+              }}
+            >
               <GrAttachment />
             </Form.Label>
           )}
@@ -203,6 +232,8 @@ export const PromptMediaInput: FC = () => {
         <S.ToolButton
           type="button"
           aria-label="Insert GIF"
+          aria-disabled={room.full || undefined}
+          title={room.full ? room.message : undefined}
           onClick={handleGifButtonClick}
         >
           <MdGif />

@@ -5,6 +5,7 @@ import type { NWImage } from "@nw/types";
 import {
   clamp,
   cropToEditorState,
+  fileTooLargeMessage,
   toCropFilter,
   VALID_IMAGE_TYPES,
 } from "@nw/utils";
@@ -25,6 +26,7 @@ import AvatarCropDialog from "@/components/dialog/avatar-crop-dialog";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
+import { useUploadCaps } from "@/hooks/use-upload-caps";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
@@ -32,8 +34,6 @@ import { deleteMedia } from "../actions";
 import { useProfileState, useProfileStoreSet } from "./profile.store";
 import * as S from "./styled";
 import { useProfileSave } from "./use-profile-save";
-
-const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 /**
  * Build an ImageCropFilter from background-position state.
@@ -61,6 +61,8 @@ export function LandingSection({ onSelect }: Props) {
   const { saveNovelist, loading } = useProfileSave();
   const { successToast } = useUIContext();
   const { uploadMedia } = useUploadMedia();
+  // The service's image cap (AWS_COST_SECURITY_PLAN.md D7).
+  const { capFor } = useUploadCaps();
   const { routeToPage } = usePageRouter();
 
   const [error, setError] = useState<string | null>(null);
@@ -145,8 +147,8 @@ export function LandingSection({ onSelect }: Props) {
       setError("File type not supported. Allowed: .png, .jpg, .gif");
       return;
     }
-    if (file.size > MAX_FILE_SIZE) {
-      setError("File too large (max 10 MB).");
+    if (file.size > capFor(file.type)) {
+      setError(fileTooLargeMessage(capFor(file.type)));
       return;
     }
 

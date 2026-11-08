@@ -125,24 +125,120 @@ const bucketName = (): string =>
   process.env.RP_BUCKET_NAME || process.env.EXPO_PUBLIC_RP_BUCKET_NAME || "";
 
 /**
- * Returns true when `url` is a virtual-hosted-style S3 URL belonging to our
- * bucket.  Accepts both the global endpoint and any regional variant:
- *   https://<bucket>.s3.amazonaws.com/…
- *   https://<bucket>.s3.<region>.amazonaws.com/…
+ * The bucket `toMediaUrl` rewrites: the configured one, else production's.
+ * The media host fronts exactly one bucket, so when it is set the production
+ * name is the right default even in a build that forgot `RP_BUCKET_NAME`.
  */
-const isOurS3Url = (url: string): boolean => {
-  const bucket = bucketName();
-  if (!bucket) return false;
-  const afterHttps = url.startsWith("https://") ? url.slice(8) : null;
-  if (!afterHttps?.startsWith(`${bucket}.s3`)) return false;
-  const rest = afterHttps.slice(bucket.length + 3); // past "<bucket>.s3"
-  // global:   .amazonaws.com/…
-  // regional: .<region>.amazonaws.com/…
-  return (
-    rest.startsWith(".amazonaws.com/") ||
-    /^\.[a-z0-9-]+\.amazonaws\.com\//.test(rest)
-  );
+const mediaBucketName = (): string => bucketName() || "rp-webapp-ui";
+
+/** The bucket whose S3 URLs count as ours: {@link mediaBucketName} once a media host is set. */
+const ourBucket = (): string =>
+  mediaHost() || chatMediaHost() ? mediaBucketName() : bucketName();
+
+/** A host as configured, bare: no scheme, no trailing slash, `""` when unset. */
+const bareHost = (value: string | null | undefined): string =>
+  (value ?? "")
+    .trim()
+    .replace(/^https?:\/\//, "")
+    .replace(/\/+$/, "");
+
+/**
+ * The hosts the service reported under `limits` on `GET /s3/usage`
+ * (AWS_COST_SECURITY_PLAN.md §3.2), set by `@nw/api`'s limits loader. Empty
+ * until it has run, and for each host the service reports as `null`.
+ */
+const serverHosts = { chat: "", media: "" };
+
+/**
+ * Hands the service's media hosts to the URL helpers below. `mediaHost` wins
+ * over the build's `RP_MEDIA_HOST` when set; `chatMediaHost` is the only way
+ * chat media (`chat-media/` keys) moves off its bucket address, so chat keeps
+ * its current host until the service names one, and switching it later is
+ * configuration alone. Pass `null` for either to clear it.
+ */
+export const setMediaHosts = (hosts: {
+  mediaHost?: string | null;
+  chatMediaHost?: string | null;
+}): void => {
+  serverHosts.media = bareHost(hosts.mediaHost);
+  serverHosts.chat = bareHost(hosts.chatMediaHost);
 };
+
+/**
+ * The CloudFront media host (`media.novelist.world`), bare — no scheme, no
+ * slash — or `""` when unset (AWS_COST_SECURITY_PLAN.md §3.2). The service's
+ * `limits.mediaHost` ({@link setMediaHosts}) first, then the build's variable,
+ * which stays as the fallback for local development.
+ *
+ * Same rule as {@link bucketName}: both reads are literal `process.env.X`
+ * expressions because Vite and Metro substitute them at build time. Web
+ * defines both in `vite.config.ts`; Metro inlines only the `EXPO_PUBLIC_` one.
+ * Unset means every helper below behaves exactly as before — the safe rollout.
+ */
+const mediaHost = (): string =>
+  serverHosts.media ||
+  bareHost(process.env.RP_MEDIA_HOST || process.env.EXPO_PUBLIC_RP_MEDIA_HOST);
+
+/** The chat media host, from the service only; `""` keeps chat on the bucket. */
+const chatMediaHost = (): string => serverHosts.chat;
+
+/** Chat attachments live under this prefix (14-day lifecycle expiry). */
+const CHAT_MEDIA_PREFIX = "chat-media/";
+
+/** The host an object key is served from: chat keys by the chat host, the rest by the media host. */
+const hostForKey = (key: string): string =>
+  key.startsWith(CHAT_MEDIA_PREFIX) ? chatMediaHost() : mediaHost();
+
+/**
+ * The object key when `url` is a virtual-hosted-style S3 URL of `bucket`, on
+ * the global endpoint or any regional one; otherwise `null`.
+ *   https://<bucket>.s3.amazonaws.com/<key>
+ *   https://<bucket>.s3.<region>.amazonaws.com/<key>
+ */
+const s3KeyOf = (url: string, bucket: string): string | null => {
+  if (!bucket || !url.startsWith(`https://${bucket}.s3`)) return null;
+  const rest = url.slice(8 + bucket.length + 3); // past "https://<bucket>.s3"
+  const match = /^(?:\.[a-z0-9-]+)?\.amazonaws\.com\/(.*)$/.exec(rest);
+  return match ? match[1] : null;
+};
+
+/** The object key when `url` is on the media host; otherwise `null`. */
+const mediaKeyOf = (url: string, host: string): string | null => {
+  if (!host) return null;
+  const prefix = `https://${host}/`;
+  return url.startsWith(prefix) ? url.slice(prefix.length) : null;
+};
+
+/**
+ * Returns true when `url` is one of our stored media URLs: the bucket's S3
+ * address (global or regional endpoint), or the media host when one is set.
+ */
+export const isOurS3Url = (url: string): boolean =>
+  s3KeyOf(url, ourBucket()) !== null ||
+  mediaKeyOf(url, mediaHost()) !== null ||
+  mediaKeyOf(url, chatMediaHost()) !== null;
+
+/**
+ * Rewrites a stored media URL on the bucket's S3 address to the CloudFront
+ * media host, so the bytes leave AWS through the flat-rate distribution rather
+ * than as S3 egress (AWS_COST_SECURITY_PLAN.md §3.2).
+ *
+ *   https://rp-webapp-ui.s3.amazonaws.com/<key>           → https://<host>/<key>
+ *   https://rp-webapp-ui.s3.us-east-1.amazonaws.com/<key> → https://<host>/<key>
+ *
+ * Anything else — a foreign URL, a wsrv.nl URL, a URL already on the media
+ * host, null — comes back unchanged, and so does everything while the host is
+ * unset. The rewrite is meant to stay at read time for good: chat bodies are
+ * encrypted at rest and devices cache old URLs, so neither can be migrated.
+ */
+export function toMediaUrl<T extends string | null | undefined>(url: T): T {
+  if (!url) return url;
+  if (!mediaHost() && !chatMediaHost()) return url;
+  const key = s3KeyOf(url as string, mediaBucketName());
+  if (key === null) return url;
+  const host = hostForKey(key);
+  return (host ? `https://${host}/${key}` : url) as T;
+}
 
 // ──────────────────────────────────────────────────────────────────────────
 // Sizing presets — tuned to current component dimensions.
@@ -202,7 +298,8 @@ type WsrvOptions = {
 // ──────────────────────────────────────────────────────────────────────────
 
 /**
- * Reverse a wsrv.nl proxy URL back to the original S3 URL.
+ * Reverse a wsrv.nl proxy URL back to the original stored-media URL — on the
+ * media host when `wsrvImage` emitted it (RP_MEDIA_HOST set), else S3.
  * Safe to call on any URL — non-wsrv.nl URLs are returned unchanged.
  * Mirrors the generic signature of wsrvImage so callers preserve null/undefined.
  */
@@ -220,21 +317,27 @@ export function wsrvImage<T extends string | null | undefined>(
   opts?: WsrvOptions | null,
 ): T {
   if (!s3Url) return s3Url;
-  if (!opts) return s3Url; // null sizing profile → caller wants the source untouched
-  if (!bucketName()) return s3Url; // env not configured → no-op
-  if (!isOurS3Url(s3Url as string)) return s3Url; // foreign URL → untouched
+  // Null sizing profile → caller wants the source unresized; it still comes
+  // from the media host when one is set (a no-op until then).
+  if (!opts) return toMediaUrl(s3Url);
+  if (!isOurS3Url(s3Url as string)) return s3Url; // foreign URL / env unset → untouched
 
   const { animated = false, fit = "cover", h, q = 80, w } = opts;
-  // Normalise to the global S3 endpoint (no region) so both
-  // s3.amazonaws.com and s3.<region>.amazonaws.com produce the same
-  // wsrv.nl cache key.
-  const bucket = bucketName();
-  const stripped = (s3Url as string)
-    .replace("https://", "")
-    .replace(
-      new RegExp(`^${bucket}\\.s3\\.[a-z0-9-]+\\.amazonaws\\.com/`),
-      `${bucket}.s3.amazonaws.com/`,
-    );
+  // One spelling per object, so every address of it shares a wsrv.nl cache
+  // key: the media host when set (wsrv then fetches through CloudFront —
+  // cached, inside the flat plan, AWS_COST_SECURITY_PLAN.md §3.2), else the
+  // global S3 endpoint, which folds the regional one into it.
+  const bucket = ourBucket();
+  const source = s3Url as string;
+  const key =
+    s3KeyOf(source, bucket) ??
+    mediaKeyOf(source, mediaHost()) ??
+    mediaKeyOf(source, chatMediaHost()) ??
+    "";
+  const host = hostForKey(key);
+  const stripped = host
+    ? `${host}/${key}`
+    : `${bucket}.s3.amazonaws.com/${key}`;
   const params = new URLSearchParams({
     fit,
     output: "webp",

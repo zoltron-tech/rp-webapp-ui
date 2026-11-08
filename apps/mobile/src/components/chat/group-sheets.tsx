@@ -16,8 +16,8 @@ import { BottomSheet } from "@/components/sheet";
 import { Text, TextInput } from "@/components/text";
 import {
   alertMediaRejected,
-  MAX_IMAGE_BYTES,
   type PickedMedia,
+  pickedOversizeMessage,
   pickImage,
   uploadFile,
 } from "@/lib/media-upload";
@@ -94,8 +94,9 @@ export const EditGroupSheet = ({
   const choose = async () => {
     const file = await pickImage();
     if (!file) return;
-    if (file.fileSize > MAX_IMAGE_BYTES) {
-      Alert.alert("Picture is too large", "Maximum file size is 10 MB.");
+    const tooLarge = await pickedOversizeMessage(api, file);
+    if (tooLarge) {
+      Alert.alert("Picture is too large", tooLarge);
       return;
     }
     setPicture(file);
@@ -113,7 +114,7 @@ export const EditGroupSheet = ({
       if (!uploaded.url) {
         setSaving(false);
         if (uploaded.rejected) alertMediaRejected();
-        else
+        else if (!uploaded.refused)
           Alert.alert(
             "Not saved",
             "The picture could not be uploaded. Try again.",

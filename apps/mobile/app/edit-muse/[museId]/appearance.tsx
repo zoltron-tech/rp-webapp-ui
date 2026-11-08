@@ -45,7 +45,7 @@ import { type MuseFormChanges, useMuseForm } from "@/hooks/use-muse-form";
 import { asHex } from "@/lib/color";
 import {
   alertMediaRejected,
-  MAX_IMAGE_BYTES,
+  pickedOversizeMessage,
   pickImage,
   uploadFile,
 } from "@/lib/media-upload";
@@ -183,16 +183,17 @@ const Appearance = ({ muse }: { muse: Muse }) => {
     close();
     const file = await pickImage();
     if (!file) return;
-    if (file.fileSize > MAX_IMAGE_BYTES) {
-      Alert.alert("Picture is too large", "Maximum file size is 10 MB.");
+    const tooLarge = await pickedOversizeMessage(api, file);
+    if (tooLarge) {
+      Alert.alert("Picture is too large", tooLarge);
       return;
     }
     setBusy("wallpaper");
-    const { rejected, url } = await uploadFile(api, file, id);
+    const { refused, rejected, url } = await uploadFile(api, file, id);
     setBusy(null);
     if (!url) {
       if (rejected) alertMediaRejected();
-      else Alert.alert("Upload failed", "Please try again.");
+      else if (!refused) Alert.alert("Upload failed", "Please try again.");
       return;
     }
     const ok = await setWallpaper(url);

@@ -9,6 +9,7 @@ import {
 import {
   getBlacklistedNovelists,
   getBlockedNovelists,
+  loadStorageUsage,
   unblacklistNovelist,
   unblockNovelist,
 } from "@nw/api/endpoints/profile";
@@ -21,6 +22,12 @@ import {
   type Friend,
   type LinkProvider,
 } from "@nw/types";
+import {
+  STORAGE_WARNING_RATIO,
+  storageDailySummary,
+  storageSummary,
+  storageUsedRatio,
+} from "@nw/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -36,6 +43,7 @@ import { Text } from "@/components/text";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Avatar } from "@/components/avatar";
 import { DisableAccountSheet } from "@/components/edit-profile/disable-account-sheet";
+import { StorageSheet } from "@/components/edit-profile/storage-sheet";
 import { UsernameSheet } from "@/components/edit-profile/username-sheet";
 import { useSignOut } from "@/hooks/use-sign-out";
 import {
@@ -105,6 +113,14 @@ export default function AccountScreen() {
     queryFn: () => getSpotifyConnection(api),
     queryKey: ["account", "spotify"],
   });
+  // Uploads against the account's total (AWS_COST_SECURITY_PLAN.md §2.2).
+  // `null` when /s3/usage fails: the row is then left out, not drawn broken.
+  // Read fresh, which also refreshes the cache the upload checks use.
+  const storage = useQuery({
+    queryFn: () => loadStorageUsage(api, { fresh: true }),
+    queryKey: ["account", "storage"],
+  });
+  const [storageOpen, setStorageOpen] = useState(false);
 
   useEffect(() => {
     void getBlockedNovelists(api, 1, PAGE_SIZE).then((page) => {
@@ -271,6 +287,13 @@ export default function AccountScreen() {
     ? spotify.data.displayName || spotify.data.spotifyUserId
     : null;
 
+  const storageUsage = storage.data ?? null;
+  const storagePct = storageUsage
+    ? Math.round(storageUsedRatio(storageUsage) * 1000) / 10
+    : 0;
+  const storageDaily = storageUsage ? storageDailySummary(storageUsage) : null;
+  const storageHidden = storage.data === null || storage.isError;
+
   return (
     <>
       <ScrollView
@@ -375,6 +398,65 @@ export default function AccountScreen() {
             subtitle="Novelists you invited"
           />
         </SettingsGroup>
+
+        {storageHidden ? null : (
+          <SettingsGroup title="Storage">
+            <SettingsRow
+              disabled={!storageUsage}
+              icon="server-outline"
+              label="Storage"
+              onPress={() => setStorageOpen(true)}
+              subtitle={
+                storageUsage ? (
+                  <View style={styles.storage}>
+                    <Text
+                      numberOfLines={1}
+                      style={[styles.value, { color: theme.textGray }]}
+                    >
+                      {storageSummary(storageUsage)}
+                    </Text>
+                    <View
+                      accessibilityLabel={`${Math.round(storagePct)} percent of your storage used`}
+                      accessibilityRole="progressbar"
+                      accessibilityValue={{
+                        max: 100,
+                        min: 0,
+                        now: Math.round(storagePct),
+                      }}
+                      style={[
+                        styles.storageTrack,
+                        { backgroundColor: theme.material.edgeTranslucent },
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.storageFill,
+                          {
+                            backgroundColor:
+                              storagePct >= STORAGE_WARNING_RATIO * 100
+                                ? theme.warning
+                                : theme.accent.solid,
+                            width: `${storagePct}%`,
+                          },
+                        ]}
+                      />
+                    </View>
+                    {storageDaily ? (
+                      <Text
+                        numberOfLines={2}
+                        style={[styles.value, { color: theme.textGray }]}
+                      >
+                        {storageDaily}
+                      </Text>
+                    ) : null}
+                  </View>
+                ) : (
+                  "…"
+                )
+              }
+            />
+          </SettingsGroup>
+        )}
 
         <SettingsGroup
           footer="Connect signs you in with the provider in a secure sheet. You can unlink at any time."
@@ -578,6 +660,13 @@ export default function AccountScreen() {
         onDisabled={() => void signOutLocally()}
         visible={disableOpen}
       />
+      {storageUsage ? (
+        <StorageSheet
+          onClose={() => setStorageOpen(false)}
+          usage={storageUsage}
+          visible={storageOpen}
+        />
+      ) : null}
     </>
   );
 }
@@ -597,5 +686,8 @@ const styles = StyleSheet.create({
   body: { gap: space.lg, padding: space.m },
   detail: { alignItems: "flex-start", gap: space.xs },
   loading: { padding: space.lg },
+  storage: { gap: space.xs, paddingTop: 2 },
+  storageFill: { borderRadius: 3, height: "100%", minWidth: 3 },
+  storageTrack: { borderRadius: 3, height: 6, overflow: "hidden" },
   value: { fontSize: fontSize.caption },
 });

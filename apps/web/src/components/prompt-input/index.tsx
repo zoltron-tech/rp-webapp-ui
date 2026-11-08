@@ -10,6 +10,7 @@ import type {
   SubmitPromptType,
 } from "@nw/types";
 import type { ProfileSong } from "@nw/types/music";
+import { tooManyMediaMessage } from "@nw/utils";
 import classNames from "classnames";
 import { Collapsible, Form } from "radix-ui";
 import {
@@ -206,7 +207,11 @@ export const PromptForm: FC<PromptInputFormProps> = ({
           if (response.message !== API_MESSAGE.Success) {
             setError(response.message);
             emit(PromptEvent.Error, response.message);
-            errorToast(`Could not send your ${type}. Please try again.`);
+            errorToast(
+              response.message === API_MESSAGE.TooManyMedia
+                ? tooManyMediaMessage(type)
+                : `Could not send your ${type}. Please try again.`,
+            );
             return;
           }
 

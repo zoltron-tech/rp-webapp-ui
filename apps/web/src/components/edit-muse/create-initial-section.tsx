@@ -2,7 +2,7 @@
 
 import { Flex, ShouldRender } from "@novelist-world/ui";
 import type { Fandom, Muse, NWImage } from "@nw/types";
-import { clamp, VALID_IMAGE_TYPES } from "@nw/utils";
+import { clamp, fileTooLargeMessage, VALID_IMAGE_TYPES } from "@nw/utils";
 import { Form, Separator } from "radix-ui";
 import {
   type FormEventHandler,
@@ -13,6 +13,7 @@ import {
 import { ImProfile } from "react-icons/im";
 import { setMuseAvatarAction } from "@/app/rp/muse/actions";
 import { deleteMedia } from "@/app/rp/profile/actions";
+import { useUploadCaps } from "@/hooks/use-upload-caps";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { API_MESSAGE } from "@/utils/constants";
 import { AvatarNew } from "../common/avatar-new";
@@ -58,6 +59,8 @@ export function CreateInitialSection({
   const setMuseState = useMuseStoreSet();
   const { save, loading } = useMuseSave();
   const { uploadMedia } = useUploadMedia();
+  // The service's cap for the file's family (AWS_COST_SECURITY_PLAN.md D7).
+  const { capFor } = useUploadCaps();
 
   const [imageUploading, setImageUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -112,8 +115,8 @@ export function CreateInitialSection({
         setError("File type not supported. Allowed: .png, .jpg, .gif");
         return;
       }
-      if (file.size > 50 * 1024 * 1024) {
-        setError("File too large (max 50 MB).");
+      if (file.size > capFor(file.type)) {
+        setError(fileTooLargeMessage(capFor(file.type)));
         return;
       }
 
@@ -142,7 +145,7 @@ export function CreateInitialSection({
       setTempUpload(s3Url);
       setPendingAvatarSrc(s3Url);
     },
-    [tempUpload, uploadMedia],
+    [capFor, tempUpload, uploadMedia],
   );
 
   // Dragging is handled imperatively inside AvatarCropDialog; it commits the

@@ -24,14 +24,12 @@ import type { StoryMapEdit } from "@/hooks/use-story-map-edit";
 import { asColor } from "@/lib/color";
 import {
   MEDIA_REJECTED_MESSAGE,
+  pickedOversizeMessage,
   pickImage,
-  uploadFile,
+  uploadStoryboardFile,
 } from "@/lib/media-upload";
 import { codexIcon } from "@/lib/story";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
-
-/** Web's limit: a map is a big picture, but not an unbounded one. */
-const MAX_MAP_BYTES = 25 * 1024 * 1024;
 
 /** Upload, rename, replace or delete one map — web's `MapSheet`. */
 export const MapSheet = ({
@@ -72,16 +70,19 @@ export const MapSheet = ({
     setError(null);
     const file = await pickImage();
     if (!file) return;
-    if (file.fileSize > MAX_MAP_BYTES) {
-      setError("That map is over 25MB. Please export it a little smaller.");
+    // The service's image cap (AWS_COST_SECURITY_PLAN.md D7).
+    const tooLarge = await pickedOversizeMessage(api, file);
+    if (tooLarge) {
+      setError(`${tooLarge} Please export it a little smaller.`);
       return;
     }
     setUploading(true);
-    const uploaded = await uploadFile(api, file, storyId);
+    const uploaded = await uploadStoryboardFile(api, file, storyId);
     setUploading(false);
     if (uploaded.url) setImage(uploaded.url);
     else if (uploaded.rejected) setError(MEDIA_REJECTED_MESSAGE);
-    else setError("Could not upload that map. Please try again.");
+    else if (!uploaded.refused)
+      setError("Could not upload that map. Please try again.");
   };
 
   const trimmed = name.trim();

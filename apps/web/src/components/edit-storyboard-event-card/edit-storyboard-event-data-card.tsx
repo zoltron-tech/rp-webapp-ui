@@ -36,6 +36,7 @@ import {
 } from "@/utils/constants/common";
 import { ROUTES } from "@/utils/constants/routes";
 import { plainTextLength } from "@/utils/rich-text";
+import { appendUploadPurpose } from "@/utils/upload-media";
 import {
   useStoryboardEventState,
   useStoryboardEventStoreSet,
@@ -198,9 +199,11 @@ const EditStoryboardEventDataCard = forwardRef<
     formData.append("file", file);
     formData.append("mediaBucket", "APP_MEDIA");
     // Store the event cover under app-media/<storyboardId>/<file> (no user-id
-    // segment) so it sits alongside the storyboard's other media.
+    // segment) so it sits alongside the storyboard's other media, on the
+    // storyboard's own limit.
     formData.append("prefix", storyBoardId);
     formData.append("scoped", "false");
+    appendUploadPurpose(formData, "storyboard", storyBoardId);
     const url = await uploadMedia(formData);
     setImageUploading(false);
 

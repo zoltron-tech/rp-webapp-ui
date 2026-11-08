@@ -2,6 +2,7 @@
 
 import { ShouldRender } from "@novelist-world/ui";
 import type { MentionDataItem, MentionTab } from "@nw/types/novelist";
+import { fileTooLargeMessage } from "@nw/utils";
 import { Separator } from "radix-ui";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BsArrowLeft } from "react-icons/bs";
@@ -14,14 +15,13 @@ import {
   type RichTextEditorHandle,
 } from "@/components/rich-text-editor-input";
 import { useGlobalState } from "@/context/store/stores";
+import { useUploadCaps } from "@/hooks/use-upload-caps";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { API_MESSAGE } from "@/utils/constants";
 import { searchMentionMusesAction } from "../../muse/actions";
 import { useProfileState, useProfileStoreSet } from "./profile.store";
 import * as S from "./styled";
 import { useProfileSave } from "./use-profile-save";
-
-const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
 
 type Props = {
   onBack: () => void;
@@ -33,6 +33,8 @@ export function AboutSection({ onBack }: Props) {
   const setProfileState = useProfileStoreSet();
   const { saveNovelist, loading } = useProfileSave();
   const { uploadMedia } = useUploadMedia();
+  // The service's cap for the file's family (AWS_COST_SECURITY_PLAN.md D7).
+  const { capFor } = useUploadCaps();
 
   const [error, setError] = useState<string | null>(null);
   const [discardOpen, setDiscardOpen] = useState(false);
@@ -99,8 +101,8 @@ export function AboutSection({ onBack }: Props) {
       input.value = "";
       if (!file) return;
 
-      if (file.size > MAX_IMAGE_SIZE) {
-        setError("File too large (max 10 MB)");
+      if (file.size > capFor(file.type)) {
+        setError(fileTooLargeMessage(capFor(file.type)));
         return;
       }
       setError(null);
@@ -124,7 +126,7 @@ export function AboutSection({ onBack }: Props) {
       editorRef.current?.replaceImageSrc(objectUrl, url);
       URL.revokeObjectURL(objectUrl);
     },
-    [uploadMedia],
+    [capFor, uploadMedia],
   );
 
   const handleSave = async () => {

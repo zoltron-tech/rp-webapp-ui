@@ -12,6 +12,7 @@ import {
   type FormEventHandler,
   forwardRef,
   useCallback,
+  useEffect,
   useRef,
   useState,
 } from "react";
@@ -50,6 +51,8 @@ import * as S from "./styles";
 
 type Props = React.HTMLProps<HTMLDivElement> & {
   storyBoardEventId?: string;
+  /** The chapter's storyboard, where pictures in a passage are stored. */
+  storyBoardId?: string;
   /** When set, the composer edits this thread instead of creating a new one. */
   initialThread?: StoryBoardEventThread | null;
   onSend?: () => void;
@@ -100,6 +103,7 @@ const InlineActions: FC<{ loading: boolean; onCancel?: () => void }> = ({
 
 export const EventThreadForm: FC<Props> = ({
   storyBoardEventId = "",
+  storyBoardId = "",
   initialThread,
   onSend,
   variant = "default",
@@ -112,6 +116,12 @@ export const EventThreadForm: FC<Props> = ({
   const threadId = useEventThreadInputState("threadId");
   const dialogDesign = useEventThreadInputState("dialogDesign");
   const setState = useEventThreadInputStoreSet();
+
+  // The storyboard can arrive after the composer mounted (the chapter loads
+  // first); the media input reads it from the store at upload time.
+  useEffect(() => {
+    setState({ storyBoardId });
+  }, [setState, storyBoardId]);
   const { successToast, errorToast } = useUIContext();
   const editorRef = useRef<RichTextEditorHandle | null>(null);
 
@@ -233,6 +243,7 @@ export const EventThreadInput: FC<Props> = forwardRef(
   (
     {
       storyBoardEventId = "",
+      storyBoardId = "",
       initialThread,
       onSend,
       variant = "default",
@@ -255,6 +266,7 @@ export const EventThreadInput: FC<Props> = forwardRef(
             : DEFAULT_DIALOG_DESIGN,
           promptText: initialThread?.message ?? "",
           storyBoardEventId,
+          storyBoardId,
           threadId: initialThread?.id ?? null,
         }}
       >
@@ -265,6 +277,7 @@ export const EventThreadInput: FC<Props> = forwardRef(
         >
           <EventThreadForm
             storyBoardEventId={storyBoardEventId}
+            storyBoardId={storyBoardId}
             initialThread={initialThread}
             onSend={onSend}
             variant={variant}

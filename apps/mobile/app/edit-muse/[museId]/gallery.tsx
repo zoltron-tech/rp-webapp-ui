@@ -8,6 +8,7 @@ import { deleteMedia } from "@nw/api/endpoints/profile";
 import { queryKeys, useApi } from "@nw/features";
 import { API_MESSAGE, type Muse } from "@nw/types";
 import type { MediaMetadata } from "@nw/types/activity";
+import { capForType, uploadCapsHint } from "@nw/utils";
 import { IMAGE_SIZES, wsrvImage } from "@nw/utils/image";
 import { useQueryClient } from "@tanstack/react-query";
 import { Image } from "@/components/image";
@@ -38,9 +39,10 @@ import {
 } from "@/components/muse/media-viewer";
 import { Notice, PillButton, SettingsGroup } from "@/components/settings";
 import { useMuseMedia, useMuseMediaMetadata } from "@/hooks/use-muse";
+import { useUploadCaps } from "@/hooks/use-upload-caps";
 import {
   alertMediaRejected,
-  MAX_GALLERY_BYTES,
+  loadUploadCaps,
   pickMedia,
   uploadFile,
 } from "@/lib/media-upload";
@@ -84,6 +86,8 @@ const Gallery = ({ muse }: { muse: Muse }) => {
   const api = useApi();
   const queryClient = useQueryClient();
   const insets = useSafeAreaInsets();
+  // The service's caps, for the hint; left out while unknown.
+  const capsHint = uploadCapsHint(useUploadCaps(), ["image", "video"]);
   const id = muse.id ?? "";
   const query = useMuseMedia(id, true);
   const media = query.data;
@@ -132,15 +136,25 @@ const Gallery = ({ muse }: { muse: Muse }) => {
     }
     const picked = await pickMedia(remaining);
     if (picked.length === 0) return;
-    const accepted = picked.filter((file) => file.fileSize <= MAX_GALLERY_BYTES);
+    // The service's cap per family (AWS_COST_SECURITY_PLAN.md D7); unknown
+    // caps skip nothing here, and the upload check and service decide.
+    const caps = await loadUploadCaps(api);
+    const accepted = picked.filter(
+      (file) => file.fileSize <= capForType(file.contentType, caps),
+    );
     if (accepted.length < picked.length) {
-      Alert.alert("Some files were skipped", "Files over 30 MB were left out.");
+      const hint = uploadCapsHint(caps, ["image", "video"]);
+      Alert.alert(
+        "Some files were skipped",
+        `Files over the size limit${hint ? ` (${hint})` : ""} were left out.`,
+      );
     }
     if (accepted.length === 0) return;
 
     setProgress({ done: 0, total: accepted.length });
     const urls: string[] = [];
     let rejected = 0;
+    let refused = false;
     for (const file of accepted) {
       const result = await uploadFile(api, file, id);
       if (result.url) urls.push(result.url);
@@ -148,6 +162,12 @@ const Gallery = ({ muse }: { muse: Muse }) => {
       setProgress((current) =>
         current ? { ...current, done: current.done + 1 } : current,
       );
+      // Today's limit or a full storage refuses the rest of the batch too;
+      // the person has been told, so stop rather than ask again per file.
+      if (result.refused) {
+        refused = true;
+        break;
+      }
     }
     if (urls.length > 0) {
       const result = await addMuseMedia(api, id, urls);
@@ -160,7 +180,7 @@ const Gallery = ({ muse }: { muse: Muse }) => {
     }
     if (rejected > 0) {
       alertMediaRejected();
-    } else if (urls.length < accepted.length) {
+    } else if (!refused && urls.length < accepted.length) {
       Alert.alert("Upload failed", "Some files did not upload. Try again.");
     }
     setProgress(null);
@@ -263,7 +283,7 @@ const Gallery = ({ muse }: { muse: Muse }) => {
         ]}
       >
         <SettingsGroup
-          footer={`PNG, JPG, GIF, WEBP or MP4, up to 30 MB each. ${MAX_TOTAL} files in all.`}
+          footer={`PNG, JPG, GIF, WEBP or MP4${capsHint ? `, ${capsHint}` : ""}. ${MAX_TOTAL} files in all.`}
           title="Upload new media"
         >
           <View style={styles.uploadRow}>

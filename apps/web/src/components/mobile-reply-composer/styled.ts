@@ -78,6 +78,11 @@ export const MediaIconBtn = styled.button`
   &:active {
     background-color: var(--accent-active);
   }
+
+  /* At the reply's media limit: still pressable (it says why), but spent. */
+  &[aria-disabled="true"] {
+    opacity: 0.5;
+  }
 `;
 
 /**

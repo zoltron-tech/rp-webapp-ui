@@ -5,6 +5,7 @@ import type {
   SubmitPromptInput,
   SubmitPromptType,
 } from "@nw/types";
+import { fileTooLargeMessage, tooManyMediaMessage } from "@nw/utils";
 import { Form } from "radix-ui";
 import {
   type FC,
@@ -26,8 +27,9 @@ import {
 import { StoreProvider } from "@/context/store/context";
 import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
+import { useUploadCaps } from "@/hooks/use-upload-caps";
 import { API_MESSAGE } from "@/utils/constants";
-import { uploadMedia } from "@/utils/upload-media";
+import { appendUploadPurpose, uploadMedia } from "@/utils/upload-media";
 import {
   getParentIdKeyFromPromptType,
   museToSource,
@@ -46,6 +48,7 @@ import {
 import { PromptMediaPreview } from "../prompt-input/prompt-media-preview";
 import { PromptMuseSelect } from "../prompt-input/prompt-muse-select";
 import { PromptTextField } from "../prompt-input/prompt-text-field";
+import { usePostMediaRoom } from "../prompt-input/use-post-media-room";
 import * as S from "./styled";
 
 export type MobileReplyComposerProps = {
@@ -80,8 +83,13 @@ const MobileReplyComposerInner: FC<MobileReplyComposerProps> = ({
   const mediaUploading = usePromptInputState("mediaUploading");
   const mediaUploadError = usePromptInputState("mediaUploadError");
   const { successToast, errorToast } = useUIContext();
+  // The service's cap for the file's family (AWS_COST_SECURITY_PLAN.md D7).
+  const { capFor } = useUploadCaps();
   const setPromptInputState = usePromptInputStoreSet();
   const { emit } = usePromptInputEvents();
+  // Five media items at most per comment or reply.
+  const room = usePostMediaRoom();
+  const { ensureRoom } = room;
 
   // Capture the soft-keyboard height so the tray matches it.
   useEffect(() => {
@@ -138,8 +146,10 @@ const MobileReplyComposerInner: FC<MobileReplyComposerProps> = ({
       const file = e.currentTarget.files?.[0] ?? null;
       if (fileInputRef.current) fileInputRef.current.value = "";
       if (!file) return;
-      if (file.size > 10 * 1024 * 1024) {
-        errorToast("Image should not be larger than 10 MB.");
+      // The reply's media limit, in case it filled while the picker was open.
+      if (!ensureRoom()) return;
+      if (file.size > capFor(file.type)) {
+        errorToast(fileTooLargeMessage(capFor(file.type)));
         return;
       }
       const objectUrl = URL.createObjectURL(file);
@@ -149,6 +159,8 @@ const MobileReplyComposerInner: FC<MobileReplyComposerProps> = ({
       });
       const formData = new FormData();
       formData.append("file", file);
+      // Post media: not the account's storage.
+      appendUploadPurpose(formData, "post");
       const uploaded = await uploadMedia(formData);
       if (uploaded === API_MESSAGE.MediaError) {
         setPromptInputState({
@@ -166,15 +178,17 @@ const MobileReplyComposerInner: FC<MobileReplyComposerProps> = ({
         uploadingImage: null,
       });
     },
-    [setPromptInputState, errorToast],
+    [setPromptInputState, errorToast, capFor, ensureRoom],
   );
 
   const handleGifSelect = useCallback(
     (gifUrl: string) => {
-      setPromptInputState({ gifToInsert: gifUrl });
       setTrayTab(null);
+      // A GIF is a media item too.
+      if (!ensureRoom()) return;
+      setPromptInputState({ gifToInsert: gifUrl });
     },
-    [setPromptInputState],
+    [ensureRoom, setPromptInputState],
   );
 
   // Clean up media state on successful send (mirrors PromptMediaInput cleanup)
@@ -210,7 +224,11 @@ const MobileReplyComposerInner: FC<MobileReplyComposerProps> = ({
       const response = await submitPrompt(payload, type);
 
       if (response.message !== API_MESSAGE.Success) {
-        errorToast("Failed to send. Please try again.");
+        errorToast(
+          response.message === API_MESSAGE.TooManyMedia
+            ? tooManyMediaMessage(type)
+            : "Failed to send. Please try again.",
+        );
         setSending(false);
         emit(PromptEvent.Error, response.message);
         return;
@@ -273,17 +291,25 @@ const MobileReplyComposerInner: FC<MobileReplyComposerProps> = ({
           <S.MediaWrap>
             <S.MediaIconBtn
               type="button"
-              title="Insert image"
-              onClick={() => fileInputRef.current?.click()}
+              title={room.full ? room.message : "Insert image"}
+              aria-label="Insert image"
+              aria-disabled={room.full || undefined}
+              onClick={() => {
+                if (ensureRoom()) fileInputRef.current?.click();
+              }}
             >
               <GrAttachment size={16} />
             </S.MediaIconBtn>
             <S.MediaIconBtn
               type="button"
-              title="Insert GIF"
-              onClick={() =>
-                setTrayTab((prev) => (prev === "gif" ? null : "gif"))
-              }
+              title={room.full ? room.message : "Insert GIF"}
+              aria-label="Insert GIF"
+              aria-disabled={room.full || undefined}
+              onClick={() => {
+                // Closing the tray is always allowed; opening it needs room.
+                if (trayTab === "gif") setTrayTab(null);
+                else if (ensureRoom()) setTrayTab("gif");
+              }}
             >
               <MdGif size={16} />
             </S.MediaIconBtn>

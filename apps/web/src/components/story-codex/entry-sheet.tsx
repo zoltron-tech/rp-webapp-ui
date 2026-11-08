@@ -1,6 +1,7 @@
 "use client";
 
 import type { CodexCategory, CodexEntry, StoryBoardEvent } from "@nw/types";
+import { fileTooLargeMessage } from "@nw/utils";
 import { type FC, useCallback, useEffect, useRef, useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { GrAttachment } from "react-icons/gr";
@@ -13,9 +14,11 @@ import {
   RichTextEditor,
   type RichTextEditorHandle,
 } from "@/components/rich-text-editor-input";
+import { useUploadCaps } from "@/hooks/use-upload-caps";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import { API_MESSAGE } from "@/utils/constants";
+import { appendUploadPurpose } from "@/utils/upload-media";
 import {
   CODEX_COLORS,
   CODEX_ICON_KEYS,
@@ -24,13 +27,12 @@ import {
 } from "./icons";
 import * as S from "./styles";
 
-/** Matches the other in-editor attachment flows (muse about, profile about). */
-const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
-
 type Props = {
   open: boolean;
   /** Null when creating; the category it lands in comes from `defaultCategoryId`. */
   entry: CodexEntry | null;
+  /** The story the entry belongs to; attachments are stored under it. */
+  storyboardId: string;
   defaultCategoryId: string | null;
   categories: CodexCategory[];
   /** Every chapter of the story, for the "appears in" multi-select. */
@@ -49,6 +51,7 @@ type Props = {
 export const EntrySheet: FC<Props> = ({
   open,
   entry,
+  storyboardId,
   defaultCategoryId,
   categories,
   chapters,
@@ -67,6 +70,8 @@ export const EntrySheet: FC<Props> = ({
   const [editorKey, setEditorKey] = useState(0);
 
   const { uploadMedia } = useUploadMedia();
+  // The service's cap for the file's family (AWS_COST_SECURITY_PLAN.md D7).
+  const { capFor } = useUploadCaps();
   const { width } = useWindowDimensions();
   const isNarrow = (width ?? 1024) <= 700;
   const editorRef = useRef<RichTextEditorHandle>(null);
@@ -103,8 +108,8 @@ export const EntrySheet: FC<Props> = ({
       const file = input.files?.[0] ?? null;
       input.value = "";
       if (!file) return;
-      if (file.size > MAX_ATTACHMENT_BYTES) {
-        setMediaError("That file is over 10 MB.");
+      if (file.size > capFor(file.type)) {
+        setMediaError(fileTooLargeMessage(capFor(file.type)));
         return;
       }
       setMediaError(null);
@@ -116,7 +121,8 @@ export const EntrySheet: FC<Props> = ({
       const formData = new FormData();
       formData.append("file", file);
       formData.append("contentType", file.type);
-      formData.append("prefix", "story-codex");
+      // Storyboard media: stored under the story, on its own limit.
+      appendUploadPurpose(formData, "storyboard", storyboardId);
 
       const url = await uploadMedia(formData);
       setUploading(false);
@@ -130,7 +136,7 @@ export const EntrySheet: FC<Props> = ({
       editorRef.current?.replaceImageSrc(objectUrl, url);
       URL.revokeObjectURL(objectUrl);
     },
-    [uploadMedia],
+    [capFor, storyboardId, uploadMedia],
   );
 
   useEffect(() => {

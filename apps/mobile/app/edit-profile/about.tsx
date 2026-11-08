@@ -30,7 +30,7 @@ import {
 import { useProfileEdit } from "@/hooks/use-profile-edit";
 import {
   alertMediaRejected,
-  MAX_IMAGE_BYTES,
+  pickedOversizeMessage,
   pickImage,
   uploadFile,
 } from "@/lib/media-upload";
@@ -146,13 +146,18 @@ export default function AboutScreen() {
   const attach = async () => {
     const file = await pickImage();
     if (!file) return;
-    if (file.fileSize > MAX_IMAGE_BYTES) {
-      Alert.alert("Picture is too large", "Maximum file size is 10 MB.");
+    const tooLarge = await pickedOversizeMessage(api, file);
+    if (tooLarge) {
+      Alert.alert("Picture is too large", tooLarge);
       return;
     }
     editor.current?.insertImage(file.uri);
     setUploading((current) => new Set(current).add(file.uri));
-    const { rejected, url } = await uploadFile(api, file, "profile-about");
+    const { refused, rejected, url } = await uploadFile(
+      api,
+      file,
+      "profile-about",
+    );
     setUploading((current) => {
       const next = new Set(current);
       next.delete(file.uri);
@@ -161,7 +166,8 @@ export default function AboutScreen() {
     if (!url) {
       editor.current?.removeImageBySrc(file.uri);
       if (rejected) alertMediaRejected();
-      else Alert.alert("Upload failed", "The picture could not be uploaded.");
+      else if (!refused)
+        Alert.alert("Upload failed", "The picture could not be uploaded.");
       return;
     }
     editor.current?.replaceImageSrc(file.uri, url);

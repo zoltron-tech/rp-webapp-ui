@@ -131,8 +131,10 @@ export const ChapterEditor = ({
       setDirty(true);
       return true;
     },
-    // Beside the story's other media, as web stores it.
+    // Beside the story's other media, as web stores it, and charged to the
+    // storyboard's own limit rather than the account's storage.
     prefix: storyId,
+    storyboard: true,
   });
 
   const descriptionLength = useMemo(

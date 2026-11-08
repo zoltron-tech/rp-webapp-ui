@@ -37,6 +37,7 @@ import {
 } from "@/utils/constants/common";
 import { ROUTES } from "@/utils/constants/routes";
 import { plainTextLength } from "@/utils/rich-text";
+import { appendUploadPurpose } from "@/utils/upload-media";
 import { StoryboardMembersDialog } from "../storyboard-members-dialog";
 import FandomPicker from "./fandom-picker";
 import GenrePicker from "./genre-picker";
@@ -192,12 +193,14 @@ const EditStoryboardDataCard = forwardRef<
     const formData = new FormData();
     formData.append("file", file);
     // Store the cover under app-media/<storyboardId>/<file> (no user-id
-    // segment). Only possible once the storyboard has an id; new drafts fall
-    // back to the default per-user scoped path until first save.
+    // segment), on the storyboard's own limit. Only possible once the
+    // storyboard has an id; new drafts fall back to the default per-user
+    // scoped path (personal storage) until first save.
     if (id) {
       formData.append("mediaBucket", "APP_MEDIA");
       formData.append("prefix", id);
       formData.append("scoped", "false");
+      appendUploadPurpose(formData, "storyboard", id);
     }
     const url = await uploadMedia(formData);
     setImageUploading(false);

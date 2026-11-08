@@ -581,6 +581,12 @@ export const ToolButton = styled.button`
     transform: scale(0.95);
   }
 
+  /* At the post's media limit: still focusable and pressable (it says why
+     instead of opening), but reads as spent. */
+  &[aria-disabled="true"] {
+    opacity: 0.5;
+  }
+
   ${FOCUS_RING}
 
   /* At the 375 baseline the sender chip and the three tool chips share one
@@ -642,6 +648,11 @@ export const MediaSelect = styled(Form.Field)`
     &:focus-visible {
       outline: 2px solid var(--accent-11, var(--accent));
       outline-offset: 2px;
+    }
+
+    /* At the post's media limit (see ToolButton). */
+    &[aria-disabled="true"] {
+      opacity: 0.5;
     }
 
     svg {

@@ -1,7 +1,13 @@
 "use client";
 
 import type { NWImage } from "@nw/types";
-import { clamp, cropToEditorState, toCropFilter, VALID_IMAGE_TYPES } from "@nw/utils";
+import {
+  clamp,
+  cropToEditorState,
+  fileTooLargeMessage,
+  toCropFilter,
+  VALID_IMAGE_TYPES,
+} from "@nw/utils";
 import { Separator } from "radix-ui";
 import { useCallback, useRef, useState } from "react";
 import {
@@ -21,6 +27,7 @@ import { setMuseAvatarAction } from "@/app/rp/muse/actions";
 import { deleteMedia } from "@/app/rp/profile/actions";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
+import { useUploadCaps } from "@/hooks/use-upload-caps";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
@@ -63,6 +70,8 @@ export function LandingSection({ onBack, onSelect }: Props) {
   const setMuseState = useMuseStoreSet();
   const { save, loading: saving } = useMuseSave();
   const { uploadMedia } = useUploadMedia();
+  // The service's cap for the file's family (AWS_COST_SECURITY_PLAN.md D7).
+  const { capFor } = useUploadCaps();
   const { routeToPage } = usePageRouter();
   const { successToast, errorToast } = useUIContext();
 
@@ -200,8 +209,8 @@ export function LandingSection({ onBack, onSelect }: Props) {
         setSaveError("File type not supported. Allowed: .png, .jpg, .gif");
         return;
       }
-      if (file.size > 50 * 1024 * 1024) {
-        setSaveError("File too large (max 50 MB).");
+      if (file.size > capFor(file.type)) {
+        setSaveError(fileTooLargeMessage(capFor(file.type)));
         return;
       }
 
@@ -231,7 +240,7 @@ export function LandingSection({ onBack, onSelect }: Props) {
       setTempUpload(s3Url);
       setPendingCropSrc(s3Url);
     },
-    [id, tempUpload, uploadMedia],
+    [capFor, id, tempUpload, uploadMedia],
   );
 
   // Dragging is handled imperatively inside AvatarCropDialog; it commits the

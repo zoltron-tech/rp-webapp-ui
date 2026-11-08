@@ -1,19 +1,19 @@
 "use client";
 
 import type { StoryMap } from "@nw/types";
-import { pluralize } from "@nw/utils";
+import { fileTooLargeMessage, pluralize } from "@nw/utils";
 import { type FC, useEffect, useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { LuImageUp } from "react-icons/lu";
 import { ResponsiveSheet } from "@/components/common/responsive-sheet";
 import * as F from "@/components/common/responsive-sheet/styles";
 import { AppAlertDialog } from "@/components/dialog";
+import { useUploadCaps } from "@/hooks/use-upload-caps";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { API_MESSAGE } from "@/utils/constants";
+import { appendUploadPurpose } from "@/utils/upload-media";
 import * as S from "./styles";
 
-/** nginx caps uploads at 25MB; refuse earlier so the failure is legible. */
-const MAX_MAP_BYTES = 25 * 1024 * 1024;
 /** Raster formats only — an SVG map would be an XSS vector, not a picture. */
 const ACCEPTED = "image/png,image/jpeg,image/webp,image/avif";
 /** Beyond this the browser starts to struggle panning the bitmap. */
@@ -39,6 +39,8 @@ export const MapSheet: FC<Props> = ({
   onDelete,
 }) => {
   const { uploadMedia } = useUploadMedia();
+  // The service's image cap: refuse early so the failure is legible (AWS_COST_SECURITY_PLAN.md D7).
+  const { capFor } = useUploadCaps();
 
   const [name, setName] = useState("");
   const [image, setImage] = useState<string | null>(null);
@@ -81,8 +83,10 @@ export const MapSheet: FC<Props> = ({
       setError("Maps must be a PNG, JPG, WebP or AVIF image.");
       return;
     }
-    if (file.size > MAX_MAP_BYTES) {
-      setError("That map is over 25MB. Please export it a little smaller.");
+    if (file.size > capFor(file.type)) {
+      setError(
+        `${fileTooLargeMessage(capFor(file.type))} Please export it a little smaller.`,
+      );
       return;
     }
 
@@ -106,6 +110,8 @@ export const MapSheet: FC<Props> = ({
     formData.append("mediaBucket", "APP_MEDIA");
     formData.append("prefix", storyboardId);
     formData.append("scoped", "false");
+    // Storyboard media: the storyboard's own limit, not the account's.
+    appendUploadPurpose(formData, "storyboard", storyboardId);
 
     const uploaded = await uploadMedia(formData);
     setUploading(false);

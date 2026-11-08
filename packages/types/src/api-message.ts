@@ -21,4 +21,9 @@ export enum API_MESSAGE {
    * BLOCK_BLACKLIST_PLAN.md K3): nothing can be sent into it.
    */
   Blocked = "blocked",
+  /**
+   * A prompt, comment or reply carrying more media than the limit (422
+   * `too_many_media`, owner decision 2026-11-08: five per input).
+   */
+  TooManyMedia = "too_many_media",
 }

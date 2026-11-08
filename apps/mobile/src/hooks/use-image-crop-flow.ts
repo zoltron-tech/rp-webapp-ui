@@ -8,9 +8,10 @@ import { Alert } from "react-native";
 import type { CropState } from "@/hooks/use-muse-edit";
 import {
   alertMediaRejected,
-  MAX_IMAGE_BYTES,
+  pickedOversizeMessage,
   pickImage,
   uploadFile,
+  uploadStoryboardFile,
 } from "@/lib/media-upload";
 
 /**
@@ -30,11 +31,22 @@ import {
 export const useImageCropFlow = ({
   onSave,
   prefix,
+  storyboard = false,
 }: {
   /** The storage URL and the final crop. Resolves `true` on success. */
   onSave: (src: string, crop: CropState) => Promise<boolean>;
-  /** The S3 key prefix — the muse id, as web passes it. */
+  /**
+   * The S3 key prefix — the muse id, as web passes it. With `storyboard`, the
+   * storyboard id.
+   */
   prefix: string | null | undefined;
+  /**
+   * Storyboard media (a story's cover, a chapter's or a story character's
+   * picture): uploaded with `purpose: "storyboard"` and `prefix` as the
+   * storyboard id, charged to the storyboard's own limit. A missing id then
+   * fails the upload rather than filing it under the account.
+   */
+  storyboard?: boolean;
 }) => {
   const api = useApi();
   const [visible, setVisible] = useState(false);
@@ -60,8 +72,9 @@ export const useImageCropFlow = ({
   const pickAndUpload = useCallback(async (): Promise<boolean> => {
     const file = await pickImage();
     if (!file) return false;
-    if (file.fileSize > MAX_IMAGE_BYTES) {
-      Alert.alert("Picture is too large", "Maximum file size is 10 MB.");
+    const tooLarge = await pickedOversizeMessage(api, file);
+    if (tooLarge) {
+      Alert.alert("Picture is too large", tooLarge);
       return false;
     }
     if (!file.contentType.startsWith("image/")) {
@@ -78,7 +91,9 @@ export const useImageCropFlow = ({
     setUploading(true);
     setVisible(true);
 
-    const { rejected, url } = await uploadFile(api, file, prefix ?? undefined);
+    const { refused, rejected, url } = storyboard
+      ? await uploadStoryboardFile(api, file, prefix ?? "")
+      : await uploadFile(api, file, prefix ?? undefined);
     if (run !== generation.current) {
       if (url) void deleteMedia(api, url);
       return false;
@@ -86,14 +101,14 @@ export const useImageCropFlow = ({
     setUploading(false);
     if (!url) {
       if (rejected) alertMediaRejected();
-      else Alert.alert("Upload failed", "Please try again.");
+      else if (!refused) Alert.alert("Upload failed", "Please try again.");
       setVisible(false);
       return false;
     }
     remote.current = url;
     orphan.current = url;
     return true;
-  }, [api, discardOrphan, prefix]);
+  }, [api, discardOrphan, prefix, storyboard]);
 
   /** The camera button: adjust what is there, or pick when there is nothing. */
   const open = useCallback(

@@ -54,6 +54,7 @@ import { ChangeUsernameDialog } from "./change-username-dialog";
 import { DevicesSection } from "./devices-section";
 import { DisableAccountSheet } from "./disable-account-sheet";
 import { NotificationsSection } from "./notifications-section";
+import { StorageSection } from "./storage-section";
 import * as S from "./styled";
 
 type Props = {
@@ -444,6 +445,9 @@ export function AccountSection({ onBack }: Props) {
             </S.AccountRowActions>
           </S.AccountRow>
         </S.AccountGroup>
+
+        {/* Uploads against the account's storage total (AWS_COST_SECURITY_PLAN.md §2.2). */}
+        <StorageSection />
 
         {/* Connected accounts */}
         <S.AccountGroup>

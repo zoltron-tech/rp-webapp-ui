@@ -22,6 +22,8 @@ import { border, fontSize, radius, space, useAppTheme } from "@/theme";
  * toolbar on a 667pt screen, so the tray shows a preview and this opens over it.
  *
  * Pictures and GIFs go into the text at the cursor, as in `StorySectionEditor`.
+ * They are storyboard media: keyed under the story and charged to the
+ * storyboard's own limit, not the account's storage.
  * Done hands the HTML back to the form, which is what saves it.
  */
 export const RichFieldEditor = ({
@@ -29,6 +31,7 @@ export const RichFieldEditor = ({
   onClose,
   onDone,
   placeholder,
+  storyboardId,
   title,
   visible,
 }: {
@@ -36,6 +39,8 @@ export const RichFieldEditor = ({
   onClose: () => void;
   onDone: (html: string) => void;
   placeholder: string;
+  /** The story the field belongs to; without it a picture cannot upload. */
+  storyboardId: string | null | undefined;
   title: string;
   visible: boolean;
 }) => {
@@ -49,6 +54,8 @@ export const RichFieldEditor = ({
     onImageInserted: (local) => editor.current?.insertImage(local),
     onImageUploaded: (local, url) =>
       editor.current?.replaceImageSrc(local, url),
+    purpose: "storyboard",
+    storyboardId,
   });
 
   const keyboardHeight = useKeyboardHeight();

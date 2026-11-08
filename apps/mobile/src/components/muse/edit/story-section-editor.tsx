@@ -26,10 +26,10 @@ import { isVideoUrl } from "@/components/muse/media-viewer";
 import { useComposerMedia } from "@/hooks/use-composer-media";
 import { useKeyboardHeight } from "@/hooks/use-keyboard-height";
 import {
-  MAX_GALLERY_BYTES,
   MEDIA_REJECTED_MESSAGE,
   type PickedMedia,
   pickAudio,
+  pickedOversizeMessage,
   pickMedia,
   uploadFile,
 } from "@/lib/media-upload";
@@ -128,7 +128,6 @@ export const StorySectionEditor = ({
   /** A clip or a track from the phone, as web's form accepts: above the text. */
   const attachFile = async (
     pick: () => Promise<{ fileSize: number } | null | undefined>,
-    limit: number,
   ) => {
     setError(null);
     const file = (await pick().catch(() => undefined)) as
@@ -140,16 +139,18 @@ export const StorySectionEditor = ({
       return;
     }
     if (!file) return;
-    if (file.fileSize > limit) {
-      setError("That file is too large.");
+    // The service's cap for the file's family (AWS_COST_SECURITY_PLAN.md D7).
+    const tooLarge = await pickedOversizeMessage(api, file);
+    if (tooLarge) {
+      setError(tooLarge);
       return;
     }
     setAttaching(true);
-    const { rejected, url } = await uploadFile(api, file, museId);
+    const { refused, rejected, url } = await uploadFile(api, file, museId);
     setAttaching(false);
     if (url) setAttachment(url);
     else if (rejected) setError(MEDIA_REJECTED_MESSAGE);
-    else setError("That file could not be uploaded. Try again.");
+    else if (!refused) setError("That file could not be uploaded. Try again.");
   };
 
   const canConfirm = html.trim().length > 0 && !media.isUploading && !attaching;
@@ -291,15 +292,12 @@ export const StorySectionEditor = ({
             icon: "videocam-outline",
             label: "Video",
             onSelect: () =>
-              void attachFile(
-                async () => (await pickMedia(1))[0] ?? null,
-                MAX_GALLERY_BYTES,
-              ),
+              void attachFile(async () => (await pickMedia(1))[0] ?? null),
           },
           {
             icon: "musical-notes-outline",
             label: "Audio",
-            onSelect: () => void attachFile(pickAudio, MAX_GALLERY_BYTES),
+            onSelect: () => void attachFile(pickAudio),
           },
         ]}
         onClose={() => setAttachMenu(false)}

@@ -1,10 +1,15 @@
-import { deleteMedia, uploadMediaScreened } from "@nw/api/endpoints/profile";
+import { deleteMedia } from "@nw/api/endpoints/profile";
 import { useApi } from "@nw/features";
 import { API_MESSAGE } from "@nw/types";
+import { tooManyMediaMessage, type UploadPurpose } from "@nw/utils";
 import * as ImagePicker from "expo-image-picker";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert } from "react-native";
-import { alertMediaRejected } from "@/lib/media-upload";
+import {
+  alertMediaRejected,
+  checkUploadAllowance,
+  uploadFileDirect,
+} from "@/lib/media-upload";
 
 /**
  * Pictures into the post, and one video alongside it — web's
@@ -17,20 +22,14 @@ import { alertMediaRejected } from "@/lib/media-upload";
  * phone that put pictures where web puts videos would render on web as a
  * post with a picture *and* an empty body.
  *
- * ## Uploading through the service, not straight to S3
+ * ## Straight to S3
  *
- * The chat composer PUTs to a presigned URL. This uses `POST /s3/upload`
- * through the portfolio service, because that is what web's prompt input
- * does, and the two have to land in the same bucket under the same prefix —
- * an inline picture posted from a phone should be indistinguishable from one
- * posted from a browser, and `deleteMedia` (which web calls when a picture is
- * removed before posting) has to be able to find it.
- *
- * React Native's `FormData` takes `{ uri, name, type }` for a file part and
- * `fetch` streams the file as multipart, which is exactly what the endpoint
- * reads. The presigned path is the wrong tool here for the reason
- * `use-attachments` gives about multipart — the service, unlike S3, wants
- * multipart.
+ * Through `uploadFileDirect`, like every upload on the phone: presign, PUT,
+ * then `/s3/moderate`, which screens the picture (AWS_COST_SECURITY_PLAN.md
+ * §2.1–2.2); the bytes never pass through the service. The key is the
+ * account's own app-media folder,
+ * so `deleteMedia` (called when a picture is removed before posting) still
+ * finds it by its URL.
  *
  * ## Cleaning up
  *
@@ -39,10 +38,20 @@ import { alertMediaRejected } from "@/lib/media-upload";
  * to. Web deletes on removal (`prompt-text-field`'s tracked URLs) and on
  * unmount; the same two moments here, through `reconcile` and `discard`.
  * Sending clears the list without deleting anything: the post now owns them.
+ *
+ * ## What it is for, and how much
+ *
+ * `purpose` says where the upload is charged (owner decisions 2026-11-08):
+ * `post` for a prompt, comment or reply (not the account's storage),
+ * `storyboard` with the `storyboardId` for passages and codex/notes fields
+ * (the storyboard's own limit), `personal` otherwise. `maxMedia` caps the
+ * pictures in the text plus the attachment (five for posts): at the cap the
+ * pickers say so instead of opening, and the save endpoint's 422
+ * `too_many_media` is the authority behind it.
  */
 
-/** Web's `MAX_FILE_SIZE`. */
-const MAX_BYTES = 10 * 1024 * 1024;
+/** `upload` gave up because the guardrails refused it, and already said why. */
+const REFUSED = "refused" as const;
 
 export interface ComposerAttachment {
   /** The local file, shown while uploading. */
@@ -53,12 +62,6 @@ export interface ComposerAttachment {
   uploading: boolean;
   failed: boolean;
 }
-
-/** A React Native multipart file part, which the DOM `FormData` type lacks. */
-const filePart = (uri: string, type: string): Blob => {
-  const name = uri.split("/").pop() ?? "upload";
-  return { name, type, uri } as unknown as Blob;
-};
 
 const contentTypeOf = (asset: ImagePicker.ImagePickerAsset): string => {
   if (asset.mimeType) return asset.mimeType;
@@ -71,21 +74,38 @@ const contentTypeOf = (asset: ImagePicker.ImagePickerAsset): string => {
 };
 
 export const useComposerMedia = ({
+  limitMessage,
+  maxMedia,
   onImageInserted,
   onImageFailed,
   onImageUploaded,
+  purpose = "personal",
+  storyboardId,
 }: {
   /** The picture's local URI, to draw at once while it uploads. */
   onImageInserted: (localUri: string) => void;
   /** The local URI swapped for the storage URL. */
   onImageUploaded: (localUri: string, url: string) => void;
   onImageFailed: (localUri: string) => void;
+  /** Where the upload is charged; `personal` unless said otherwise. */
+  purpose?: UploadPurpose;
+  /** The storyboard the media goes into, for `purpose: "storyboard"`. */
+  storyboardId?: string | null;
+  /**
+   * The most media items the text and the attachment may hold together;
+   * unlimited when unset. Counted from the pictures `reconcile` is handed.
+   */
+  maxMedia?: number;
+  /** What to say at the cap; the post line by default. */
+  limitMessage?: string;
 }) => {
   const api = useApi();
   const [uploadingSources, setUploadingSources] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
   const [attachment, setAttachment] = useState<ComposerAttachment | null>(null);
+  /** Pictures in the text, as of the last `reconcile` (local ones included). */
+  const [imageCount, setImageCount] = useState(0);
 
   /** Storage URLs this composer put there and has not yet sent. */
   const tracked = useRef(new Set<string>());
@@ -93,74 +113,113 @@ export const useComposerMedia = ({
   const callbacks = useRef({ onImageFailed, onImageInserted, onImageUploaded });
   callbacks.current = { onImageFailed, onImageInserted, onImageUploaded };
 
+  // The latest counts for the pickers' check, which runs from callbacks.
+  const counts = useRef({ attachment: false, images: 0 });
+  counts.current = { attachment: Boolean(attachment), images: imageCount };
+  const mediaCount = imageCount + (attachment ? 1 : 0);
+  const atMediaLimit = maxMedia !== undefined && mediaCount >= maxMedia;
+
   /**
-   * The storage URL, `null` on a failure, or `MediaRejected` when the
-   * service's NSFW check refused the picture before storing it.
+   * Whether one more media item fits; says why not (once) when it does not.
+   * `replacingAttachment` is for a new video, which takes the place of the
+   * attachment rather than adding to it.
+   */
+  const ensureRoom = useCallback(
+    (replacingAttachment = false): boolean => {
+      if (maxMedia === undefined) return true;
+      const { attachment: hasAttachment, images } = counts.current;
+      const used = images + (hasAttachment && !replacingAttachment ? 1 : 0);
+      if (used < maxMedia) return true;
+      Alert.alert("Media limit reached", limitMessage ?? tooManyMediaMessage());
+      return false;
+    },
+    [limitMessage, maxMedia],
+  );
+
+  /**
+   * The storage URL, `null` on a failure, `MediaRejected` when the service's
+   * NSFW check refused the picture (and deleted it), or `REFUSED` when the
+   * upload guardrails turned it away (size cap, today's limit, storage full)
+   * — the person has been told why by then. The usage refresh after the PUT
+   * happens inside `uploadFileDirect`.
    */
   const upload = useCallback(
     async (
       uri: string,
       type: string,
-    ): Promise<string | API_MESSAGE.MediaRejected | null> => {
-      const form = new FormData();
-      form.append("file", filePart(uri, type));
-      const result = await uploadMediaScreened(api, form).catch(
-        () => API_MESSAGE.MediaError,
+      fileSize?: number | null,
+    ): Promise<string | API_MESSAGE.MediaRejected | typeof REFUSED | null> => {
+      const result = await uploadFileDirect(
+        api,
+        { contentType: type, fileSize, uri },
+        { purpose, storyboardId },
       );
-      return result === API_MESSAGE.MediaError ? null : result;
+      if (result.refused) return REFUSED;
+      if (result.rejected) return API_MESSAGE.MediaRejected;
+      return result.url;
     },
-    [api],
+    [api, purpose, storyboardId],
   );
 
-  const accept = useCallback((asset: ImagePicker.ImagePickerAsset): boolean => {
-    if ((asset.fileSize ?? 0) > MAX_BYTES) {
-      Alert.alert("Attachment is too large", "Maximum file size is 10 MB.");
-      return false;
-    }
-    return true;
-  }, []);
+  /**
+   * The service's cap for the family, and its storage and daily limits while
+   * enforced (AWS_COST_SECURITY_PLAN.md §2.2) — alerts the shared copy and
+   * returns `false` when refused, before the picture is drawn into the text.
+   */
+  const accept = useCallback(
+    (asset: ImagePicker.ImagePickerAsset): Promise<boolean> =>
+      checkUploadAllowance(
+        api,
+        contentTypeOf(asset),
+        asset.fileSize ?? 0,
+        purpose,
+      ),
+    [api, purpose],
+  );
 
   /** A picture from the library, into the text. */
   const pickImage = useCallback(async () => {
+    if (!ensureRoom()) return;
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       quality: 0.9,
     });
     if (result.canceled) return;
     const asset = result.assets[0];
-    if (!asset || !accept(asset)) return;
+    if (!asset || !(await accept(asset))) return;
 
     const local = asset.uri;
     const type = contentTypeOf(asset);
     setUploadingSources((current) => new Set(current).add(local));
     callbacks.current.onImageInserted(local);
 
-    const url = await upload(local, type);
+    const url = await upload(local, type, asset.fileSize);
     setUploadingSources((current) => {
       const next = new Set(current);
       next.delete(local);
       return next;
     });
 
-    if (!url || url === API_MESSAGE.MediaRejected) {
+    if (!url || url === API_MESSAGE.MediaRejected || url === REFUSED) {
       callbacks.current.onImageFailed(local);
-      if (url) alertMediaRejected();
-      else Alert.alert("Upload failed", "Please try again.");
+      if (url === API_MESSAGE.MediaRejected) alertMediaRejected();
+      else if (!url) Alert.alert("Upload failed", "Please try again.");
       return;
     }
     tracked.current.add(url);
     callbacks.current.onImageUploaded(local, url);
-  }, [accept, upload]);
+  }, [accept, ensureRoom, upload]);
 
   /** A video, as the post's attachment. */
   const pickVideo = useCallback(async () => {
+    if (!ensureRoom(true)) return;
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["videos"],
       quality: 0.9,
     });
     if (result.canceled) return;
     const asset = result.assets[0];
-    if (!asset || !accept(asset)) return;
+    if (!asset || !(await accept(asset))) return;
 
     const entry: ComposerAttachment = {
       contentType: contentTypeOf(asset),
@@ -173,16 +232,24 @@ export const useComposerMedia = ({
 
     // Videos are not screened, so this is never `MediaRejected`; the check is
     // for the type's sake.
-    const uploaded = await upload(entry.localUri, entry.contentType);
-    const url = uploaded === API_MESSAGE.MediaRejected ? null : uploaded;
+    const uploaded = await upload(
+      entry.localUri,
+      entry.contentType,
+      asset.fileSize,
+    );
+    const url =
+      uploaded === API_MESSAGE.MediaRejected || uploaded === REFUSED
+        ? null
+        : uploaded;
     setAttachment((current) =>
       current?.localUri === entry.localUri
         ? { ...current, failed: !url, uploading: false, url }
         : current,
     );
     if (url) tracked.current.add(url);
-    else Alert.alert("Upload failed", "Please try again.");
-  }, [accept, upload]);
+    else if (uploaded !== REFUSED)
+      Alert.alert("Upload failed", "Please try again.");
+  }, [accept, ensureRoom, upload]);
 
   /** A clip from the tray: already hosted, nothing to upload. */
   const attachUrl = useCallback((url: string, contentType: string) => {
@@ -211,6 +278,7 @@ export const useComposerMedia = ({
    */
   const reconcile = useCallback(
     (sources: string[]) => {
+      setImageCount(sources.length);
       const present = new Set(sources);
       for (const url of tracked.current) {
         if (!present.has(url)) {
@@ -227,6 +295,7 @@ export const useComposerMedia = ({
     tracked.current.clear();
     setAttachment(null);
     setUploadingSources(new Set());
+    setImageCount(0);
   }, []);
 
   /** The post was abandoned: nothing uploaded belongs to anyone. */
@@ -235,6 +304,7 @@ export const useComposerMedia = ({
     tracked.current.clear();
     setAttachment(null);
     setUploadingSources(new Set());
+    setImageCount(0);
   }, [api]);
 
   // The composer unmounting mid-draft is a discard, as web's unmount is.
@@ -243,11 +313,14 @@ export const useComposerMedia = ({
   useEffect(() => () => discardRef.current(), []);
 
   return {
+    atMediaLimit,
     attachment,
     attachUrl,
     commit,
     discard,
+    ensureRoom,
     isUploading: uploadingSources.size > 0 || Boolean(attachment?.uploading),
+    mediaCount,
     pickImage,
     pickVideo,
     reconcile,

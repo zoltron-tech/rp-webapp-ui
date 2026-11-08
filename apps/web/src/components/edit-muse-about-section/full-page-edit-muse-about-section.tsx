@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import type { MuseAboutSection } from "@nw/types/novelist";
+import { fileTooLargeMessage } from "@nw/utils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { GrAttachment } from "react-icons/gr";
 import { IoCloseOutline } from "react-icons/io5";
@@ -20,6 +21,7 @@ import {
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
+import { useUploadCaps } from "@/hooks/use-upload-caps";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
@@ -40,6 +42,8 @@ export const FullPageEditMuseAboutSection = ({
   const { stopPageLoading, baseDataLoader, routeToPage } = usePageRouter();
   const { successToast, errorToast } = useUIContext();
   const { uploadMedia } = useUploadMedia();
+  // The service's cap for the file's family (AWS_COST_SECURITY_PLAN.md D7).
+  const { capFor } = useUploadCaps();
 
   const editorRef = useRef<RichTextEditorHandle>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -70,8 +74,6 @@ export const FullPageEditMuseAboutSection = ({
     ordinal: number;
     text: string;
   } | null>(null);
-
-  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
   // Fetch existing section data on edit
   useEffect(() => {
@@ -112,8 +114,8 @@ export const FullPageEditMuseAboutSection = ({
       const input = e.currentTarget;
       const file = input.files?.[0] ?? null;
       if (!file) return;
-      if (file.size > MAX_FILE_SIZE) {
-        setError("File too large (max 10 MB)");
+      if (file.size > capFor(file.type)) {
+        setError(fileTooLargeMessage(capFor(file.type)));
         return;
       }
       setImageUploading(true);
@@ -140,7 +142,7 @@ export const FullPageEditMuseAboutSection = ({
       // Reset input so the same file can be re-selected
       input.value = "";
     },
-    [uploadMedia, tempUpload, MAX_FILE_SIZE],
+    [uploadMedia, tempUpload, capFor],
   );
 
   const handleRemoveAttachment = useCallback(async () => {

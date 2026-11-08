@@ -39,6 +39,11 @@ export type ErrorType = {
   message: API_MESSAGE.Error;
   /** Human-readable detail from the backend (e.g. tier limit reached), when available. */
   reason?: string;
+  /**
+   * The service's machine code off a 422 `{ "code": "..." }` (e.g.
+   * `too_many_media` from the prompt, comment and reply saves), when it sent one.
+   */
+  code?: string;
 };
 
 export type DataType<T> = ErrorType | T | null;

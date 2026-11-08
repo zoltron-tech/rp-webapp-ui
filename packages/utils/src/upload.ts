@@ -1,4 +1,5 @@
 import { formatBytes } from "./bytes";
+import { isHostedMediaUrl } from "./image";
 
 export const VALID_IMAGE_TYPES = ["image/png", "image/jpeg", "image/gif"];
 
@@ -243,19 +244,58 @@ export const tooManyMediaMessage = (kind: PostMediaKind = "post"): string =>
 /** Avatars inside mention chips and dialog embeds: chrome, not media. */
 const AVATAR_CLASS = /\b(mention-avatar|dialog-avatar|muse-av)\b/;
 
+/** `klipy.com` or any subdomain (the picker's files are on `static.klipy.com`). */
+const KLIPY_HOST = /^https?:\/\/(?:[a-z0-9-]+\.)*klipy\.com(?:[/:?#]|$)/i;
+
 /**
- * How many media items a rich-text body holds: every `<img>` (uploaded
- * pictures and GIFs alike) except the avatars drawn inside mention chips and
- * dialog embeds, plus every `<video>` and `<audio>`. A plain tag count, enough
- * for the composer's limit; the save endpoint is the authority.
+ * Whether a media URL is served by Klipy: a GIF, sticker or clip chosen from
+ * a picker, never stored on our side. Not hosted by us, so it never counts
+ * toward {@link MAX_POST_MEDIA}; kept for callers that name Klipy itself.
+ */
+export const isKlipyMediaUrl = (url: string | null | undefined): boolean =>
+  Boolean(url && KLIPY_HOST.test(url.trim()));
+
+/** A picture still on the device or in the page while its upload runs. */
+const PENDING_UPLOAD = /^(?:blob|file|content|ph|assets-library):/i;
+
+/**
+ * Whether a media URL counts toward {@link MAX_POST_MEDIA} (owner decision
+ * 2026-11-08): only media we host ({@link isHostedMediaUrl}: our bucket or
+ * media host), plus a local picture whose upload to us is still running
+ * (`blob:`, `file:`, `content:`, `ph:`). A link to another site, Klipy
+ * included, is free. The portfolio service's `PostMedia` is the same rule.
+ */
+export const countsAsPostMedia = (url: string | null | undefined): boolean => {
+  const trimmed = url?.trim();
+  if (!trimmed) return false;
+  return PENDING_UPLOAD.test(trimmed) || isHostedMediaUrl(trimmed);
+};
+
+const attr = (tag: string, name: string): string | null => {
+  const match = new RegExp(
+    `\\s${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s"'>]+))`,
+    "i",
+  ).exec(tag);
+  return match ? (match[1] ?? match[2] ?? match[3] ?? "") : null;
+};
+
+/**
+ * How many media items a rich-text body holds toward {@link MAX_POST_MEDIA}:
+ * every `<img>`, `<video>` and `<audio>` whose `src` we host
+ * ({@link countsAsPostMedia}), except the avatars drawn inside mention chips
+ * and dialog embeds. A plain tag count, enough for the composer's limit; the
+ * save endpoint (`PostMedia` in the portfolio service, which counts the same
+ * way) is the authority.
  */
 export const countRichTextMedia = (html: string | null | undefined): number => {
   if (!html) return 0;
   let count = 0;
   for (const match of html.matchAll(/<(img|video|audio)\b[^>]*>/gi)) {
+    const tag = match[0];
+    if (!countsAsPostMedia(attr(tag, "src"))) continue;
     if (match[1].toLowerCase() === "img") {
-      const cls = /\bclass\s*=\s*(?:"([^"]*)"|'([^']*)')/i.exec(match[0]);
-      if (cls && AVATAR_CLASS.test(cls[1] ?? cls[2] ?? "")) continue;
+      const cls = attr(tag, "class");
+      if (cls && AVATAR_CLASS.test(cls)) continue;
     }
     count += 1;
   }

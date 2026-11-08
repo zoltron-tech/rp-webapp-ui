@@ -1,10 +1,13 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { afterEach, beforeEach, describe, it } from "node:test";
 import { formatBytes } from "../src/bytes.ts";
+import { setMediaHosts } from "../src/image.ts";
 import {
   capForType,
   checkUploadAllowance,
   countRichTextMedia,
+  countsAsPostMedia,
+  isKlipyMediaUrl,
   countsTowardStorage,
   fileTooLargeMessage,
   MAX_POST_MEDIA,
@@ -490,25 +493,132 @@ describe("post media cap", () => {
     );
   });
 
-  it("counts pictures, GIFs, video and audio in a body", () => {
+  const S3 = "https://rp-webapp-ui.s3.amazonaws.com/app-media/u1";
+  const S3_REGIONAL =
+    "https://rp-webapp-ui.s3.us-east-1.amazonaws.com/app-media/u1";
+  const HOST = "media.novelist.world";
+  const ENV_KEYS = [
+    "RP_MEDIA_HOST",
+    "EXPO_PUBLIC_RP_MEDIA_HOST",
+    "RP_BUCKET_NAME",
+    "EXPO_PUBLIC_RP_BUCKET_NAME",
+  ] as const;
+  const savedEnv: Partial<Record<(typeof ENV_KEYS)[number], string>> = {};
+
+  beforeEach(() => {
+    for (const key of ENV_KEYS) {
+      savedEnv[key] = process.env[key];
+      delete process.env[key];
+    }
+  });
+
+  afterEach(() => {
+    setMediaHosts({ chatMediaHost: null, mediaHost: null });
+    for (const key of ENV_KEYS) {
+      if (savedEnv[key] === undefined) delete process.env[key];
+      else process.env[key] = savedEnv[key];
+    }
+  });
+
+  it("counts our pictures, video and audio in a body", () => {
     assert.equal(countRichTextMedia(null), 0);
     assert.equal(countRichTextMedia(""), 0);
     assert.equal(countRichTextMedia("<p>just words</p>"), 0);
     const body = [
-      '<div><span class="inline-image-container"><img src="https://x/a.png" class="inline-image" data-width-pct="50"></span></div>',
-      '<div><img src="https://static.klipy.com/b.gif" class="inline-image"></div>',
-      '<div><img src="https://x/c.png" alt="plain"></div>',
-      '<video src="https://x/d.mp4"></video>',
-      "<AUDIO src='https://x/e.mp3'></AUDIO>",
+      `<div><span class="inline-image-container"><img src="${S3}/a.png" class="inline-image" data-width-pct="50"></span></div>`,
+      `<div><img src="${S3_REGIONAL}/c.png" alt="plain"></div>`,
+      `<video src="${S3}/d.mp4"></video>`,
+      `<AUDIO src='${S3}/e.mp3'></AUDIO>`,
     ].join("");
-    assert.equal(countRichTextMedia(body), 5);
+    assert.equal(countRichTextMedia(body), 4);
+  });
+
+  it("leaves third-party pictures and video out", () => {
+    assert.equal(
+      countRichTextMedia(
+        '<img src="https://i.imgur.com/a.png"><video src="https://x.example/d.mp4"></video>',
+      ),
+      0,
+    );
+    // Another bucket, or our bucket's name inside someone else's URL.
+    assert.equal(
+      countRichTextMedia(
+        '<img src="https://other.s3.amazonaws.com/a.png"><img src="https://x.example/rp-webapp-ui.s3.amazonaws.com/a.png">',
+      ),
+      0,
+    );
+    assert.equal(
+      countRichTextMedia('<img src="data:image/png;base64,AAAA">'),
+      0,
+    );
+  });
+
+  it("counts the media host only when it is set", () => {
+    const body = `<p><img class="inline-image" src="https://${HOST}/app-media/u1/a.webp"></p>`;
+    assert.equal(countRichTextMedia(body), 0);
+    setMediaHosts({ mediaHost: HOST });
+    assert.equal(countRichTextMedia(body), 1);
+    setMediaHosts({ mediaHost: null });
+    process.env.RP_MEDIA_HOST = `https://${HOST}/`;
+    assert.equal(countRichTextMedia(body), 1);
+  });
+
+  it("follows the configured bucket", () => {
+    process.env.RP_BUCKET_NAME = "rp-dev";
+    assert.equal(
+      countRichTextMedia(
+        '<img src="https://rp-dev.s3.amazonaws.com/app-media/u1/a.png">',
+      ),
+      1,
+    );
+    assert.equal(countRichTextMedia(`<img src="${S3}/a.png">`), 0);
+  });
+
+  it("counts a picture whose upload is still running", () => {
+    assert.equal(
+      countRichTextMedia(
+        '<img src="blob:https://novelist.world/1f0e"><img src="file:///tmp/a.jpg">',
+      ),
+      2,
+    );
+  });
+
+  it("leaves Klipy GIFs out", () => {
+    const gif =
+      '<div><img src="https://static.klipy.com/ii/4bbcf901/ba/05/wLP3Qu3EJIv6dN.gif" class="inline-image"></div>';
+    assert.equal(countRichTextMedia(gif), 0);
+    assert.equal(countRichTextMedia(gif.repeat(6)), 0);
+    assert.equal(countRichTextMedia(`${gif}<img src="${S3}/a.png">`), 1);
+  });
+
+  it("leaves tags without a src out", () => {
+    assert.equal(countRichTextMedia('<p>text</p><img><img src="">'), 0);
+    assert.equal(countRichTextMedia(`<img data-src="${S3}/a.png">`), 0);
+  });
+
+  it("tells Klipy media URLs apart", () => {
+    assert.equal(isKlipyMediaUrl("https://static.klipy.com/a.gif"), true);
+    assert.equal(isKlipyMediaUrl(" https://klipy.com/a.mp4 "), true);
+    assert.equal(isKlipyMediaUrl("https://static.klipy.com"), true);
+    assert.equal(isKlipyMediaUrl("https://x/klipy.com/a.gif"), false);
+    assert.equal(isKlipyMediaUrl("https://klipy.com.evil.example/a"), false);
+    assert.equal(isKlipyMediaUrl(null), false);
+    assert.equal(isKlipyMediaUrl(""), false);
+  });
+
+  it("decides one URL at a time", () => {
+    assert.equal(countsAsPostMedia(`${S3}/a.png`), true);
+    assert.equal(countsAsPostMedia("https://static.klipy.com/a.gif"), false);
+    assert.equal(countsAsPostMedia("https://i.imgur.com/a.png"), false);
+    assert.equal(countsAsPostMedia(null), false);
   });
 
   it("leaves mention and dialog avatars out", () => {
     const body =
-      '<p><span class="mention-tag"><img src="https://x/u.png" alt="U" class="mention-avatar"><span class="mention-text">U</span></span></p>' +
-      "<p><img class='dialog-avatar' src='https://x/m.png'></p>" +
-      '<p><img class="inline-image" src="https://x/a.png"></p>';
+      `<p><span class="mention-tag"><img src="${S3}/u.png" alt="U" class="mention-avatar"><span class="mention-text">U</span></span></p>` +
+      `<p><img class='dialog-avatar' src='${S3}/m.png'></p>` +
+      `<p><img class='muse-av' src='${S3}/v.png'></p>` +
+      `<p><img class="inline-image" src="${S3}/a.png"></p>`;
     assert.equal(countRichTextMedia(body), 1);
   });
 });

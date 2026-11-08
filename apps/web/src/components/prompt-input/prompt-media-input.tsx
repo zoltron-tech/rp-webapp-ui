@@ -179,26 +179,25 @@ export const PromptMediaInput: FC = () => {
     (gifUrl: string) => {
       setShowGifPicker(false);
       setTrayTab(null);
-      // A GIF is a media item too.
-      if (!ensureRoom()) return;
+      // A Klipy GIF never counts toward the media limit (owner decision
+      // 2026-11-08), so it is never checked for room.
       set({ gifToInsert: gifUrl });
     },
-    [ensureRoom, set],
+    [set],
   );
 
   const handleGifButtonClick = useCallback(() => {
-    // Closing the tray is always allowed; opening a picker needs room.
+    // GIFs do not count toward the media limit: the picker always opens.
     if (isMobile && trayTab === "gif") {
       setTrayTab(null);
       return;
     }
-    if (!ensureRoom()) return;
     if (isMobile) {
       setTrayTab("gif");
     } else {
       setShowGifPicker(true);
     }
-  }, [ensureRoom, isMobile, trayTab]);
+  }, [isMobile, trayTab]);
 
   return (
     <>
@@ -232,8 +231,6 @@ export const PromptMediaInput: FC = () => {
         <S.ToolButton
           type="button"
           aria-label="Insert GIF"
-          aria-disabled={room.full || undefined}
-          title={room.full ? room.message : undefined}
           onClick={handleGifButtonClick}
         >
           <MdGif />

@@ -1,7 +1,11 @@
 import { deleteMedia } from "@nw/api/endpoints/profile";
 import { useApi } from "@nw/features";
 import { API_MESSAGE } from "@nw/types";
-import { tooManyMediaMessage, type UploadPurpose } from "@nw/utils";
+import {
+  countsAsPostMedia,
+  tooManyMediaMessage,
+  type UploadPurpose,
+} from "@nw/utils";
 import * as ImagePicker from "expo-image-picker";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert } from "react-native";
@@ -115,8 +119,14 @@ export const useComposerMedia = ({
 
   // The latest counts for the pickers' check, which runs from callbacks.
   const counts = useRef({ attachment: false, images: 0 });
-  counts.current = { attachment: Boolean(attachment), images: imageCount };
-  const mediaCount = imageCount + (attachment ? 1 : 0);
+  // Only media we host counts toward `maxMedia` (owner decision 2026-11-08):
+  // an upload, finished or still running (no `url` yet). A Klipy clip in the
+  // attachment's place does not.
+  const countedAttachment =
+    attachment !== null &&
+    (attachment.url === null || countsAsPostMedia(attachment.url));
+  counts.current = { attachment: countedAttachment, images: imageCount };
+  const mediaCount = imageCount + (countedAttachment ? 1 : 0);
   const atMediaLimit = maxMedia !== undefined && mediaCount >= maxMedia;
 
   /**
@@ -278,7 +288,13 @@ export const useComposerMedia = ({
    */
   const reconcile = useCallback(
     (sources: string[]) => {
-      setImageCount(sources.length);
+      // Only pictures we host (or this composer uploaded, or is uploading)
+      // count toward `maxMedia`; a GIF or a link to another site is free.
+      setImageCount(
+        sources.filter(
+          (source) => tracked.current.has(source) || countsAsPostMedia(source),
+        ).length,
+      );
       const present = new Set(sources);
       for (const url of tracked.current) {
         if (!present.has(url)) {

@@ -219,6 +219,24 @@ export const isOurS3Url = (url: string): boolean =>
   mediaKeyOf(url, chatMediaHost()) !== null;
 
 /**
+ * Whether `url` is media we host, for the post media limit: the bucket's S3
+ * address (global or any regional endpoint; the configured bucket, else
+ * production's `rp-webapp-ui`) or the media / chat media host when set.
+ * Unlike {@link isOurS3Url} it does not wait for a media host before trusting
+ * the production bucket name. Anything else (another site, Klipy, wsrv.nl,
+ * `data:`) is not ours.
+ */
+export const isHostedMediaUrl = (url: string | null | undefined): boolean => {
+  const trimmed = url?.trim();
+  if (!trimmed) return false;
+  return (
+    s3KeyOf(trimmed, mediaBucketName()) !== null ||
+    mediaKeyOf(trimmed, mediaHost()) !== null ||
+    mediaKeyOf(trimmed, chatMediaHost()) !== null
+  );
+};
+
+/**
  * Rewrites a stored media URL on the bucket's S3 address to the CloudFront
  * media host, so the bytes leave AWS through the flat-rate distribution rather
  * than as S3 egress (AWS_COST_SECURITY_PLAN.md §3.2).

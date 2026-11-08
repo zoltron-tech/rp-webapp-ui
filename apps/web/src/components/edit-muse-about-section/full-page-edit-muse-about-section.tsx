@@ -20,6 +20,7 @@ import {
 } from "@/components/rich-text-editor-input";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
+import { useRichTextMediaRoom } from "@/hooks/use-rich-text-media-room";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadCaps } from "@/hooks/use-upload-caps";
 import { useUploadMedia } from "@/hooks/use-upload-media";
@@ -66,6 +67,8 @@ export const FullPageEditMuseAboutSection = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showGifPicker, setShowGifPicker] = useState(false);
+  // Five media items per rich-text input, as on prompts (2026-11-08).
+  const { ensureRoom } = useRichTextMediaRoom(text, imageUrl);
   const [showDiscardAlert, setShowDiscardAlert] = useState(false);
   // What the form held when it opened (or after the section loaded), so the
   // close button can tell whether anything typed would be thrown away.
@@ -104,16 +107,24 @@ export const FullPageEditMuseAboutSection = ({
     fetchData();
   }, [authState]);
 
-  const handleGifSelect = useCallback((gifUrl: string) => {
-    setShowGifPicker(false);
-    editorRef.current?.insertGif(gifUrl);
-  }, []);
+  const handleGifSelect = useCallback(
+    (gifUrl: string) => {
+      setShowGifPicker(false);
+      if (!ensureRoom()) return;
+      editorRef.current?.insertGif(gifUrl);
+    },
+    [ensureRoom],
+  );
 
   const handleFileChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const input = e.currentTarget;
       const file = input.files?.[0] ?? null;
       if (!file) return;
+      if (!ensureRoom()) {
+        input.value = "";
+        return;
+      }
       if (file.size > capFor(file.type)) {
         setError(fileTooLargeMessage(capFor(file.type)));
         return;
@@ -142,7 +153,7 @@ export const FullPageEditMuseAboutSection = ({
       // Reset input so the same file can be re-selected
       input.value = "";
     },
-    [uploadMedia, tempUpload, capFor],
+    [uploadMedia, tempUpload, capFor, ensureRoom],
   );
 
   const handleRemoveAttachment = useCallback(async () => {
@@ -310,6 +321,9 @@ export const FullPageEditMuseAboutSection = ({
             htmlFor="fp-attach-input"
             aria-label="Attach image"
             style={{ marginRight: "0.5rem" }}
+            onClick={(event) => {
+              if (!ensureRoom()) event.preventDefault();
+            }}
           >
             <GrAttachment />
           </S.FPAttachButton>
@@ -324,7 +338,9 @@ export const FullPageEditMuseAboutSection = ({
           <S.FPGifButton
             type="button"
             aria-label="Insert GIF"
-            onClick={() => setShowGifPicker(true)}
+            onClick={() => {
+              if (ensureRoom()) setShowGifPicker(true);
+            }}
           >
             <MdGif />
           </S.FPGifButton>

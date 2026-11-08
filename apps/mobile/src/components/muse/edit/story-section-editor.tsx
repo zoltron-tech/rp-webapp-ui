@@ -25,6 +25,7 @@ import { EditorModal } from "@/components/muse/edit/editor-modal";
 import { isVideoUrl } from "@/components/muse/media-viewer";
 import { useComposerMedia } from "@/hooks/use-composer-media";
 import { useKeyboardHeight } from "@/hooks/use-keyboard-height";
+import { useRichTextMediaRoom } from "@/hooks/use-rich-text-media-room";
 import {
   MEDIA_REJECTED_MESSAGE,
   type PickedMedia,
@@ -86,6 +87,9 @@ export const StorySectionEditor = ({
   const [attachMenu, setAttachMenu] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Five media items per rich-text input, as on prompts (2026-11-08): the
+  // pictures and GIFs in the text plus the attachment.
+  const { ensureRoom } = useRichTextMediaRoom(html, attachment);
 
   const media = useComposerMedia({
     onImageFailed: (local) => editor.current?.removeImageBySrc(local),
@@ -121,6 +125,7 @@ export const StorySectionEditor = ({
   const pickFromTray = (url: string) => {
     const tab = trayTab;
     setTrayTab(null);
+    if (!ensureRoom(tab === "clip")) return;
     if (tab === "clip") setAttachment(url);
     else editor.current?.insertImage(url);
   };
@@ -130,6 +135,7 @@ export const StorySectionEditor = ({
     pick: () => Promise<{ fileSize: number } | null | undefined>,
   ) => {
     setError(null);
+    if (!ensureRoom(true)) return;
     const file = (await pick().catch(() => undefined)) as
       | PickedMedia
       | null
@@ -219,7 +225,9 @@ export const StorySectionEditor = ({
         <Pressable
           accessibilityLabel="Add a picture to the text"
           accessibilityRole="button"
-          onPress={() => void media.pickImage()}
+          onPress={() => {
+            if (ensureRoom()) void media.pickImage();
+          }}
           style={({ pressed }) => [
             styles.action,
             {
@@ -238,7 +246,9 @@ export const StorySectionEditor = ({
         <Pressable
           accessibilityLabel="Insert a GIF"
           accessibilityRole="button"
-          onPress={() => openTray("gif")}
+          onPress={() => {
+            if (ensureRoom()) openTray("gif");
+          }}
           style={({ pressed }) => [
             styles.action,
             {
@@ -268,7 +278,9 @@ export const StorySectionEditor = ({
           accessibilityLabel="Attach a video or audio file"
           accessibilityRole="button"
           disabled={attaching}
-          onPress={() => setAttachMenu(true)}
+          onPress={() => {
+            if (ensureRoom(true)) setAttachMenu(true);
+          }}
           style={({ pressed }) => [
             styles.action,
             {

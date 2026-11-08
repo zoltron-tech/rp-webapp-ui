@@ -15,6 +15,7 @@ import {
   type RichTextEditorHandle,
 } from "@/components/rich-text-editor-input";
 import { useGlobalState } from "@/context/store/stores";
+import { useRichTextMediaRoom } from "@/hooks/use-rich-text-media-room";
 import { useUploadCaps } from "@/hooks/use-upload-caps";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { API_MESSAGE } from "@/utils/constants";
@@ -39,6 +40,8 @@ export function AboutSection({ onBack }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [discardOpen, setDiscardOpen] = useState(false);
   const [showGifPicker, setShowGifPicker] = useState(false);
+  // Five media items per rich-text input, as on prompts (2026-11-08).
+  const { ensureRoom } = useRichTextMediaRoom(about);
 
   const editorRef = useRef<RichTextEditorHandle>(null);
   const originalRef = useRef(novelist?.about ?? "");
@@ -89,10 +92,14 @@ export function AboutSection({ onBack }: Props) {
     [fetchMentionableFriends, fetchMentionableMuses],
   );
 
-  const handleGifSelect = useCallback((gifUrl: string) => {
-    setShowGifPicker(false);
-    editorRef.current?.insertGif(gifUrl);
-  }, []);
+  const handleGifSelect = useCallback(
+    (gifUrl: string) => {
+      setShowGifPicker(false);
+      if (!ensureRoom()) return;
+      editorRef.current?.insertGif(gifUrl);
+    },
+    [ensureRoom],
+  );
 
   const handleAttachImage = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,6 +107,7 @@ export function AboutSection({ onBack }: Props) {
       const file = input.files?.[0] ?? null;
       input.value = "";
       if (!file) return;
+      if (!ensureRoom()) return;
 
       if (file.size > capFor(file.type)) {
         setError(fileTooLargeMessage(capFor(file.type)));
@@ -126,7 +134,7 @@ export function AboutSection({ onBack }: Props) {
       editorRef.current?.replaceImageSrc(objectUrl, url);
       URL.revokeObjectURL(objectUrl);
     },
-    [capFor, uploadMedia],
+    [capFor, uploadMedia, ensureRoom],
   );
 
   const handleSave = async () => {
@@ -176,7 +184,13 @@ export function AboutSection({ onBack }: Props) {
 
       <S.AboutSectionBody>
         <S.AboutToolbar>
-          <S.AboutAttachLabel htmlFor="about-attach-input" aria-label="Attach image">
+          <S.AboutAttachLabel
+            htmlFor="about-attach-input"
+            aria-label="Attach image"
+            onClick={(event) => {
+              if (!ensureRoom()) event.preventDefault();
+            }}
+          >
             <GrAttachment />
           </S.AboutAttachLabel>
           <input
@@ -189,7 +203,9 @@ export function AboutSection({ onBack }: Props) {
           <S.AboutToolButton
             type="button"
             aria-label="Insert GIF"
-            onClick={() => setShowGifPicker(true)}
+            onClick={() => {
+              if (ensureRoom()) setShowGifPicker(true);
+            }}
           >
             <MdGif />
           </S.AboutToolButton>

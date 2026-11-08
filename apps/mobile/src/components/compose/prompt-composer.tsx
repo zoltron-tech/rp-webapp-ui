@@ -335,8 +335,9 @@ const ComposerScreen = ({
   const pickFromTray = useCallback(
     (url: string) => {
       setTrayTab(null);
-      // A clip takes the attachment's place; a GIF adds to the text.
-      if (!media.ensureRoom(trayTab === "clip")) return;
+      // A clip takes the attachment's place; a GIF adds to the text. Both
+      // come from Klipy, not our host, so neither counts toward the media
+      // limit (owner decision 2026-11-08) and neither is checked for room.
       if (trayTab === "clip") media.attachUrl(url, "video/mp4");
       else editor.current?.insertImage(url);
     },
@@ -395,6 +396,8 @@ const ComposerScreen = ({
       // Same boolean, no render: this only moves when the page goes from
       // empty to not, or back.
       setHasText(!empty);
+      // Every picture, for the upload cleanup; the hook counts only the
+      // ones we host toward the limit (Klipy GIFs and links are free).
       reconcileMedia(imageSources(doc));
     },
     [reconcileMedia],
@@ -903,16 +906,10 @@ const ComposerScreen = ({
                       <Pressable
                         hitSlop={space.xs}
                         accessibilityLabel="Insert a GIF"
-                        accessibilityHint={
-                          media.atMediaLimit ? limitMessage : undefined
-                        }
                         accessibilityRole="button"
-                        onPress={() => {
-                          if (media.ensureRoom()) openTray("gif");
-                        }}
+                        onPress={() => openTray("gif")}
                         style={({ pressed }) => [
                           styles.iconButton,
-                          media.atMediaLimit && styles.iconButtonFull,
                           {
                             backgroundColor:
                               trayTab !== null

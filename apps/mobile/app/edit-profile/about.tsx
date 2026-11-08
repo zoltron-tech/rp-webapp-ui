@@ -28,6 +28,7 @@ import {
   useKeyboardOffset,
 } from "@/hooks/use-keyboard-height";
 import { useProfileEdit } from "@/hooks/use-profile-edit";
+import { useRichTextMediaRoom } from "@/hooks/use-rich-text-media-room";
 import {
   alertMediaRejected,
   pickedOversizeMessage,
@@ -66,6 +67,8 @@ export default function AboutScreen() {
   const leaving = useRef(false);
 
   const dirty = html !== original;
+  // Five media items per rich-text input, as on prompts (2026-11-08).
+  const { ensureRoom } = useRichTextMediaRoom(html);
   const busy = saving || uploading.size > 0;
 
   const [trayTab, setTrayTab] = useState<TrayTab | null>(null);
@@ -144,6 +147,7 @@ export default function AboutScreen() {
   );
 
   const attach = async () => {
+    if (!ensureRoom()) return;
     const file = await pickImage();
     if (!file) return;
     const tooLarge = await pickedOversizeMessage(api, file);
@@ -264,6 +268,7 @@ export default function AboutScreen() {
           disabled={saving}
           label="GIF"
           onPress={() => {
+            if (!ensureRoom()) return;
             Keyboard.dismiss();
             setTrayTab("gif");
           }}
@@ -289,6 +294,7 @@ export default function AboutScreen() {
         }}
         onSelect={(url) => {
           setTrayTab(null);
+          if (!ensureRoom()) return;
           editor.current?.insertImage(url);
         }}
         onTabChange={setTrayTab}

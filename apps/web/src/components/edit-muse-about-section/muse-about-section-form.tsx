@@ -17,6 +17,7 @@ import {
   RichTextEditor,
   type RichTextEditorHandle,
 } from "@/components/rich-text-editor-input";
+import { useRichTextMediaRoom } from "@/hooks/use-rich-text-media-room";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadCaps } from "@/hooks/use-upload-caps";
 import { useUploadMedia } from "@/hooks/use-upload-media";
@@ -60,11 +61,17 @@ export function MuseAboutSectionForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showGifPicker, setShowGifPicker] = useState(false);
+  // Five media items per rich-text input, as on prompts (2026-11-08).
+  const { ensureRoom } = useRichTextMediaRoom(text, imageUrl);
 
-  const handleGifSelect = useCallback((gifUrl: string) => {
-    setShowGifPicker(false);
-    editorRef.current?.insertGif(gifUrl);
-  }, []);
+  const handleGifSelect = useCallback(
+    (gifUrl: string) => {
+      setShowGifPicker(false);
+      if (!ensureRoom()) return;
+      editorRef.current?.insertGif(gifUrl);
+    },
+    [ensureRoom],
+  );
 
   const handleFileChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -72,6 +79,7 @@ export function MuseAboutSectionForm({
       const file = input.files?.[0] ?? null;
       input.value = "";
       if (!file) return;
+      if (!ensureRoom()) return;
       if (file.size > capFor(file.type)) {
         setError(fileTooLargeMessage(capFor(file.type)));
         return;
@@ -117,7 +125,7 @@ export function MuseAboutSectionForm({
         setImageUploading(false);
       }
     },
-    [uploadMedia, tempUpload, capFor],
+    [uploadMedia, tempUpload, capFor, ensureRoom],
   );
 
   const handleRemoveAttachment = useCallback(async () => {
@@ -247,6 +255,9 @@ export function MuseAboutSectionForm({
             htmlFor="msf-attach-input"
             aria-label="Attach image"
             style={{ marginRight: "0.5rem" }}
+            onClick={(event) => {
+              if (!ensureRoom()) event.preventDefault();
+            }}
           >
             <GrAttachment />
           </S.FPAttachButton>
@@ -261,7 +272,9 @@ export function MuseAboutSectionForm({
           <S.FPGifButton
             type="button"
             aria-label="Insert GIF"
-            onClick={() => setShowGifPicker(true)}
+            onClick={() => {
+              if (ensureRoom()) setShowGifPicker(true);
+            }}
           >
             <MdGif />
           </S.FPGifButton>

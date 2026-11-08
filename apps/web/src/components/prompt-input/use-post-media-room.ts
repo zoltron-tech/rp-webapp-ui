@@ -9,8 +9,9 @@ import { usePromptInputState } from "./prompt-input.store";
 
 /**
  * The prompt, comment or reply composer's media limit (owner decision
- * 2026-11-08: five per input): the pictures and GIFs in the text plus the
- * attachment, read off the prompt-input store.
+ * 2026-11-08: five per input): the uploaded pictures in the text plus the
+ * attachment, read off the prompt-input store. Klipy GIFs never count
+ * (`countRichTextMedia` leaves them out) and the GIF picker never asks.
  *
  * `ensureRoom` is what every way of adding media calls first: `true` when one
  * more fits, else it toasts the short line and returns `false`, so the picker

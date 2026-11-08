@@ -9,7 +9,7 @@ import { MdOutlineDownload, MdOutlineReport, MdShare } from "react-icons/md";
 import { AppAlertDialog } from "@/components/dialog";
 import { MiniMuseCard } from "@/components/mini-muse-card";
 import { ShareMuseDialog } from "@/components/share-muse-dialog";
-import { useGlobalState } from "@/context/store/stores";
+import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
 import { API_MESSAGE } from "@/utils/constants";
@@ -27,6 +27,7 @@ type Props = {
 
 export function MoreSection({ muse, isOwnMuse }: Props) {
   const user = useGlobalState("user");
+  const setGlobalState = useGlobalStoreSet();
   const { routeToPage } = usePageRouter();
   const { successToast, errorToast } = useUIContext();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -121,10 +122,29 @@ export function MoreSection({ muse, isOwnMuse }: Props) {
         text="This action is permanent and cannot be undone. The muse and all associated data will be removed."
         actionButtonLabel="Delete"
         actionColor="negative"
+        closeOnConfirm
         onConfirm={async () => {
           if (!muse?.id) return;
-          setShowDeleteConfirm(false);
-          await deleteMuseAction(muse.id);
+          const museId = muse.id;
+          const response = await deleteMuseAction(museId).catch(() => null);
+          if (response?.message !== API_MESSAGE.Success) {
+            errorToast?.("Couldn't delete the muse. Please try again.");
+            return;
+          }
+          setGlobalState((prev) => {
+            const prevNovelist = prev.novelist;
+            if (!prevNovelist) return prev;
+            return {
+              novelist: {
+                ...prevNovelist,
+                museCount: Math.max(prevNovelist.museCount - 1, 0),
+                muses: (prevNovelist.muses ?? []).filter(
+                  (m) => m.id !== museId,
+                ),
+              },
+            };
+          });
+          successToast?.("Muse deleted.");
           routeToPage(
             muse.originalVerseId
               ? ROUTES.Muse.View(muse.originalVerseId)

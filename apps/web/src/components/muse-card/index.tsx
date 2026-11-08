@@ -103,6 +103,7 @@ export const MuseCard: FC<Props> = ({ muse, className, ...rest }) => {
       >
         <ShouldRender if={muse !== INITIAL_MUSE && !!isCurrentUser}>
           <AppAlertDialog
+            closeOnConfirm
             heading={`Unalive ${muse.firstName}?`}
             text="This action is permanent. Are you sure?"
             open={showDeleteAlert}

@@ -246,6 +246,7 @@ export const ProfileSongPlayer: FC<Props> = ({
 
       {reportId && (
         <AppAlertDialog
+          closeOnConfirm
           heading={`Report ${song.title}?`}
           text="Report a song that isn't the uploader's to share, or that breaks the community rules. Our support team will review it."
           open={confirmingReport}

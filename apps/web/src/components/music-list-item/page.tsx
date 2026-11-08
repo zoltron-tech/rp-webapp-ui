@@ -159,12 +159,15 @@ export const MusicListItem: FC<Props> = ({ song, className, ...rest }) => {
     }
   }, [song.id, successToast, errorToast]);
 
-  const handleCopySongName = () => {
-    if (song.name) {
-      navigator.clipboard.writeText(
+  const handleCopySongName = async () => {
+    if (!song.name) return;
+    try {
+      await navigator.clipboard.writeText(
         song.name + (song.description ? ` - ${song.description}` : ""),
       );
-      successToast("Song info copied to clipboard");
+      successToast("Song info copied.");
+    } catch {
+      errorToast("Couldn't copy the song info.");
     }
   };
 
@@ -254,6 +257,7 @@ export const MusicListItem: FC<Props> = ({ song, className, ...rest }) => {
         </ShouldRender>
       </S.HeaderDropdownMenuContainer>
       <AppAlertDialog
+        closeOnConfirm
         heading={`Report this song?`}
         text={`We strive to maintain a safe and welcoming community. If you notice any misconduct from anyone, please report it. Our team will review the issue and take appropriate action as quickly as possible.`}
         open={showReportSongAlert}
@@ -262,6 +266,7 @@ export const MusicListItem: FC<Props> = ({ song, className, ...rest }) => {
         actionButtonLabel="Report"
       />
       <AppAlertDialog
+        closeOnConfirm
         heading={`Delete this song?`}
         text={`Deleting the song will remove all of its threads and replies too. Are you sure you want to delete this song?`}
         open={showDeleteSongAlert}

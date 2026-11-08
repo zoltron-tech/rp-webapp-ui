@@ -148,7 +148,10 @@ export const StoryCharacters: FC<Props> = ({ storyboardId, cast, canEdit }) => {
 
   const handleSaveCharacter = useCallback(
     async (character: StoryCharacter) => {
-      const saved = await saveStoryCharacterAction(storyboardId, character);
+      const saved = await saveStoryCharacterAction(
+        storyboardId,
+        character,
+      ).catch(() => null);
       if (!saved || "message" in saved) {
         errorToast("Could not save that character. Please try again.");
         return;

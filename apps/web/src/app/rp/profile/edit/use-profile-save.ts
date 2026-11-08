@@ -2,7 +2,7 @@
 
 import type { NovelistNote, NWImage, UpdateNovelistPayload } from "@nw/types/novelist";
 import type { Accent } from "@nw/types/theme";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { updateUserTheme } from "@/app/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useUIContext } from "@/hooks";
@@ -39,8 +39,33 @@ export function useProfileSave() {
   const palette = useProfileState("palette");
 
   const [loading, setLoading] = useState(false);
+  // The save in flight. `loading` stays true for the whole run (every step of
+  // a multi-step saveAll, the note included), and a second call while one is
+  // running (double-click) gets the same promise instead of saving twice.
+  const inFlightRef = useRef<Promise<SaveResult> | null>(null);
 
-  const saveNovelist = useCallback(async (): Promise<SaveResult> => {
+  const track = useCallback(
+    (run: () => Promise<SaveResult>): Promise<SaveResult> => {
+      if (inFlightRef.current) return inFlightRef.current;
+      setLoading(true);
+      const promise = run()
+        .catch(
+          (): SaveResult => ({
+            message: API_MESSAGE.UncategorizedError,
+            ok: false,
+          }),
+        )
+        .finally(() => {
+          inFlightRef.current = null;
+          setLoading(false);
+        });
+      inFlightRef.current = promise;
+      return promise;
+    },
+    [],
+  );
+
+  const runSaveNovelist = useCallback(async (): Promise<SaveResult> => {
     const payload: UpdateNovelistPayload = {
       about: about ?? "",
       avatar: avatar ?? undefined,
@@ -50,9 +75,7 @@ export function useProfileSave() {
       lastName: (lastName ?? "").trim(),
     };
 
-    setLoading(true);
     const response = await updateUserNovelist(payload, !novelist?.id);
-    setLoading(false);
 
     // Error response is `{ message: API_MESSAGE.Error }` only — no other fields.
     if (!("firstName" in response)) {
@@ -95,9 +118,7 @@ export function useProfileSave() {
   ]);
 
   const deleteBanner = useCallback(async (): Promise<SaveResult> => {
-    setLoading(true);
     const result = await deleteBannerAction();
-    setLoading(false);
 
     if (result.message !== API_MESSAGE.Success) {
       return { message: result.message, ok: false };
@@ -110,7 +131,7 @@ export function useProfileSave() {
     return { ok: true };
   }, [novelist, setGlobalState, setProfileState]);
 
-  const saveNote = useCallback(async (): Promise<SaveResult> => {
+  const runSaveNote = useCallback(async (): Promise<SaveResult> => {
     let result: NovelistNote | { message: string };
     if (noteObj?.text?.trim()) {
       result = await addNoteAction(
@@ -134,13 +155,11 @@ export function useProfileSave() {
     return { ok: true };
   }, [noteObj, novelist, setGlobalState, setProfileState]);
 
-  const saveTheme = useCallback(async (): Promise<SaveResult> => {
-    setLoading(true);
+  const runSaveTheme = useCallback(async (): Promise<SaveResult> => {
     const response = await updateUserTheme({
       palette: Number(palette) as Accent,
       theme: 0,
     });
-    setLoading(false);
 
     if (!("user" in response)) {
       return { message: response.message as string, ok: false };
@@ -160,62 +179,63 @@ export function useProfileSave() {
    * Returns combined result; if any save fails, returns the failure.
    */
   const saveAll = useCallback(
-    async (
+    (
       opts: { novelist?: boolean; theme?: boolean; note?: boolean } = {
         note: true,
         novelist: true,
         theme: true,
       },
-    ): Promise<SaveResult> => {
-      const bannerDeleted =
-        opts.novelist &&
-        banner === null &&
-        (novelist?.banner ?? null) !== null;
+    ): Promise<SaveResult> =>
+      track(async () => {
+        const bannerDeleted =
+          opts.novelist &&
+          banner === null &&
+          (novelist?.banner ?? null) !== null;
 
-      const novelistDirty =
-        opts.novelist &&
-        ((firstName ?? "").trim() !== (novelist?.firstName ?? "") ||
-          (lastName ?? "").trim() !== (novelist?.lastName ?? "") ||
-          (about ?? "") !== (novelist?.about ?? "") ||
-          (image ?? "") !== (novelist?.image ?? "") ||
-          avatar !== (novelist?.avatar ?? null) ||
-          (banner !== null && banner !== (novelist?.banner ?? null)));
+        const novelistDirty =
+          opts.novelist &&
+          ((firstName ?? "").trim() !== (novelist?.firstName ?? "") ||
+            (lastName ?? "").trim() !== (novelist?.lastName ?? "") ||
+            (about ?? "") !== (novelist?.about ?? "") ||
+            (image ?? "") !== (novelist?.image ?? "") ||
+            avatar !== (novelist?.avatar ?? null) ||
+            (banner !== null && banner !== (novelist?.banner ?? null)));
 
-      const noteDirty =
-        opts.note !== false &&
-        ((noteObj?.text ?? "") !== (novelist?.note?.text ?? "") ||
-          (noteObj?.color ?? null) !== (novelist?.note?.color ?? null) ||
-          (noteObj?.emoji ?? null) !== (novelist?.note?.emoji ?? null));
+        const noteDirty =
+          opts.note !== false &&
+          ((noteObj?.text ?? "") !== (novelist?.note?.text ?? "") ||
+            (noteObj?.color ?? null) !== (novelist?.note?.color ?? null) ||
+            (noteObj?.emoji ?? null) !== (novelist?.note?.emoji ?? null));
 
-      const themeDirty =
-        opts.theme && Number(palette) !== Number(user?.palette ?? 0);
+        const themeDirty =
+          opts.theme && Number(palette) !== Number(user?.palette ?? 0);
 
-      if (bannerDeleted) {
-        const r = await deleteBanner();
-        if (!r.ok) return r;
-      }
+        if (bannerDeleted) {
+          const r = await deleteBanner();
+          if (!r.ok) return r;
+        }
 
-      if (novelistDirty) {
-        const r = await saveNovelist();
-        if (!r.ok) return r;
-      }
+        if (novelistDirty) {
+          const r = await runSaveNovelist();
+          if (!r.ok) return r;
+        }
 
-      if (noteDirty) {
-        const r = await saveNote();
-        if (!r.ok) return r;
-      }
+        if (noteDirty) {
+          const r = await runSaveNote();
+          if (!r.ok) return r;
+        }
 
-      if (themeDirty) {
-        const r = await saveTheme();
-        if (!r.ok) return r;
-      }
+        if (themeDirty) {
+          const r = await runSaveTheme();
+          if (!r.ok) return r;
+        }
 
-      if (bannerDeleted || novelistDirty || noteDirty || themeDirty) {
-        successToast("Profile updated successfully.");
-      }
+        if (bannerDeleted || novelistDirty || noteDirty || themeDirty) {
+          successToast("Profile updated successfully.");
+        }
 
-      return { ok: true };
-    },
+        return { ok: true };
+      }),
     [
       about,
       avatar,
@@ -227,12 +247,26 @@ export function useProfileSave() {
       novelist,
       palette,
       deleteBanner,
-      saveNovelist,
-      saveNote,
-      saveTheme,
+      runSaveNovelist,
+      runSaveNote,
+      runSaveTheme,
       successToast,
+      track,
       user?.palette,
     ],
+  );
+
+  const saveNovelist = useCallback(
+    () => track(runSaveNovelist),
+    [track, runSaveNovelist],
+  );
+  const saveNote = useCallback(
+    () => track(runSaveNote),
+    [track, runSaveNote],
+  );
+  const saveTheme = useCallback(
+    () => track(runSaveTheme),
+    [track, runSaveTheme],
   );
 
   return { loading, saveAll, saveNote, saveNovelist, saveTheme };

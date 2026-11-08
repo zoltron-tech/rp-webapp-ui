@@ -14,7 +14,7 @@ type PickerProps = {
   traits: MuseTrait[];
   busy?: boolean;
   onClose: () => void;
-  onSave: (traits: MuseTrait[]) => void;
+  onSave: (traits: MuseTrait[]) => unknown;
 };
 
 /**
@@ -181,7 +181,7 @@ type NoteProps = {
   max: number;
   busy?: boolean;
   onClose: () => void;
-  onSave: (note: string | null) => void;
+  onSave: (note: string | null) => unknown;
   onRemove: () => void;
 };
 

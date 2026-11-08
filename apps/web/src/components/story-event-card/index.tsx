@@ -161,6 +161,7 @@ export const StoryCardEvent: FC<Props> = ({
     <S.CardWrapper className={classNames([className])} {...rest}>
       <ShouldRender if={canManage}>
         <AppAlertDialog
+          closeOnConfirm
           heading={`Delete ${event.name}?`}
           text="This permanently removes the chapter and all of its threads. Are you sure?"
           open={showDeleteAlert}

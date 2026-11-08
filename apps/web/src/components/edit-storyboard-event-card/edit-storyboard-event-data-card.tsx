@@ -287,11 +287,13 @@ const EditStoryboardEventDataCard = forwardRef<
       storyBoardId,
     };
 
-    const response = await updateStoryBoardEventAction(payload);
+    const response = await updateStoryBoardEventAction(payload).catch(
+      () => null,
+    );
     setLoading(false);
 
-    if ("message" in response) {
-      errorToast(response.reason ?? "Failed to save. Please try again.");
+    if (!response || "message" in response) {
+      errorToast(response?.reason ?? "Failed to save. Please try again.");
       return;
     }
 
@@ -324,6 +326,12 @@ const EditStoryboardEventDataCard = forwardRef<
       id ? "Chapter updated successfully." : "Chapter created successfully.",
     );
     onSaved?.(response);
+    // Saved: close the dialog / tray, or go back to the story from the page.
+    if (onClose) {
+      onClose();
+    } else {
+      routeToPage(ROUTES.Story.View(storyBoardId));
+    }
   };
 
   const leave = useCallback(() => {
@@ -569,6 +577,7 @@ const EditStoryboardEventDataCard = forwardRef<
       />
 
       <AppAlertDialog
+        closeOnConfirm
         open={discardDialogOpen}
         onOpenChange={setDiscardDialogOpen}
         heading="Discard unsaved changes?"

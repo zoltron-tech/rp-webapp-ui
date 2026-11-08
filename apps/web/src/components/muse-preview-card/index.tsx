@@ -8,8 +8,9 @@ import { FaRegTrashCan } from "react-icons/fa6";
 import { GrEdit } from "react-icons/gr";
 import { deleteMuseAction } from "@/app/rp/muse/actions";
 import { AppAlertDialog } from "@/components/dialog";
-import { useGlobalState } from "@/context/store/stores";
+import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { useCustomEvents } from "@/hooks";
+import { useUIContext } from "@/hooks/use-ui-context";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { API_MESSAGE } from "@/utils/constants";
 import { EVENTS } from "@/utils/constants/custom-events";
@@ -29,6 +30,8 @@ export const MusePreviewCard: FC<Props> = ({ muse, className, verses }) => {
   const isHomePath =
     typeof pathname === "string" && pathname.startsWith("/rp/home");
   const user = useGlobalState("user");
+  const setGlobalState = useGlobalStoreSet();
+  const { successToast, errorToast } = useUIContext();
   const isOwnMuse = muse?.pennedBy?.username === user?.username;
   const { emit } = useCustomEvents(EVENTS.MUSE.base);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
@@ -76,12 +79,28 @@ export const MusePreviewCard: FC<Props> = ({ muse, className, verses }) => {
   };
 
   const onConfirmDelete = async () => {
-    if (!displayMuse?.id) return;
-    const res = await deleteMuseAction(displayMuse.id);
-    if (res?.message === API_MESSAGE.Success) {
-      emit(EVENTS.MUSE.DELETED, { id: displayMuse.id, name: displayMuse.firstName });
+    const museId = displayMuse?.id;
+    if (!museId) return;
+    const res = await deleteMuseAction(museId).catch(() => null);
+    if (res?.message !== API_MESSAGE.Success) {
+      errorToast(`Couldn't delete ${displayMuse.firstName}. Please try again.`);
+      return;
     }
-    setShowDeleteAlert(false);
+    // Each delete site adjusts the signed-in novelist's count itself; there
+    // is no shared MUSE.DELETED listener for it, so nothing double-counts.
+    setGlobalState((prev) =>
+      prev.novelist
+        ? {
+            novelist: {
+              ...prev.novelist,
+              museCount: Math.max(0, (prev.novelist.museCount ?? 0) - 1),
+              muses: (prev.novelist.muses ?? []).filter((m) => m.id !== museId),
+            },
+          }
+        : prev,
+    );
+    emit(EVENTS.MUSE.DELETED, { id: museId, name: displayMuse.firstName });
+    successToast(`${displayMuse.firstName} deleted.`);
   };
 
   const combinedClassName =
@@ -94,6 +113,7 @@ export const MusePreviewCard: FC<Props> = ({ muse, className, verses }) => {
       className={combinedClassName}
     >
       <AppAlertDialog
+        closeOnConfirm
         heading={`Delete ${displayMuse.firstName}?`}
         text="This action is permanent."
         open={showDeleteAlert}

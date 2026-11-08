@@ -2,7 +2,7 @@
 
 import type { SoundCue } from "@nw/types";
 import type { Song } from "@nw/types/music";
-import { type FC, useEffect, useState } from "react";
+import { type FC, useEffect, useRef, useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { LuMusic, LuRepeat } from "react-icons/lu";
 import { ResponsiveSheet } from "@/components/common/responsive-sheet";
@@ -33,8 +33,8 @@ type Props = {
   passageCount: number;
   canEdit: boolean;
   onClose: () => void;
-  onSave: (cue: SoundCue) => void;
-  onDelete?: (cue: SoundCue) => void;
+  onSave: (cue: SoundCue) => unknown;
+  onDelete?: (cue: SoundCue) => unknown;
 };
 
 /**
@@ -67,21 +67,39 @@ export const CueSheet: FC<Props> = ({
   const [isLoop, setIsLoop] = useState(false);
   const [fadeIn, setFadeIn] = useState(2);
   const [fadeOut, setFadeOut] = useState(2);
+  // Held while a delete is in flight: no second delete, no save, no closing.
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!cue || !onDelete || deleting) return;
+    setDeleting(true);
+    try {
+      await onDelete(cue);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  /** Read when the sheet opens, never depended on: the parent builds this
+   *  inline, so a fresh object arrives on every render and depending on it
+   *  would reset the form under the author — including after a failed save. */
+  const defaultRangeRef = useRef(defaultRange);
+  defaultRangeRef.current = defaultRange;
 
   useEffect(() => {
     if (!open) return;
     setName(cue?.name ?? "");
     setSongId(cue?.songId ?? null);
     setColor(cue?.color ?? CUE_COLORS[0]);
-    setStart(cue?.startThreadOrdinal ?? defaultRange.start);
-    setEnd(cue?.endThreadOrdinal ?? defaultRange.end);
+    setStart(cue?.startThreadOrdinal ?? defaultRangeRef.current.start);
+    setEnd(cue?.endThreadOrdinal ?? defaultRangeRef.current.end);
     setClipStart(cue?.clipStartSec ?? null);
     setClipEnd(cue?.clipEndSec ?? null);
     setVolume(cue?.volume ?? 1);
     setIsLoop(cue?.isLoop ?? false);
     setFadeIn(cue?.fadeInSec ?? 2);
     setFadeOut(cue?.fadeOutSec ?? 2);
-  }, [open, cue, defaultRange]);
+  }, [open, cue]);
 
   const trimmed = name.trim();
   const selectedSong = songs.find((song) => song.id === songId) ?? null;
@@ -92,7 +110,7 @@ export const CueSheet: FC<Props> = ({
       open={open}
       wide
       title={cue ? "Cue" : "New cue"}
-      confirmDisabled={trimmed.length === 0 || !songId}
+      confirmDisabled={trimmed.length === 0 || !songId || deleting}
       onConfirm={
         canEdit
           ? () =>
@@ -113,7 +131,9 @@ export const CueSheet: FC<Props> = ({
               })
           : undefined
       }
-      onClose={onClose}
+      onClose={() => {
+        if (!deleting) onClose();
+      }}
     >
       {!canEdit ? (
         <F.Hint>Only members of this story can change its soundscape.</F.Hint>
@@ -284,7 +304,12 @@ export const CueSheet: FC<Props> = ({
           </F.Field>
 
           {cue && onDelete && (
-            <F.DangerButton type="button" onClick={() => onDelete(cue)}>
+            <F.DangerButton
+              type="button"
+              disabled={deleting}
+              aria-busy={deleting}
+              onClick={handleDelete}
+            >
               <FaRegTrashCan size={13} />
               Delete cue
             </F.DangerButton>

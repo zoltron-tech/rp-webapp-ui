@@ -567,6 +567,7 @@ export default function BooksPage() {
       )}
 
       <AppAlertDialog
+        closeOnConfirm
         open={confirmBulk}
         onOpenChange={(open) => !open && !removing && setConfirmBulk(false)}
         heading={

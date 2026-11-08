@@ -53,20 +53,25 @@ export function CreateGroupDialog({
     }
 
     setLoading(true);
-    const result = await createGroupAction(
-      trimmedName,
-      selectedFriends.map((friend) => friend.id),
-    );
-    setLoading(false);
+    try {
+      const result = await createGroupAction(
+        trimmedName,
+        selectedFriends.map((friend) => friend.id),
+      );
 
-    if (!result || "message" in result) {
+      if (!result || "message" in result) {
+        errorToast("Failed to create group. Please try again.");
+        return;
+      }
+
+      reset();
+      onOpenChange(false);
+      onCreated(result);
+    } catch {
       errorToast("Failed to create group. Please try again.");
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    reset();
-    onOpenChange(false);
-    onCreated(result);
   };
 
   return (

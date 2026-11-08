@@ -33,6 +33,8 @@ type Props = {
   /** Off while searching or in the Archive tab, where the board order is
    *  not what is on screen and a drag would reorder something invisible. */
   sortable: boolean;
+  /** A pin/archive toggle is in flight — both hold until it lands. */
+  pending?: boolean;
   onOpen: (note: StoryNote) => void;
   onTogglePin: (note: StoryNote) => void;
   onToggleArchive: (note: StoryNote) => void;
@@ -41,6 +43,7 @@ type Props = {
 export const NoteCard: FC<Props> = ({
   note,
   sortable,
+  pending = false,
   onOpen,
   onTogglePin,
   onToggleArchive,
@@ -75,6 +78,8 @@ export const NoteCard: FC<Props> = ({
         aria-pressed={note.isPinned}
         aria-label={note.isPinned ? "Unpin this note" : "Pin this note"}
         title={note.isPinned ? "Unpin" : "Pin"}
+        disabled={pending}
+        aria-busy={pending}
         onClick={() => onTogglePin(note)}
       >
         {/* One pin, either way — the button scales and angles it, so the
@@ -138,6 +143,8 @@ export const NoteCard: FC<Props> = ({
             note.isArchived ? "Restore this note" : "Archive this note"
           }
           title={note.isArchived ? "Restore" : "Archive"}
+          disabled={pending}
+          aria-busy={pending}
           onClick={() => onToggleArchive(note)}
         >
           {note.isArchived ? (

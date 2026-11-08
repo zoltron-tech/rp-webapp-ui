@@ -72,7 +72,7 @@ export function GallerySection({ onBack }: Props) {
   const image = useMuseState("image");
   const wallpaper = useMuseState("wallpaper");
   const cardBackground = useMuseState("cardBackground");
-  const { successToast } = useUIContext();
+  const { successToast, errorToast } = useUIContext();
   const { uploadMedia } = useUploadMedia();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -195,37 +195,44 @@ export function GallerySection({ onBack }: Props) {
     setUploading(true);
     setError(null);
 
-    const uploadedUrls: string[] = [];
+    try {
+      const uploadedUrls: string[] = [];
 
-    for (const pending of pendingFiles) {
-      const formData = new FormData();
-      formData.append("file", pending.file);
-      formData.append("contentType", pending.file.type);
-      formData.append("prefix", id);
+      for (const pending of pendingFiles) {
+        const formData = new FormData();
+        formData.append("file", pending.file);
+        formData.append("contentType", pending.file.type);
+        formData.append("prefix", id);
 
-      const url = await uploadMedia(formData);
-      if (!url || url === API_MESSAGE.MediaError) {
-        setError("One or more files failed to upload. Please try again.");
-        setUploading(false);
+        const url = await uploadMedia(formData).catch(() => null);
+        if (!url || url === API_MESSAGE.MediaError) {
+          setError("One or more files failed to upload. Please try again.");
+          return;
+        }
+        uploadedUrls.push(url);
+      }
+
+      // Register the URLs with the muse before showing them: a file only on
+      // S3 is gone from the gallery after a refresh.
+      const result = await addMuseMediaAction(id, uploadedUrls).catch(
+        () => null,
+      );
+      if (result?.message !== API_MESSAGE.Success) {
+        // Keep the picks so the user can retry.
+        errorToast?.(
+          "Couldn't add the media to the gallery. Please try again.",
+        );
         return;
       }
-      uploadedUrls.push(url);
-    }
 
-    // S3 uploads all succeeded — update UI immediately
-    for (const f of pendingFiles) URL.revokeObjectURL(f.previewUrl);
-    setPendingFiles([]);
-    setExistingMedia((prev) => [...prev, ...uploadedUrls]);
-    setUploading(false);
-    successToast?.("Media uploaded successfully.");
-
-    // Best-effort: register URLs with the backend (don't block or error on failure)
-    try {
-      await addMuseMediaAction(id, uploadedUrls);
-    } catch {
-      // silently ignore — files are already on S3 and visible in the gallery
+      for (const f of pendingFiles) URL.revokeObjectURL(f.previewUrl);
+      setPendingFiles([]);
+      setExistingMedia((prev) => [...prev, ...uploadedUrls]);
+      successToast?.("Media uploaded.");
+    } finally {
+      setUploading(false);
     }
-  }, [id, pendingFiles, uploadMedia, successToast]);
+  }, [id, pendingFiles, uploadMedia, successToast, errorToast]);
 
   const anyChecking = pendingFiles.some((f) => f.isChecking);
 
@@ -234,17 +241,28 @@ export function GallerySection({ onBack }: Props) {
       if (!id) return;
       setConfirmDeleteUrl(null);
 
-      // Remove from UI immediately
+      // Remove from UI immediately; put it back if the service refuses.
+      const removedAt = existingMedia.indexOf(url);
       setExistingMedia((prev) => prev.filter((u) => u !== url));
-      successToast?.("Media removed.");
 
       // Off the muse (its metadata row, hearts and notifications), then out
       // of storage — the order the profile gallery deletes in. Storage alone
       // left a row behind that the profile kept listing.
-      await deleteMuseMediaAction(id, url);
-      await deleteMedia(url);
+      const result = await deleteMuseMediaAction(id, url).catch(() => null);
+      if (result?.message !== API_MESSAGE.Success) {
+        setExistingMedia((prev) => {
+          if (prev.includes(url)) return prev;
+          const next = [...prev];
+          next.splice(removedAt < 0 ? next.length : removedAt, 0, url);
+          return next;
+        });
+        errorToast?.("Couldn't delete the media. Please try again.");
+        return;
+      }
+      successToast?.("Media deleted.");
+      await deleteMedia(url).catch(() => null);
     },
-    [id, successToast],
+    [id, existingMedia, successToast, errorToast],
   );
 
   const stopSelecting = useCallback(() => {

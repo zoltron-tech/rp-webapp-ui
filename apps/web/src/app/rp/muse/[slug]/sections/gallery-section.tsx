@@ -375,6 +375,7 @@ function MediaCaption({
   const [count, setCount] = useState(meta?.reactionCount ?? 0);
   const [likersOpen, setLikersOpen] = useState(false);
   const [unliked, setUnliked] = useState(false);
+  const reactBusyRef = useRef(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Wrap the current textarea selection (or caret) with `marker` on both sides.
@@ -415,28 +416,39 @@ function MediaCaption({
 
   const handleReact = useCallback(async () => {
     if (!meta?.id) return; // no metadata row yet — nothing to react to
+    if (reactBusyRef.current) return; // a toggle is already in flight
     const next = !reacted;
     if (!next) {
       // The shared heart's `unliked` shake, keyed off the press.
       setUnliked(true);
       setTimeout(() => setUnliked(false), 500);
     }
+    reactBusyRef.current = true;
     setReacted(next);
     setCount((c) => Math.max(0, c + (next ? 1 : -1)));
-    const result = await toggleLike();
-    if ("reactions" in result) {
-      setReacted(result.reacted);
-      setCount(result.reactions);
-      onMetaChange(url, {
-        ...meta,
-        reacted: result.reacted,
-        reactionCount: result.reactions,
-      });
-    } else {
-      setReacted(!next);
-      setCount((c) => Math.max(0, c + (next ? -1 : 1)));
+    try {
+      const result = await toggleLike().catch(() => null);
+      if (result && "reactions" in result) {
+        setReacted(result.reacted);
+        setCount(result.reactions);
+        onMetaChange(url, {
+          ...meta,
+          reacted: result.reacted,
+          reactionCount: result.reactions,
+        });
+      } else {
+        setReacted(!next);
+        setCount((c) => Math.max(0, c + (next ? -1 : 1)));
+        errorToast?.(
+          next
+            ? "Couldn't like this media. Please try again."
+            : "Couldn't unlike this media. Please try again.",
+        );
+      }
+    } finally {
+      reactBusyRef.current = false;
     }
-  }, [meta, reacted, toggleLike, onMetaChange, url]);
+  }, [meta, reacted, toggleLike, onMetaChange, url, errorToast]);
 
   const handleOpenLikers = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -697,31 +709,38 @@ function UploadPanel({
     if (pendingFiles.some((f) => f.isChecking)) return;
     setUploading(true);
     setError(null);
-    const uploadedUrls: string[] = [];
-    for (const pending of pendingFiles) {
-      const formData = new FormData();
-      formData.append("file", pending.file);
-      formData.append("contentType", pending.file.type);
-      formData.append("prefix", museId);
-      const url = await uploadMedia(formData);
-      if (!url || url === API_MESSAGE.MediaError) {
-        setError("One or more files failed to upload. Please try again.");
-        setUploading(false);
+    try {
+      const uploadedUrls: string[] = [];
+      for (const pending of pendingFiles) {
+        const formData = new FormData();
+        formData.append("file", pending.file);
+        formData.append("contentType", pending.file.type);
+        formData.append("prefix", museId);
+        const url = await uploadMedia(formData).catch(() => null);
+        if (!url || url === API_MESSAGE.MediaError) {
+          setError("One or more files failed to upload. Please try again.");
+          return;
+        }
+        uploadedUrls.push(url);
+      }
+      const result = await addMuseMediaAction(museId, uploadedUrls).catch(
+        () => null,
+      );
+      if (result?.message !== API_MESSAGE.Success) {
+        // Keep the picks so the user can retry.
+        errorToast?.(
+          "Couldn't add the media to the gallery. Please try again.",
+        );
         return;
       }
-      uploadedUrls.push(url);
+      for (const f of pendingFiles) URL.revokeObjectURL(f.previewUrl);
+      setPendingFiles([]);
+      successToast?.("Media uploaded.");
+      onUploaded(uploadedUrls);
+    } finally {
+      setUploading(false);
     }
-    for (const f of pendingFiles) URL.revokeObjectURL(f.previewUrl);
-    setPendingFiles([]);
-    setUploading(false);
-    successToast?.("Media uploaded successfully.");
-    try {
-      await addMuseMediaAction(museId, uploadedUrls);
-    } catch {
-      /* silently ignore */
-    }
-    onUploaded(uploadedUrls);
-  }, [museId, pendingFiles, uploadMedia, successToast, onUploaded]);
+  }, [museId, pendingFiles, uploadMedia, successToast, errorToast, onUploaded]);
 
   const canAddMore = existingCount + pendingFiles.length < MAX_TOTAL;
   const anyChecking = pendingFiles.some((f) => f.isChecking);
@@ -926,13 +945,25 @@ export function GallerySection({ muse, media }: Props) {
   const handleConfirmDelete = useCallback(async () => {
     if (!muse?.id || !confirmDeleteUrl) return;
     const url = confirmDeleteUrl;
+    const removedAt = localMedia.indexOf(url);
     setConfirmDeleteUrl(null);
     setLocalMedia((prev) => prev.filter((u) => u !== url));
     setGalleryIndex(null);
+    const result = await deleteMuseMediaAction(muse.id, url).catch(() => null);
+    if (result?.message !== API_MESSAGE.Success) {
+      // Put the tile back where it was.
+      setLocalMedia((prev) => {
+        if (prev.includes(url)) return prev;
+        const next = [...prev];
+        next.splice(removedAt < 0 ? next.length : removedAt, 0, url);
+        return next;
+      });
+      errorToast?.("Couldn't delete the media. Please try again.");
+      return;
+    }
     successToast?.("Media deleted.");
-    await deleteMuseMediaAction(muse.id, url);
-    await deleteMedia(url);
-  }, [muse?.id, confirmDeleteUrl, successToast]);
+    await deleteMedia(url).catch(() => null);
+  }, [muse?.id, confirmDeleteUrl, localMedia, successToast, errorToast]);
 
   /*
    * Select mode: tiles toggle instead of opening, a bar counts them, and one

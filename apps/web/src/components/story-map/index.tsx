@@ -246,31 +246,33 @@ export const StoryMapView: FC<Props> = ({
     );
   }, []);
 
+  /** Resolves true once saved, so the pin sheet closes only on success. */
   const commitPin = useCallback(
     async (pin: StoryMapPin) => {
       const mapId = activeMap?.id;
-      if (!mapId) return;
+      if (!mapId) return false;
 
       const previous = maps;
       // Optimistic for a move (the pin already exists); a new pin waits for
       // its server id rather than flickering in with a fake one.
       if (pin.id) patchPin(mapId, pin);
 
-      const saved = await saveStoryMapPinAction(mapId, pin);
+      const saved = await saveStoryMapPinAction(mapId, pin).catch(() => null);
       if (!saved || "message" in saved) {
         setMaps(previous);
         errorToast("Could not save that pin. Please try again.");
-        return;
+        return false;
       }
       patchPin(mapId, saved);
+      return true;
     },
     [activeMap?.id, maps, patchPin, errorToast],
   );
 
   const handleDeletePin = async (pin: StoryMapPin) => {
     if (!pin.id || !activeMap?.id) return;
-    const result = await deleteStoryMapPinAction(pin.id);
-    if (result.message !== API_MESSAGE.Success) {
+    const result = await deleteStoryMapPinAction(pin.id).catch(() => null);
+    if (result?.message !== API_MESSAGE.Success) {
       errorToast("Could not remove that pin. Please try again.");
       return;
     }
@@ -286,7 +288,9 @@ export const StoryMapView: FC<Props> = ({
   };
 
   const handleSaveMap = async (map: StoryMap) => {
-    const saved = await saveStoryMapAction(storyboardId, map);
+    const saved = await saveStoryMapAction(storyboardId, map).catch(
+      () => null,
+    );
     if (!saved || "message" in saved) {
       errorToast("Could not save that map. Please try again.");
       return;
@@ -306,8 +310,8 @@ export const StoryMapView: FC<Props> = ({
 
   const handleDeleteMap = async (map: StoryMap) => {
     if (!map.id) return;
-    const result = await deleteStoryMapAction(map.id);
-    if (result.message !== API_MESSAGE.Success) {
+    const result = await deleteStoryMapAction(map.id).catch(() => null);
+    if (result?.message !== API_MESSAGE.Success) {
       errorToast("Could not delete that map. Please try again.");
       return;
     }
@@ -715,9 +719,11 @@ export const StoryMapView: FC<Props> = ({
         chapters={chapters}
         canEdit={canEdit}
         onClose={() => setPinSheet({ open: false, pin: null, point: null })}
-        onSave={(pin) => {
-          commitPin(pin);
-          setPinSheet({ open: false, pin: null, point: null });
+        onSave={async (pin) => {
+          // A failed save keeps the sheet open, label and notes intact.
+          if (await commitPin(pin)) {
+            setPinSheet({ open: false, pin: null, point: null });
+          }
         }}
         onDelete={handleDeletePin}
         onOpenChapter={(chapterId) =>

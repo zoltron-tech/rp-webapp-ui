@@ -26,7 +26,7 @@ type Props = {
   chronoPosition: number | null;
   canEdit: boolean;
   onClose: () => void;
-  onSave: (placement: BlockPlacement) => void;
+  onSave: (placement: BlockPlacement) => unknown;
   /** Returns the chapter to the unplaced shelf. */
   onUnplace: () => void;
 };

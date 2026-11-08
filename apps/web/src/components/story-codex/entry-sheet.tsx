@@ -36,8 +36,8 @@ type Props = {
   /** Every chapter of the story, for the "appears in" multi-select. */
   chapters: StoryBoardEvent[];
   onClose: () => void;
-  onSave: (entry: CodexEntry) => void;
-  onDelete?: (entry: CodexEntry) => void;
+  onSave: (entry: CodexEntry) => unknown;
+  onDelete?: (entry: CodexEntry) => unknown;
 };
 
 /**
@@ -73,6 +73,19 @@ export const EntrySheet: FC<Props> = ({
   const [showGifPicker, setShowGifPicker] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [mediaError, setMediaError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  // Held while a delete is in flight: no second delete, no save, no closing.
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!entry || !onDelete) return;
+    setDeleting(true);
+    try {
+      await onDelete(entry);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const handleGifSelect = useCallback((gifUrl: string) => {
     setShowGifPicker(false);
@@ -134,6 +147,7 @@ export const EntrySheet: FC<Props> = ({
     setMediaError(null);
     setUploading(false);
     setShowGifPicker(false);
+    setConfirmDelete(false);
   }, [open, entry, defaultCategoryId, categories]);
 
   const trimmed = name.trim();
@@ -152,10 +166,12 @@ export const EntrySheet: FC<Props> = ({
       title={entry ? "Edit entry" : "New entry"}
       // Saving mid-upload would store the local blob: URL, which dies with the
       // page — hold the save until the attachment has a real one.
-      confirmDisabled={trimmed.length === 0 || !categoryId || uploading}
+      confirmDisabled={
+        trimmed.length === 0 || !categoryId || uploading || deleting
+      }
       onConfirm={() => {
         if (!categoryId) return;
-        onSave({
+        return onSave({
           categoryId,
           chapterIds,
           color,
@@ -165,7 +181,9 @@ export const EntrySheet: FC<Props> = ({
           name: trimmed,
         });
       }}
-      onClose={onClose}
+      onClose={() => {
+        if (!deleting) onClose();
+      }}
     >
       <F.Field>
         Name
@@ -299,11 +317,26 @@ export const EntrySheet: FC<Props> = ({
       </F.Field>
 
       {entry && onDelete && (
-        <F.DangerButton type="button" onClick={() => onDelete(entry)}>
+        <F.DangerButton
+          type="button"
+          disabled={deleting}
+          onClick={() => setConfirmDelete(true)}
+        >
           <FaRegTrashCan size={13} />
           Delete entry
         </F.DangerButton>
       )}
+
+      <AppAlertDialog
+        heading="Delete this entry?"
+        text="It disappears from the codex for every co-author on this story. This cannot be undone."
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        actionButtonLabel="Delete"
+        actionColor="negative"
+        closeOnConfirm
+        onConfirm={handleDelete}
+      />
 
       <AppAlertDialog
         heading="Insert GIF"

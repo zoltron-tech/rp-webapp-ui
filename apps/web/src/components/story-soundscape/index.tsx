@@ -74,6 +74,7 @@ export const StorySoundscapeBoard: FC<Props> = ({
 
   // ── Saving ───────────────────────────────────────────────────────────────
 
+  /** Resolves true once saved, so the cue sheet closes only on success. */
   const commitCue = useCallback(
     async (cue: SoundCue) => {
       const previous = cues;
@@ -84,11 +85,13 @@ export const StorySoundscapeBoard: FC<Props> = ({
         );
       }
 
-      const saved = await saveSoundCueAction(storyboardEventId, cue);
+      const saved = await saveSoundCueAction(storyboardEventId, cue).catch(
+        () => null,
+      );
       if (!saved || "message" in saved) {
-        onCuesChanged(previous);
+        if (cue.id) onCuesChanged(previous);
         errorToast("Could not save that cue. Please try again.");
-        return;
+        return false;
       }
 
       const exists = previous.some((candidate) => candidate.id === saved.id);
@@ -99,14 +102,15 @@ export const StorySoundscapeBoard: FC<Props> = ({
             )
           : [...previous, saved],
       );
+      return true;
     },
     [cues, storyboardEventId, onCuesChanged, errorToast],
   );
 
   const handleDelete = async (cue: SoundCue) => {
     if (!cue.id) return;
-    const result = await deleteSoundCueAction(cue.id);
-    if (result.message !== API_MESSAGE.Success) {
+    const result = await deleteSoundCueAction(cue.id).catch(() => null);
+    if (result?.message !== API_MESSAGE.Success) {
       errorToast("Could not delete that cue. Please try again.");
       return;
     }
@@ -323,9 +327,9 @@ export const StorySoundscapeBoard: FC<Props> = ({
         passageCount={passageCount}
         canEdit={canEdit}
         onClose={() => setSheet({ cue: null, open: false })}
-        onSave={(cue) => {
-          commitCue(cue);
-          setSheet({ cue: null, open: false });
+        onSave={async (cue) => {
+          // A failed save keeps the sheet open with the author's picks.
+          if (await commitCue(cue)) setSheet({ cue: null, open: false });
         }}
         onDelete={handleDelete}
       />

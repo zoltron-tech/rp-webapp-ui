@@ -260,16 +260,18 @@ export function LandingSection({ onBack, onSelect }: Props) {
       src: pendingCropSrc,
     };
     setAvatarSaving(true);
-    setMuseAvatarAction(id, nwImage).then((result) => {
-      setAvatarSaving(false);
-      if (result && typeof result === "object" && "message" in result) {
-        errorToast("Failed to update avatar.");
-        return;
-      }
-      setTempUpload(null);
-      setMuseState({ avatar: result as NWImage });
-      successToast("Avatar updated.");
-    });
+    setMuseAvatarAction(id, nwImage)
+      .then((result) => {
+        if (result && typeof result === "object" && "message" in result) {
+          errorToast("Failed to update avatar.");
+          return;
+        }
+        setTempUpload(null);
+        setMuseState({ avatar: result as NWImage });
+        successToast("Avatar updated.");
+      })
+      .catch(() => errorToast("Failed to update avatar."))
+      .finally(() => setAvatarSaving(false));
   }, [
     id,
     pendingCropSrc,
@@ -593,6 +595,7 @@ export function LandingSection({ onBack, onSelect }: Props) {
 
       {/* Navigation guard dialog */}
       <AppAlertDialog
+        closeOnConfirm
         open={dialogOpen}
         onOpenChange={(open) => {
           if (!open) handleDialogCancel();

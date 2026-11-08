@@ -162,11 +162,13 @@ export const ReorderStoryboardEventsOverlay: FC<Props> = ({
       .filter((id): id is string => Boolean(id));
 
     setSaving(true);
+    // A network throw counts as a failure: stay open with the new order kept.
     const response = await reorderStoryBoardEventsAction(
       storyboardId,
       orderedEventIds,
-    );
-    setSaving(false);
+    )
+      .catch(() => null)
+      .finally(() => setSaving(false));
 
     if (!response || "message" in response) {
       errorToast("Could not reorder chapters. Please try again.");

@@ -330,16 +330,18 @@ export function AppearanceSection({
       src: pendingAvatarSrc,
     };
     setAvatarSaving(true);
-    setMuseAvatarAction(id, nwImage).then((result) => {
-      setAvatarSaving(false);
-      if (result && typeof result === "object" && "message" in result) {
-        errorToast("Failed to update avatar.");
-        return;
-      }
-      setAvatarTempUpload(null);
-      setMuseState({ avatar: result as NWImage });
-      successToast("Avatar updated.");
-    });
+    setMuseAvatarAction(id, nwImage)
+      .then((result) => {
+        if (result && typeof result === "object" && "message" in result) {
+          errorToast("Failed to update avatar.");
+          return;
+        }
+        setAvatarTempUpload(null);
+        setMuseState({ avatar: result as NWImage });
+        successToast("Avatar updated.");
+      })
+      .catch(() => errorToast("Failed to update avatar."))
+      .finally(() => setAvatarSaving(false));
   }, [
     id,
     pendingAvatarSrc,

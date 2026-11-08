@@ -6,6 +6,7 @@ import { isSupportNovelist } from "@nw/chat";
 import type { Fandom, Novelist, NWImage, Prompt, StoryBoard } from "@nw/types";
 import { BLOCK_BLACKLIST_COPY, isBlacklistedConnection } from "@nw/types";
 import type { Activity } from "@nw/types/activity";
+import type { Friend } from "@nw/types/novelist";
 import type { ProfileSong } from "@nw/types/music";
 import { ACCENT_MAP, type Accent } from "@nw/types/theme";
 import classNames from "classnames";
@@ -113,6 +114,25 @@ const FANDOMLESS_ID = "FANDOMLESS";
  *  chip, so it gets a short label here. */
 const fandomChipLabel = (fandom: Fandom) =>
   fandom.id === FANDOMLESS_ID ? "Fandomless" : fandom.name;
+
+/** A profile as a friends-list entry, for patching lists after an accept. */
+const novelistAsFriend = (n: Novelist): Friend => ({
+  avatar: n.avatar,
+  badges: n.badges,
+  banner: n.banner,
+  connection: "FRIEND",
+  firstName: n.firstName,
+  id: n.id,
+  image: n.image,
+  isVerified: n.isVerified,
+  lastName: n.lastName,
+  level: n.level,
+  muses: n.muses,
+  mutualFriendCount: 0,
+  palette: n.palette,
+  totalPoints: n.totalPoints,
+  username: n.username,
+});
 
 const POST_PAGE_SIZE = 20;
 const ACTIVITY_PAGE_SIZE = 10;
@@ -405,10 +425,13 @@ export default function UserProfilePage({}) {
     setStartTour(false);
   };
 
-  const handleCopyUsername = () => {
-    if (username) {
-      navigator.clipboard.writeText(username);
-      successToast("Username copied to clipboard");
+  const handleCopyUsername = async () => {
+    if (!username) return;
+    try {
+      await navigator.clipboard.writeText(username);
+      successToast("Username copied.");
+    } catch {
+      errorToast("Couldn't copy the username.");
     }
   };
 
@@ -425,14 +448,15 @@ export default function UserProfilePage({}) {
   };
 
   const handleSendFeedbackMessage = async () => {
-    const response = await sendFeedbackMessage(supportMessage.trim());
+    const response = await sendFeedbackMessage(supportMessage.trim()).catch(
+      () => null,
+    );
     if (response?.message === API_MESSAGE.Success) {
       successToast(`Feedback sent successfully.`);
-    } else {
-      errorToast(
-        `There was an issue while sending feedback Please contact at ${SUPPORT_EMAIL}.`,
-      );
+      return true;
     }
+    errorToast(`Couldn't send feedback. Please contact ${SUPPORT_EMAIL}.`);
+    return false;
   };
 
   const toMusesPage = () => {
@@ -458,23 +482,39 @@ export default function UserProfilePage({}) {
     }
   };
 
-  const handleSendFriendRequest = async () => {
-    if (!novelist?.id) return;
-
-    const response = await sendFriendRequest(novelist.id);
-
-    if (response?.message === API_MESSAGE.Success) {
-      setNovelist((current) => {
-        if (!current) return current;
-        const copied = { ...current };
-
-        copied.connection = "FRIEND_REQUEST_SENT";
-        return copied;
-      });
-
-      successToast("Friend request sent");
+  // One friend-request action at a time: a double-click would otherwise send
+  // (or accept, reject, cancel) twice.
+  const friendActionBusy = useRef(false);
+  const runFriendAction = async (action: () => Promise<void>) => {
+    if (friendActionBusy.current) return;
+    friendActionBusy.current = true;
+    try {
+      await action();
+    } finally {
+      friendActionBusy.current = false;
     }
   };
+
+  const handleSendFriendRequest = () =>
+    runFriendAction(async () => {
+      if (!novelist?.id) return;
+
+      const response = await sendFriendRequest(novelist.id).catch(() => null);
+
+      if (response?.message === API_MESSAGE.Success) {
+        setNovelist((current) => {
+          if (!current) return current;
+          const copied = { ...current };
+
+          copied.connection = "FRIEND_REQUEST_SENT";
+          return copied;
+        });
+
+        successToast("Friend request sent");
+      } else {
+        errorToast("Couldn't send the friend request. Please try again.");
+      }
+    });
 
   const handleBlockUser = async () => {
     if (!novelist?.id) return;
@@ -492,6 +532,8 @@ export default function UserProfilePage({}) {
 
       successToast("User blocked");
       routeToPage(ROUTES.Home);
+    } else {
+      errorToast("Could not block this novelist. Please try again.");
     }
   };
 
@@ -515,6 +557,8 @@ export default function UserProfilePage({}) {
       successToast(
         BLOCK_BLACKLIST_COPY.blacklistedToast(`@${novelist.username}`),
       );
+    } else {
+      errorToast("Could not blacklist this novelist. Please try again.");
     }
   };
 
@@ -538,41 +582,73 @@ export default function UserProfilePage({}) {
     );
   };
 
-  const handleAcceptFriendRequest = async () => {
-    if (!novelist?.id) return;
+  const handleAcceptFriendRequest = () =>
+    runFriendAction(async () => {
+      if (!novelist?.id) return;
+      const accepted = novelist;
 
-    const response = await acceptFriendRequest(novelist.id);
-    if (response?.message === API_MESSAGE.Success) {
-      setNovelist((current) => {
-        if (!current) return current;
-        const copied = { ...current };
+      const response = await acceptFriendRequest(accepted.id).catch(() => null);
+      if (response?.message === API_MESSAGE.Success) {
+        // Mirror of handleUnfriendNovelist: both sides gain a friend.
+        setNovelist((current) => {
+          if (!current) return current;
+          const copied = { ...current };
 
-        copied.connection = "FRIEND";
+          copied.connection = "FRIEND";
+          if (
+            userNovelist &&
+            !copied.friends.some((friend) => friend.id === userNovelist.id)
+          ) {
+            copied.friends = [...copied.friends, novelistAsFriend(userNovelist)];
+          }
+          copied.friendsCount = copied.friendsCount + 1;
 
-        return copied;
-      });
+          return copied;
+        });
 
-      successToast("Friend request accepted");
-    }
-  };
+        setGlobalState((prev) => {
+          const prevNovelist = prev.novelist;
+          if (!prevNovelist) return prev;
+          if (prevNovelist.friends.some((friend) => friend.id === accepted.id)) {
+            return prev;
+          }
+          return {
+            novelist: {
+              ...prevNovelist,
+              friends: [...prevNovelist.friends, novelistAsFriend(accepted)],
+              friendsCount: prevNovelist.friendsCount + 1,
+            },
+          };
+        });
 
-  const handleDeleteFriendRequest = async () => {
-    if (!novelist?.id) return;
+        successToast("Friend request accepted");
+      } else {
+        errorToast("Couldn't accept the friend request. Please try again.");
+      }
+    });
 
-    const response = await deleteFriendRequest(novelist.id);
-    if (response?.message === API_MESSAGE.Success) {
-      setNovelist((current) => {
-        if (!current) return current;
-        const copied = { ...current };
+  const handleDeleteFriendRequest = () =>
+    runFriendAction(async () => {
+      if (!novelist?.id) return;
 
-        copied.connection = null;
+      const response = await deleteFriendRequest(novelist.id).catch(
+        () => null,
+      );
+      if (response?.message === API_MESSAGE.Success) {
+        setNovelist((current) => {
+          if (!current) return current;
+          const copied = { ...current };
 
-        return copied;
-      });
+          copied.connection = null;
 
-      successToast("Friend request rejected");
-    }
-  };
+          return copied;
+        });
+
+        successToast("Friend request rejected");
+      } else {
+        errorToast("Couldn't reject the friend request. Please try again.");
+      }
+    });
 
   const handleUnfriendNovelist = async () => {
     if (!novelist?.id) return;
@@ -619,31 +695,35 @@ export default function UserProfilePage({}) {
 
     const response = await reportProfile(novelist.id, "");
     if (response?.message === API_MESSAGE.Success) {
-      setShowReportAlert(false);
       successToast(REPORT_SENT_TOAST);
     } else {
       errorToast("There was an issue while reporting this profile.");
     }
   };
 
-  const handleCancelFriendRequest = async () => {
-    if (!novelist?.id) return;
+  const handleCancelFriendRequest = () =>
+    runFriendAction(async () => {
+      if (!novelist?.id) return;
 
-    const response = await cancelFriendRequest(novelist.id);
+      const response = await cancelFriendRequest(novelist.id).catch(
+        () => null,
+      );
 
-    if (response?.message === API_MESSAGE.Success) {
-      setNovelist((current) => {
-        if (!current) return current;
-        const copied = { ...current };
+      if (response?.message === API_MESSAGE.Success) {
+        setNovelist((current) => {
+          if (!current) return current;
+          const copied = { ...current };
 
-        copied.connection = null;
+          copied.connection = null;
 
-        return copied;
-      });
+          return copied;
+        });
 
-      successToast("Friend request cancelled");
-    }
-  };
+        successToast("Friend request cancelled");
+      } else {
+        errorToast("Couldn't cancel the friend request. Please try again.");
+      }
+    });
 
   const fetchStoryboards = async () => {
     const _storyboards = await baseDataLoader(() =>
@@ -984,6 +1064,7 @@ export default function UserProfilePage({}) {
         open={showUnfriendAlert}
         onOpenChange={setShowUnfriendAlert}
         onConfirm={handleUnfriendNovelist}
+        closeOnConfirm
         actionButtonLabel="Unfriend"
       />
       <AppAlertDialog
@@ -992,6 +1073,7 @@ export default function UserProfilePage({}) {
         open={showReportAlert}
         onOpenChange={setShowReportAlert}
         onConfirm={handleReportNovelist}
+        closeOnConfirm
         actionButtonLabel="Report"
       />
       <AppAlertDialog
@@ -1016,6 +1098,7 @@ export default function UserProfilePage({}) {
         open={showBlockAlert}
         onOpenChange={setShowBlockAlert}
         onConfirm={handleBlockUser}
+        closeOnConfirm
         actionButtonLabel="Block"
       />
       <AppAlertDialog
@@ -1024,6 +1107,7 @@ export default function UserProfilePage({}) {
         open={showBlackListAlert}
         onOpenChange={setShowBlackListAlert}
         onConfirm={handleBlackListUser}
+        closeOnConfirm
         actionButtonLabel={BLOCK_BLACKLIST_COPY.blacklistConfirm.action}
       />
       <AppAlertDialog
@@ -1039,7 +1123,9 @@ export default function UserProfilePage({}) {
         onOpenChange={setShowContactSupportAlert}
         onConfirm={async () => {
           if (!supportMessage.trim()) return; // validation
-          await handleSendFeedbackMessage();
+          // A failed send keeps the dialog and the message, so nothing typed
+          // is lost.
+          if (!(await handleSendFeedbackMessage())) return;
           setShowContactSupportAlert(false); // close dialog
           setSupportMessage(""); // reset message
         }}

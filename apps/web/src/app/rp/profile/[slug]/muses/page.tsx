@@ -15,7 +15,7 @@ import { AppAlertDialog } from "@/components/dialog";
 import MuseListItem from "@/components/muse-list-item";
 import { MusePreviewCard } from "@/components/muse-preview-card";
 import { useGlobalState } from "@/context/store/stores";
-import { useCustomEvents, useUIContext } from "@/hooks";
+import { useCustomEvents } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import {
   type CustomEventType,
@@ -43,7 +43,6 @@ export default function MusesListPage({}) {
   const isCurrentUser = user?.username === username;
   const { baseDataLoader } = usePageRouter();
   const { on, off } = useCustomEvents(EVENTS.MUSE.base);
-  const { successToast } = useUIContext();
   const { routeToPage } = usePageRouter();
   const [visibility, setVisibility] = useState<string[]>([
     "PUBLIC",
@@ -205,10 +204,9 @@ export default function MusesListPage({}) {
   useEffect(() => {
     const handleMuseDeleted = (e: CustomEventType<MuseDeletedPayload>) => {
       const museId = e.detail.id;
-      const name = e.detail.name;
 
+      // The delete control (MuseListItem / MusePreviewCard) toasts itself.
       setMuses((prev) => prev?.filter((muse) => muse.id !== museId) || []);
-      successToast(`${name} removed successfully.`);
     };
 
     on(EVENTS.MUSE.DELETED, handleMuseDeleted);

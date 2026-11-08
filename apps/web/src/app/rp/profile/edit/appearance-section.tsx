@@ -776,7 +776,7 @@ export function AppearanceSection({ onBack }: Props) {
           onOpenChange={setNoteDialogOpen}
           heading="Edit your note"
           text="A short note shown next to your avatar."
-          actionButtonLabel="Save"
+          actionButtonLabel="Done"
           closeButtonText="Cancel"
           actionColor="neutral"
           onConfirm={confirmNote}
@@ -795,6 +795,7 @@ export function AppearanceSection({ onBack }: Props) {
       )}
 
       <AppAlertDialog
+        closeOnConfirm
         open={discardOpen}
         onOpenChange={setDiscardOpen}
         heading="Discard unsaved changes?"

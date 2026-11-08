@@ -95,7 +95,11 @@ export const UpdatePromptForm: FC<UpdatePromptProps> = ({
   const handleUpdatePrompt = async () => {
     if (!payload?.id || !text) return;
 
-    const response = await updatePromptCommentAction(payload?.id, text, type);
+    const response = await updatePromptCommentAction(
+      payload?.id,
+      text,
+      type,
+    ).catch(() => null);
     if (response?.message === API_MESSAGE.Success) {
       successToast(`Updated successfully`);
       const eventInvoker = emitters[type];
@@ -103,10 +107,11 @@ export const UpdatePromptForm: FC<UpdatePromptProps> = ({
         id: payload.id,
         text,
       });
+      setOpen(false);
     } else {
+      // Stay open with the edit intact so it can be retried.
       errorToast("There was an issue while updating this comment.");
     }
-    setOpen(false);
   };
 
   useEffect(() => {

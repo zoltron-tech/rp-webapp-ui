@@ -72,7 +72,7 @@ export const CommentSource: FC = () => {
     const response = await concludeCommentAction(commentId, next);
     if (response?.message === API_MESSAGE.Success) {
       setCommentState({ concluded: next });
-      successToast(next ? `Thread marked as concluded` : `Thread reopened`);
+      successToast(next ? "Thread marked as concluded." : "Thread reopened.");
     } else {
       errorToast("There was an issue while updating this thread.");
     }
@@ -84,9 +84,9 @@ export const CommentSource: FC = () => {
       emit(EVENTS.COMMENT.DELETED, {
         id: commentId,
       });
-      successToast(`Deleted successfully`);
+      successToast("Thread deleted.");
     } else {
-      errorToast("There was an issue while deleting this comment.");
+      errorToast("There was an issue while deleting this thread.");
     }
   }, [commentId, source, successToast, errorToast]);
 
@@ -196,6 +196,7 @@ export const CommentSource: FC = () => {
         </ShouldRender>
       </S.HeaderDropdownMenuContainer>
       <AppAlertDialog
+        closeOnConfirm
         heading={`Report this reply?`}
         text={`We strive to maintain a safe and welcoming community. If you notice any misconduct from anyone, please report it. Our team will review the issue and take appropriate action as quickly as possible.`}
         open={commentAlert === "report"}
@@ -204,8 +205,9 @@ export const CommentSource: FC = () => {
         actionButtonLabel="Report"
       />
       <AppAlertDialog
+        closeOnConfirm
         heading={`Delete this thread?`}
-        text={`Deleting the prompt will remove all of its threads and replies too. Are you sure you want to delete this reply?`}
+        text={`Deleting this thread will remove all of its replies too. Are you sure you want to delete this thread?`}
         open={commentAlert === "delete"}
         onOpenChange={handleOpenChange("delete")}
         onConfirm={handleDeleteComment}

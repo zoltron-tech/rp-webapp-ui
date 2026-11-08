@@ -19,6 +19,8 @@ import * as S from "./styled";
 
 type BasicInfoStepProps = {
   handleNext: () => void;
+  /** The page is finishing onboarding (in flight or routing away). */
+  finishing?: boolean;
 };
 
 const ErrorKeys = [API_MESSAGE.UncategorizedError] as const;
@@ -28,7 +30,10 @@ const ERROR_MAP: Record<ErrorKey, ReactNode> = {
   [API_MESSAGE.UncategorizedError]: UNCATEGORIZED_ERROR_MESSAGE,
 };
 
-export const PaletteStep: FC<BasicInfoStepProps> = ({ handleNext }) => {
+export const PaletteStep: FC<BasicInfoStepProps> = ({
+  handleNext,
+  finishing = false,
+}) => {
   const user = useGlobalState("user");
   const palette = useOnboardingState("palette");
   const setOnboardingState = useOnboardingStoreSet();
@@ -47,6 +52,7 @@ export const PaletteStep: FC<BasicInfoStepProps> = ({ handleNext }) => {
   const handleSubmit: FormEventHandler<HTMLFormElement> = useCallback(
     async (e) => {
       e.preventDefault();
+      if (loading || finishing) return;
       const target = e.target as HTMLFormElement;
       const _palatte = target.palette.value.trim();
       // Only the basic four are offered here; an account already on another
@@ -61,11 +67,13 @@ export const PaletteStep: FC<BasicInfoStepProps> = ({ handleNext }) => {
         const response = await updateUserTheme({
           palette: Number(_palatte) as Accent,
           theme: 0,
-        });
+        }).catch(() => null);
         setLoading(false);
 
-        if (!("user" in response)) {
-          setError(response.message as ErrorKey);
+        if (!response || !("user" in response)) {
+          setError(
+            (response?.message as ErrorKey) ?? API_MESSAGE.UncategorizedError,
+          );
           return;
         }
 
@@ -77,7 +85,7 @@ export const PaletteStep: FC<BasicInfoStepProps> = ({ handleNext }) => {
 
       handleNext();
     },
-    [user, handleNext, setGlobalState],
+    [user, handleNext, setGlobalState, loading, finishing],
   );
 
   const handleReset = useCallback(() => {
@@ -127,8 +135,12 @@ export const PaletteStep: FC<BasicInfoStepProps> = ({ handleNext }) => {
           <S.ResetButton type="reset" className="reset-button">
             Reset
           </S.ResetButton>
-          <Form.Submit className="submit-button" disabled={loading}>
-            Finish
+          <Form.Submit
+            className="submit-button"
+            disabled={loading || finishing}
+            aria-busy={loading || finishing}
+          >
+            {loading || finishing ? "Finishing…" : "Finish"}
           </Form.Submit>
         </S.FormActions>
       </Form.Root>

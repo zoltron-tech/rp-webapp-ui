@@ -112,6 +112,7 @@ export const HeadcanonsPanel: FC<Props> = ({
   );
   const [sheet, setSheet] = useState<Sheet>(null);
   const [busy, setBusy] = useState(false);
+  const [pinningId, setPinningId] = useState<string | null>(null);
   const [editorError, setEditorError] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
   const [shownNote, setShownNote] = useState<string | null>(null);
@@ -160,12 +161,19 @@ export const HeadcanonsPanel: FC<Props> = ({
 
   // ── Traits ───────────────────────────────────────────────────────────────
 
+  // The save helpers below return their promise to the sheet's onConfirm, so
+  // the sheet spins and stays put until it settles; a network throw counts
+  // as a failure (toast, sheet stays open) and never leaves `busy` stuck.
   const saveTraits = async (traits: MuseTrait[], done?: string) => {
     setBusy(true);
-    const result = await updateMuseTraitsAction(museId, {
-      traits: traits.map((t) => ({ key: t.key, note: t.note })),
-    });
-    setBusy(false);
+    let result: Awaited<ReturnType<typeof updateMuseTraitsAction>> | null;
+    try {
+      result = await updateMuseTraitsAction(museId, {
+        traits: traits.map((t) => ({ key: t.key, note: t.note })),
+      }).catch(() => null);
+    } finally {
+      setBusy(false);
+    }
     if (isError(result) || !Array.isArray(result)) {
       errorToast(
         reasonCopy(result, "Couldn't save the traits. Please try again."),
@@ -187,8 +195,12 @@ export const HeadcanonsPanel: FC<Props> = ({
         : [],
     };
     setBusy(true);
-    const result = await updateMuseFactsAction(museId, request);
-    setBusy(false);
+    let result: Awaited<ReturnType<typeof updateMuseFactsAction>> | null;
+    try {
+      result = await updateMuseFactsAction(museId, request).catch(() => null);
+    } finally {
+      setBusy(false);
+    }
     if (isError(result) || !("blocks" in result)) {
       errorToast(
         reasonCopy(result, "Couldn't save the quick facts. Please try again."),
@@ -204,7 +216,7 @@ export const HeadcanonsPanel: FC<Props> = ({
     const current = new Map(
       section.facts.blocks.map((b) => [b.block, b.items]),
     );
-    saveFacts({
+    return saveFacts({
       blocks: enabled.map((block) => ({
         block,
         items: current.get(block) ?? [],
@@ -215,7 +227,7 @@ export const HeadcanonsPanel: FC<Props> = ({
 
   const setListItems = (block: string, items: string[]) => {
     if (!section) return;
-    saveFacts({
+    return saveFacts({
       ...section.facts,
       blocks: section.facts.blocks.map((b) =>
         b.block === block ? { ...b, items } : b,
@@ -230,7 +242,7 @@ export const HeadcanonsPanel: FC<Props> = ({
       block === "STRENGTHS" || block === "FLAWS"
         ? ["STRENGTHS", "FLAWS"]
         : [block];
-    saveFacts({
+    return saveFacts({
       ...section.facts,
       blocks: section.facts.blocks.filter((b) => !gone.includes(b.block)),
     });
@@ -238,7 +250,7 @@ export const HeadcanonsPanel: FC<Props> = ({
 
   const setPicks = (picks: ThisOrThatPick[]) => {
     if (!section) return;
-    saveFacts({ ...section.facts, thisOrThat: picks });
+    return saveFacts({ ...section.facts, thisOrThat: picks });
   };
 
   // ── Cards ────────────────────────────────────────────────────────────────
@@ -248,11 +260,21 @@ export const HeadcanonsPanel: FC<Props> = ({
     const editing = sheet.headcanon;
     setBusy(true);
     setEditorError(null);
-    const result = editing
-      ? await updateHeadcanonAction(editing.id, request)
-      : await createHeadcanonAction(museId, request);
-    setBusy(false);
+    let result:
+      | Awaited<ReturnType<typeof updateHeadcanonAction>>
+      | Awaited<ReturnType<typeof createHeadcanonAction>>
+      | null;
+    try {
+      result = await (
+        editing
+          ? updateHeadcanonAction(editing.id, request)
+          : createHeadcanonAction(museId, request)
+      ).catch(() => null);
+    } finally {
+      setBusy(false);
+    }
     if (isError(result) || !("id" in result)) {
+      errorToast("Couldn't save the headcanon.");
       setEditorError(
         reasonCopy(result, "Couldn't save the headcanon. Please try again."),
       );
@@ -291,15 +313,28 @@ export const HeadcanonsPanel: FC<Props> = ({
   };
 
   const togglePin = async (card: Headcanon) => {
-    const result = await setHeadcanonPinnedAction(card.id, !card.pinned);
-    if (isError(result) || !("id" in result)) {
-      errorToast(
-        reasonCopy(result, "Couldn't change the pin. Please try again."),
-      );
-      return;
+    if (pinningId) return;
+    setPinningId(card.id);
+    try {
+      const result = await setHeadcanonPinnedAction(
+        card.id,
+        !card.pinned,
+      ).catch(() => null);
+      if (isError(result) || !("id" in result)) {
+        errorToast(
+          reasonCopy(result, "Couldn't change the pin. Please try again."),
+        );
+        return;
+      }
+      // Show the new pin state at once, then take the server's order for
+      // where it lands among the others. A failed refetch keeps what's shown.
+      replaceCard(result);
+      successToast(result.pinned ? "Headcanon pinned." : "Headcanon unpinned.");
+      const fresh = await getHeadcanonSectionAction(museId).catch(() => null);
+      if (!isError(fresh)) setSection(fresh);
+    } finally {
+      setPinningId(null);
     }
-    // Where it lands among the others is the server's order; fetch it.
-    await load();
   };
 
   const deleteCard = async (card: Headcanon) => {
@@ -791,6 +826,7 @@ export const HeadcanonsPanel: FC<Props> = ({
           setSheet({ headcanon: h, kind: "editor" });
         }}
         onTogglePin={togglePin}
+        pinning={Boolean(openCard) && pinningId === openCard?.id}
         onDelete={deleteCard}
       />
     </S.Tone>

@@ -359,6 +359,7 @@ export default function MuseAboutListSectionsPage() {
       )}
 
       <AppAlertDialog
+        closeOnConfirm
         heading="Delete this section?"
         text="Deleting the section will remove all of its content. Are you sure you want to delete this section?"
         open={showDeleteAlert}

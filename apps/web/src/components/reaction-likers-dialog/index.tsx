@@ -65,6 +65,7 @@ export const ReactionLikersDialog: FC<ReactionLikersDialogProps> = ({
 
   const [likers, setLikers] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
@@ -131,13 +132,23 @@ export const ReactionLikersDialog: FC<ReactionLikersDialogProps> = ({
     if (!open || !targetId) return;
     let cancelled = false;
     setLoading(true);
+    setLoadFailed(false);
     setPage(1);
-    getReactionLikersAction(targetId, 1, PAGE_SIZE).then((data) => {
-      if (cancelled) return;
-      setLikers(data);
-      setHasMore(data.length >= PAGE_SIZE);
-      setLoading(false);
-    });
+    getReactionLikersAction(targetId, 1, PAGE_SIZE)
+      .then((data) => {
+        if (cancelled) return;
+        setLikers(data);
+        setHasMore(data.length >= PAGE_SIZE);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setLikers([]);
+        setHasMore(false);
+        setLoadFailed(true);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
     return () => {
       cancelled = true;
     };
@@ -147,11 +158,16 @@ export const ReactionLikersDialog: FC<ReactionLikersDialogProps> = ({
     if (loadingMore) return;
     setLoadingMore(true);
     const nextPage = page + 1;
-    const data = await getReactionLikersAction(targetId, nextPage, PAGE_SIZE);
-    setLikers((prev) => [...prev, ...data]);
-    setHasMore(data.length >= PAGE_SIZE);
-    setPage(nextPage);
-    setLoadingMore(false);
+    try {
+      const data = await getReactionLikersAction(targetId, nextPage, PAGE_SIZE);
+      setLikers((prev) => [...prev, ...data]);
+      setHasMore(data.length >= PAGE_SIZE);
+      setPage(nextPage);
+    } catch {
+      errorToast("Could not load more reactions. Please try again.");
+    } finally {
+      setLoadingMore(false);
+    }
   };
 
   const handleClose = () => {
@@ -185,57 +201,67 @@ export const ReactionLikersDialog: FC<ReactionLikersDialogProps> = ({
     }
   };
 
-  const handleAddFriend = async (friend: Friend) => {
+  /** Runs one friend-request call for a row; `pending` always clears, even
+   *  when the request throws, so the other rows never get stuck. */
+  const runFriendAction = async (
+    friend: Friend,
+    request: (novelistId: string) => Promise<{ message?: string } | null>,
+    next: string | null,
+    successMessage: string,
+    failureMessage: string,
+  ) => {
     if (pending) return;
     setPending(friend.id);
-    const response = await sendFriendRequest(friend.id);
-    setPending(null);
-    if (response?.message === API_MESSAGE.Success) {
-      patchConnection(friend.id, "FRIEND_REQUEST_SENT");
-      successToast("Friend request sent");
-    } else {
-      errorToast("Could not send friend request. Please try again.");
+    try {
+      const response = await request(friend.id);
+      if (response?.message === API_MESSAGE.Success) {
+        patchConnection(friend.id, next);
+        successToast(successMessage);
+      } else {
+        errorToast(failureMessage);
+      }
+    } catch {
+      errorToast(failureMessage);
+    } finally {
+      setPending(null);
     }
   };
 
-  const handleCancelRequest = async (friend: Friend) => {
-    if (pending) return;
-    setPending(friend.id);
-    const response = await cancelFriendRequest(friend.id);
-    setPending(null);
-    if (response?.message === API_MESSAGE.Success) {
-      patchConnection(friend.id, null);
-      successToast("Friend request cancelled");
-    } else {
-      errorToast("Could not cancel friend request. Please try again.");
-    }
-  };
+  const handleAddFriend = (friend: Friend) =>
+    runFriendAction(
+      friend,
+      sendFriendRequest,
+      "FRIEND_REQUEST_SENT",
+      "Friend request sent.",
+      "Could not send friend request. Please try again.",
+    );
 
-  const handleAcceptRequest = async (friend: Friend) => {
-    if (pending) return;
-    setPending(friend.id);
-    const response = await acceptFriendRequest(friend.id);
-    setPending(null);
-    if (response?.message === API_MESSAGE.Success) {
-      patchConnection(friend.id, "FRIEND");
-      successToast("Friend request accepted");
-    } else {
-      errorToast("Could not accept friend request. Please try again.");
-    }
-  };
+  const handleCancelRequest = (friend: Friend) =>
+    runFriendAction(
+      friend,
+      cancelFriendRequest,
+      null,
+      "Friend request cancelled.",
+      "Could not cancel friend request. Please try again.",
+    );
 
-  const handleDeclineRequest = async (friend: Friend) => {
-    if (pending) return;
-    setPending(friend.id);
-    const response = await deleteFriendRequest(friend.id);
-    setPending(null);
-    if (response?.message === API_MESSAGE.Success) {
-      patchConnection(friend.id, null);
-      successToast("Friend request declined");
-    } else {
-      errorToast("Could not decline friend request. Please try again.");
-    }
-  };
+  const handleAcceptRequest = (friend: Friend) =>
+    runFriendAction(
+      friend,
+      acceptFriendRequest,
+      "FRIEND",
+      "Friend request accepted.",
+      "Could not accept friend request. Please try again.",
+    );
+
+  const handleDeclineRequest = (friend: Friend) =>
+    runFriendAction(
+      friend,
+      deleteFriendRequest,
+      null,
+      "Friend request declined.",
+      "Could not decline friend request. Please try again.",
+    );
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setStartY(e.touches[0].clientY);
@@ -297,6 +323,7 @@ export const ReactionLikersDialog: FC<ReactionLikersDialogProps> = ({
             variant="negative"
             size="sm"
             className={isPendingThis ? "messaging" : "pending"}
+            disabled={isPendingThis}
             onClick={() => handleCancelRequest(friend)}
           >
             <FiClock />
@@ -353,6 +380,7 @@ export const ReactionLikersDialog: FC<ReactionLikersDialogProps> = ({
           variant="primary"
           size="sm"
           className={isPendingThis ? "messaging" : undefined}
+          disabled={isPendingThis}
           onClick={() => handleAddFriend(friend)}
         >
           <FiUserPlus />
@@ -420,6 +448,10 @@ export const ReactionLikersDialog: FC<ReactionLikersDialogProps> = ({
             </S.FriendRow>
           ))}
         </S.FriendList>
+      ) : loadFailed ? (
+        <S.EmptyText role="alert">
+          Couldn't load reactions. Please try again.
+        </S.EmptyText>
       ) : (
         <S.EmptyText>No reactions yet.</S.EmptyText>
       )}

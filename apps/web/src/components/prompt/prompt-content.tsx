@@ -1,11 +1,18 @@
 "use client";
 
 import { ShouldRender } from "@novelist-world/ui";
-import { type FC, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  type FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { IoIosShareAlt } from "react-icons/io";
 import { TbMessageCircle } from "react-icons/tb";
 import { useGlobalState } from "@/context/store/stores";
-import { useCustomEvents } from "@/hooks";
+import { useCustomEvents, useUIContext } from "@/hooks";
 import { useToggleLike } from "@/hooks/use-toggle-like";
 import {
   type CustomEventType,
@@ -45,6 +52,10 @@ export const PromptContent: FC<PromptContentProps> = ({ disableCollapse }) => {
 
   const authState = useGlobalState("authState");
   const setPromptState = usePromptStateSet();
+  const { errorToast } = useUIContext();
+  // Ignore clicks while a like request is in flight so overlapping requests
+  // can't finish out of order.
+  const likePendingRef = useRef(false);
   const { toggleLike } = useToggleLike({
     id: promptId,
     liked: reacted,
@@ -75,29 +86,39 @@ export const PromptContent: FC<PromptContentProps> = ({ disableCollapse }) => {
   }, [onPromptEvent, offPromptEvent, promptId, setPromptState]);
 
   const handleLikeToggle = useCallback(async () => {
+    if (likePendingRef.current) return;
+    likePendingRef.current = true;
+    // Captured pre-click state — a failure restores exactly this.
+    const previous = { reacted, reactions };
     setPromptState({
       reacted: !reacted,
       reactions: reacted ? reactions - 1 : reactions + 1,
     });
-    const response = await toggleLike();
-    if (!response || "message" in response) {
+    try {
+      const response = await toggleLike().catch(() => null);
+      if (!response || "message" in response) {
+        setPromptState(previous);
+        errorToast(
+          previous.reacted
+            ? "Couldn't unlike this prompt."
+            : "Couldn't like this prompt.",
+        );
+        return;
+      }
+
       setPromptState({
-        reacted: reacted,
-        reactions: reacted ? reactions + 1 : reactions - 1,
+        reacted: response.reacted,
+        reactions: response.reactions,
       });
-      return;
+
+      emitPromptEvent(EVENTS.PROMPT.REACTED, {
+        id: promptId,
+        reacted: response.reacted,
+        reactions: response.reactions,
+      });
+    } finally {
+      likePendingRef.current = false;
     }
-
-    setPromptState({
-      reacted: response.reacted,
-      reactions: response.reactions,
-    });
-
-    emitPromptEvent(EVENTS.PROMPT.REACTED, {
-      id: promptId,
-      reacted: response.reacted,
-      reactions: response.reactions,
-    });
   }, [
     toggleLike,
     setPromptState,
@@ -105,6 +126,7 @@ export const PromptContent: FC<PromptContentProps> = ({ disableCollapse }) => {
     reactions,
     emitPromptEvent,
     promptId,
+    errorToast,
   ]);
 
   const onLike = useMemo(() => {

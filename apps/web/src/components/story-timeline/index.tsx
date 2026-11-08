@@ -198,11 +198,12 @@ export const StoryTimelineView: FC<Props> = ({ storyboardId, canEdit }) => {
 
   // ── Saving ───────────────────────────────────────────────────────────────
 
-  /** Optimistic placement write: patch locally, then reconcile with the server. */
+  /** Optimistic placement write: patch locally, then reconcile with the server.
+   *  Resolves true once the server has it. */
   const commitPlacement = useCallback(
     async (event: StoryBoardEvent, placement: BlockPlacement | null) => {
       const eventId = event.id;
-      if (!eventId) return;
+      if (!eventId) return false;
 
       const previous = events;
       setEvents((current) =>
@@ -224,12 +225,12 @@ export const StoryTimelineView: FC<Props> = ({ storyboardId, canEdit }) => {
         laneId: placement?.laneId ?? null,
         timelineEnd: placement?.end ?? null,
         timelineStart: placement?.start ?? null,
-      });
+      }).catch(() => null);
 
       if (!saved || "message" in saved) {
         setEvents(previous);
         errorToast("Could not move that chapter. Please try again.");
-        return;
+        return false;
       }
 
       // The server clamps and normalises (flipped edges, foreign timelines),
@@ -239,6 +240,7 @@ export const StoryTimelineView: FC<Props> = ({ storyboardId, canEdit }) => {
           candidate.id === eventId ? saved : candidate,
         ),
       );
+      return true;
     },
     [events, errorToast],
   );
@@ -352,7 +354,9 @@ export const StoryTimelineView: FC<Props> = ({ storyboardId, canEdit }) => {
   // ── Timelines ────────────────────────────────────────────────────────────
 
   const handleSaveTimeline = async (lane: StoryTimelineLane) => {
-    const saved = await saveStoryTimelineLaneAction(storyboardId, lane);
+    const saved = await saveStoryTimelineLaneAction(storyboardId, lane).catch(
+      () => null,
+    );
     if (!saved || "message" in saved) {
       errorToast("Could not save that timeline. Please try again.");
       return;
@@ -370,8 +374,10 @@ export const StoryTimelineView: FC<Props> = ({ storyboardId, canEdit }) => {
 
   const handleDeleteTimeline = async (lane: StoryTimelineLane) => {
     if (!lane.id) return;
-    const result = await deleteStoryTimelineLaneAction(lane.id);
-    if (result.message !== API_MESSAGE.Success) {
+    const result = await deleteStoryTimelineLaneAction(lane.id).catch(
+      () => null,
+    );
+    if (result?.message !== API_MESSAGE.Success) {
       errorToast("Could not delete that timeline. Please try again.");
       return;
     }
@@ -385,7 +391,10 @@ export const StoryTimelineView: FC<Props> = ({ storyboardId, canEdit }) => {
   // ── Markers ──────────────────────────────────────────────────────────────
 
   const handleSaveMarker = async (marker: StoryTimelineMarker) => {
-    const saved = await saveStoryTimelineMarkerAction(storyboardId, marker);
+    const saved = await saveStoryTimelineMarkerAction(
+      storyboardId,
+      marker,
+    ).catch(() => null);
     if (!saved || "message" in saved) {
       errorToast("Could not save that marker. Please try again.");
       return;
@@ -397,8 +406,10 @@ export const StoryTimelineView: FC<Props> = ({ storyboardId, canEdit }) => {
 
   const handleDeleteMarker = async (marker: StoryTimelineMarker) => {
     if (!marker.id) return;
-    const result = await deleteStoryTimelineMarkerAction(marker.id);
-    if (result.message !== API_MESSAGE.Success) {
+    const result = await deleteStoryTimelineMarkerAction(marker.id).catch(
+      () => null,
+    );
+    if (result?.message !== API_MESSAGE.Success) {
       errorToast("Could not delete that marker. Please try again.");
       return;
     }
@@ -844,6 +855,15 @@ export const StoryTimelineView: FC<Props> = ({ storyboardId, canEdit }) => {
       <TimelineSheet
         open={timelineSheet.open}
         lane={timelineSheet.lane}
+        chapterCount={
+          timelineSheet.lane?.id
+            ? events.filter(
+                (event) =>
+                  event.timelineLaneId === timelineSheet.lane?.id &&
+                  event.timelineStart != null,
+              ).length
+            : 0
+        }
         onClose={() => setTimelineSheet({ lane: null, open: false })}
         onSave={handleSaveTimeline}
         onDelete={handleDeleteTimeline}
@@ -865,9 +885,11 @@ export const StoryTimelineView: FC<Props> = ({ storyboardId, canEdit }) => {
         readingPosition={readingPositions.get(blockSheetId ?? "") ?? 0}
         chronoPosition={chronoPositions.get(blockSheetId ?? "") ?? null}
         onClose={() => setBlockSheetId(null)}
-        onSave={(placement) => {
-          if (sheetEvent) commitPlacement(sheetEvent, placement);
-          setBlockSheetId(null);
+        onSave={async (placement) => {
+          // A failed save keeps the sheet open on the author's placement.
+          if (!sheetEvent || (await commitPlacement(sheetEvent, placement))) {
+            setBlockSheetId(null);
+          }
         }}
         onUnplace={() => {
           if (sheetEvent) commitPlacement(sheetEvent, null);

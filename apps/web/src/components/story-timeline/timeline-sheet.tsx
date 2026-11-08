@@ -1,9 +1,11 @@
 "use client";
 
 import type { StoryTimelineLane } from "@nw/types";
+import { pluralize } from "@nw/utils";
 import { type FC, useEffect, useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { ResponsiveSheet } from "@/components/common/responsive-sheet";
+import { AppAlertDialog } from "@/components/dialog";
 import * as S from "./styles";
 
 /** Timeline accents, drawn from the app's existing palette variables. */
@@ -23,27 +25,44 @@ type Props = {
   /** Null when creating a new timeline. The wire shape is still a "lane" —
    *  only the reader-facing name changed. */
   lane: StoryTimelineLane | null;
+  /** How many chapters sit on this timeline — deleting takes them all off. */
+  chapterCount?: number;
   onClose: () => void;
-  onSave: (lane: StoryTimelineLane) => void;
-  onDelete?: (lane: StoryTimelineLane) => void;
+  onSave: (lane: StoryTimelineLane) => unknown;
+  onDelete?: (lane: StoryTimelineLane) => unknown;
 };
 
 /** Create/rename/recolor one timeline (a POV, a plotline, a faction). */
 export const TimelineSheet: FC<Props> = ({
   open,
   lane,
+  chapterCount = 0,
   onClose,
   onSave,
   onDelete,
 }) => {
   const [name, setName] = useState("");
   const [color, setColor] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  // Held while a delete is in flight: no save and no closing until it lands.
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!lane || !onDelete) return;
+    setDeleting(true);
+    try {
+      await onDelete(lane);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   // Reset whenever the sheet opens on a different timeline.
   useEffect(() => {
     if (!open) return;
     setName(lane?.name ?? "");
     setColor(lane?.color ?? TIMELINE_COLORS[0]);
+    setConfirmDelete(false);
   }, [open, lane]);
 
   const trimmed = name.trim();
@@ -52,7 +71,7 @@ export const TimelineSheet: FC<Props> = ({
     <ResponsiveSheet
       open={open}
       title={lane ? "Edit timeline" : "New timeline"}
-      confirmDisabled={trimmed.length === 0}
+      confirmDisabled={trimmed.length === 0 || deleting}
       onConfirm={() =>
         onSave({
           color,
@@ -61,7 +80,9 @@ export const TimelineSheet: FC<Props> = ({
           ordinal: lane?.ordinal ?? 0,
         })
       }
-      onClose={onClose}
+      onClose={() => {
+        if (!deleting) onClose();
+      }}
     >
       <S.Field>
         Name
@@ -97,11 +118,30 @@ export const TimelineSheet: FC<Props> = ({
       </S.Hint>
 
       {lane && onDelete && (
-        <S.DangerButton type="button" onClick={() => onDelete(lane)}>
+        <S.DangerButton
+          type="button"
+          disabled={deleting}
+          onClick={() => setConfirmDelete(true)}
+        >
           <FaRegTrashCan size={13} />
           Delete timeline
         </S.DangerButton>
       )}
+
+      <AppAlertDialog
+        heading="Delete this timeline?"
+        text={
+          chapterCount > 0
+            ? `${chapterCount} ${pluralize("chapter", chapterCount)} ${chapterCount === 1 ? "comes" : "come"} off it and ${chapterCount === 1 ? "goes" : "go"} back to the unplaced shelf. The chapters themselves are not deleted.`
+            : "No chapters sit on it, so nothing else changes."
+        }
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        actionButtonLabel="Delete"
+        actionColor="negative"
+        closeOnConfirm
+        onConfirm={handleDelete}
+      />
     </ResponsiveSheet>
   );
 };

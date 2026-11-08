@@ -24,8 +24,8 @@ type Props = {
   chapters: StoryBoardEvent[];
   canEdit: boolean;
   onClose: () => void;
-  onSave: (pin: StoryMapPin) => void;
-  onDelete?: (pin: StoryMapPin) => void;
+  onSave: (pin: StoryMapPin) => unknown;
+  onDelete?: (pin: StoryMapPin) => unknown;
   onOpenChapter: (chapterId: string) => void;
 };
 
@@ -50,6 +50,18 @@ export const PinSheet: FC<Props> = ({
   const [codexEntryId, setCodexEntryId] = useState<string | null>(null);
   const [label, setLabel] = useState("");
   const [query, setQuery] = useState("");
+  // Held while a remove is in flight: no second remove, no save, no closing.
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!pin || !onDelete || deleting) return;
+    setDeleting(true);
+    try {
+      await onDelete(pin);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -98,7 +110,7 @@ export const PinSheet: FC<Props> = ({
     <ResponsiveSheet
       open={open}
       title={pin ? "Pin" : "New pin"}
-      confirmDisabled={!canSave}
+      confirmDisabled={!canSave || deleting}
       onConfirm={
         canEdit && point
           ? () =>
@@ -113,7 +125,9 @@ export const PinSheet: FC<Props> = ({
               })
           : undefined
       }
-      onClose={onClose}
+      onClose={() => {
+        if (!deleting) onClose();
+      }}
     >
       {!canEdit ? (
         <>
@@ -200,7 +214,12 @@ export const PinSheet: FC<Props> = ({
           )}
 
           {pin && onDelete && (
-            <F.DangerButton type="button" onClick={() => onDelete(pin)}>
+            <F.DangerButton
+              type="button"
+              disabled={deleting}
+              aria-busy={deleting}
+              onClick={handleDelete}
+            >
               <FaRegTrashCan size={13} />
               Remove pin
             </F.DangerButton>

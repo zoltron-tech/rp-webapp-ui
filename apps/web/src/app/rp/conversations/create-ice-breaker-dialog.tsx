@@ -9,6 +9,7 @@ import { HiPaperAirplane } from "react-icons/hi2";
 import { IoCheckmark } from "react-icons/io5";
 import { ChatRichInput } from "@/components/chat-rich-input";
 import { AvatarNew } from "@/components/common/avatar-new";
+import { SheetSpinner } from "@/components/common/responsive-sheet/styles";
 import { AppAlertDialog } from "@/components/dialog";
 import * as SheetS from "@/components/profile-more-dropdown/styled";
 import {
@@ -70,7 +71,10 @@ export function CreateIceBreakerDialog({
   const [messageFocused, setMessageFocused] = useState(false);
   const [color, setColor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // Guards a second tap that lands before the `loading` re-render.
+  const loadingRef = useRef(false);
   const senderRowRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
 
   const novelistSource = useMemo<PromptSource | null>(
     () => (novelist ? novelistToSource(novelist) : null),
@@ -106,7 +110,9 @@ export function CreateIceBreakerDialog({
   // ── Mobile sheet open/close animation ──────────────────────────────────────
   const [sheetOpen, setSheetOpen] = useState(false);
   const [visible, setVisible] = useState(false);
-  const [startY, setStartY] = useState(0);
+  // Where a swipe-to-close began; null when it began in the body (the text
+  // field, the pickers), which must never dismiss the draft.
+  const dragStartYRef = useRef<number | null>(null);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const openSheet = () => {
@@ -149,11 +155,14 @@ export function CreateIceBreakerDialog({
   };
 
   const handleCancel = () => {
+    // No dismissal mid-request: the draft stays until the create settles.
+    if (loadingRef.current) return;
     reset();
     onOpenChange(false);
   };
 
   const handleConfirm = async () => {
+    if (loadingRef.current) return;
     const trimmedMessage = message.trim();
     if (!trimmedMessage) {
       errorToast("Ice breaker message must not be blank.");
@@ -176,16 +185,25 @@ export function CreateIceBreakerDialog({
     const finalMessage =
       htmlToIceBreakerMarkdown(messageHtml).trim() || trimmedMessage;
 
+    loadingRef.current = true;
     setLoading(true);
-    const result = await createIceBreakerAction(
-      selectedSource.sourceId,
-      selectedSource.sourceType,
-      finalMessage,
-      color,
-    );
-    setLoading(false);
+    let result: Awaited<ReturnType<typeof createIceBreakerAction>> | null =
+      null;
+    try {
+      result = await createIceBreakerAction(
+        selectedSource.sourceId,
+        selectedSource.sourceType,
+        finalMessage,
+        color,
+      );
+    } catch {
+      result = null;
+    } finally {
+      loadingRef.current = false;
+      setLoading(false);
+    }
 
-    if (result.message !== API_MESSAGE.Success) {
+    if (result?.message !== API_MESSAGE.Success) {
       errorToast("Failed to create ice breaker. Please try again.");
       return;
     }
@@ -241,7 +259,7 @@ export function CreateIceBreakerDialog({
 
   // Shared body — identical markup for the centered dialog and the bottom sheet.
   const body = (
-    <S.IceBreakerDialogBody>
+    <S.IceBreakerDialogBody ref={bodyRef}>
       <S.IceBreakerSection>
         <S.IceBreakerSectionLabel>Who's sending this?</S.IceBreakerSectionLabel>
         <S.IceBreakerSenderRow>
@@ -323,10 +341,15 @@ export function CreateIceBreakerDialog({
             style={{ bottom: 8, position: "absolute", right: 10 }}
             $visible={message.trim().length > 0}
             disabled={isConfirmDisabled}
+            aria-busy={loading}
             title="Create"
             onClick={handleConfirm}
           >
-            <HiPaperAirplane size={14} />
+            {loading ? (
+              <SheetSpinner aria-hidden />
+            ) : (
+              <HiPaperAirplane size={14} />
+            )}
           </S.IceBreakerInlineSendButton>
         </S.IceBreakerMessageBubble>
         <S.IceBreakerCharCount className={remaining <= 20 ? "warn" : undefined}>
@@ -368,6 +391,7 @@ export function CreateIceBreakerDialog({
               type="button"
               $variant="cancel"
               aria-label="Cancel"
+              disabled={loading}
               onClick={handleCancel}
             >
               <BsX size={18} />
@@ -382,6 +406,7 @@ export function CreateIceBreakerDialog({
         }
         open={open}
         onOpenChange={(next) => {
+          if (!next && loadingRef.current) return;
           if (!next) reset();
           onOpenChange(next);
         }}
@@ -403,9 +428,18 @@ export function CreateIceBreakerDialog({
       />
       <SheetS.MobileSheet
         $open={sheetOpen}
-        onTouchStart={(e) => setStartY(e.touches[0].clientY)}
+        // Swipe-to-close only from the handle / header, never from the body.
+        onTouchStart={(e) => {
+          dragStartYRef.current = bodyRef.current?.contains(e.target as Node)
+            ? null
+            : e.touches[0].clientY;
+        }}
         onTouchEnd={(e) => {
-          if (e.changedTouches[0].clientY - startY > 50) handleCancel();
+          const start = dragStartYRef.current;
+          dragStartYRef.current = null;
+          if (start !== null && e.changedTouches[0].clientY - start > 50) {
+            handleCancel();
+          }
         }}
       >
         <SheetS.DragHandle />
@@ -415,6 +449,7 @@ export function CreateIceBreakerDialog({
               type="button"
               $variant="cancel"
               aria-label="Cancel"
+              disabled={loading}
               onClick={handleCancel}
             >
               <BsX size={18} />

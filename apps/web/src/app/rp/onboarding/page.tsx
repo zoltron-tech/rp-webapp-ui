@@ -2,13 +2,14 @@
 
 import { ShouldRender } from "@novelist-world/ui";
 import { Separator, Tabs } from "radix-ui";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { HiOutlineUserCircle } from "react-icons/hi2";
 import { PiMaskHappyBold } from "react-icons/pi";
 import { finishOnboardingAction } from "@/app/actions";
 import { StoreProvider } from "@/context/store/context";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
+import { useUIContext } from "@/hooks/use-ui-context";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
 import { getUserNovelist } from "../novelists/actions";
@@ -30,6 +31,9 @@ export default function OnboardingPage() {
   const { routeToPage } = usePageRouter();
   const [currentStep, setCurrentStep] = useState("username");
   const { stopPageLoading } = usePageRouter();
+  const { errorToast } = useUIContext();
+  const [finishing, setFinishing] = useState(false);
+  const finishingRef = useRef(false);
 
   const handleUsernameNext = useCallback(() => {
     setCurrentStep("name");
@@ -44,17 +48,27 @@ export default function OnboardingPage() {
   }, []);
 
   const handleAccentNext = useCallback(async () => {
-    const response = await finishOnboardingAction();
-    if (response.message !== API_MESSAGE.Success) {
-      console.log("Error finishing onboarding:", response);
+    if (finishingRef.current) return;
+    finishingRef.current = true;
+    setFinishing(true);
+    const fail = () => {
+      finishingRef.current = false;
+      setFinishing(false);
+      errorToast("Couldn't finish setting up your profile. Please try again.");
+    };
+
+    const response = await finishOnboardingAction().catch(() => null);
+    if (response?.message !== API_MESSAGE.Success) {
+      fail();
       return;
     }
-    const updatedNovelist = await getUserNovelist();
-    if ("message" in updatedNovelist) {
-      console.log("Error fetching updated novelist:", updatedNovelist);
+    const updatedNovelist = await getUserNovelist().catch(() => null);
+    if (!updatedNovelist || "message" in updatedNovelist) {
+      fail();
       return;
     }
 
+    // Stays "finishing" while the route changes, so Finish can't fire twice.
     setGlobalState({
       authState: "LOGGED_IN",
       justOnboarded: true,
@@ -63,7 +77,7 @@ export default function OnboardingPage() {
     });
 
     routeToPage(ROUTES.Welcome);
-  }, [routeToPage, novelist, user]);
+  }, [routeToPage, setGlobalState, errorToast]);
 
   useEffect(() => {
     stopPageLoading();
@@ -146,7 +160,10 @@ export default function OnboardingPage() {
                   </Tabs.Content>
                   <Tabs.Content value="accent" asChild>
                     <S.StepContent>
-                      <PaletteStep handleNext={handleAccentNext} />
+                      <PaletteStep
+                        handleNext={handleAccentNext}
+                        finishing={finishing}
+                      />
                     </S.StepContent>
                   </Tabs.Content>
                 </S.OnboardingPanel>

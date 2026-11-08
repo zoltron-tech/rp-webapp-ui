@@ -45,6 +45,8 @@ type Props = {
   onChange: (headcanon: Headcanon) => void;
   onEdit?: (headcanon: Headcanon) => void;
   onTogglePin?: (headcanon: Headcanon) => void;
+  /** A pin change is out for this card: the pin button waits. */
+  pinning?: boolean;
   onDelete?: (headcanon: Headcanon) => void;
 };
 
@@ -68,6 +70,7 @@ export const HeadcanonDetailSheet: FC<Props> = ({
   onChange,
   onEdit,
   onTogglePin,
+  pinning = false,
   onDelete,
 }) => {
   const authState = useGlobalState("authState");
@@ -168,9 +171,13 @@ export const HeadcanonDetailSheet: FC<Props> = ({
                     : "Pin to the profile"
                 }
                 title={headcanon.pinned ? "Unpin" : "Pin"}
+                disabled={pinning}
+                aria-busy={pinning}
                 onClick={() => onTogglePin(headcanon)}
               >
-                {headcanon.pinned ? (
+                {pinning ? (
+                  <F.SheetSpinner aria-hidden />
+                ) : headcanon.pinned ? (
                   <LuPinOff size={16} />
                 ) : (
                   <LuPin size={16} />

@@ -25,7 +25,7 @@ export const NoteEditTray: FC<NoteEditTrayProps> = ({
   <EditTray
     open={open}
     title="Edit your note"
-    confirmLabel="Save note"
+    confirmLabel="Done"
     onCancel={onCancel}
     onConfirm={onConfirm}
   >

@@ -152,14 +152,15 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
   }, [isMobile]);
 
   const handleSendFeedbackMessage = async () => {
-    const response = await sendFeedbackMessage(supportMessage.trim());
+    const response = await sendFeedbackMessage(supportMessage.trim()).catch(
+      () => null,
+    );
     if (response?.message === API_MESSAGE.Success) {
       successToast(`Feedback sent successfully.`);
-    } else {
-      errorToast(
-        `There was an issue while sending feedback Please contact at ${SUPPORT_EMAIL}.`,
-      );
+      return true;
     }
+    errorToast(`Couldn't send feedback. Please contact ${SUPPORT_EMAIL}.`);
+    return false;
   };
 
   const handleLogout = useCallback(async () => {
@@ -254,6 +255,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
         />
 
         <AppAlertDialog
+          closeOnConfirm
           heading={`Logout?`}
           text={`Are you sure you want to logout?`}
           open={showLogoutAlert}
@@ -274,7 +276,9 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
           onOpenChange={setShowContactSupportAlert}
           onConfirm={async () => {
             if (!supportMessage.trim()) return; // validation
-            await handleSendFeedbackMessage();
+            // A failed send keeps the dialog and the message, so nothing typed
+            // is lost.
+            if (!(await handleSendFeedbackMessage())) return;
             setShowContactSupportAlert(false); // close dialog
             setSupportMessage(""); // reset message
           }}

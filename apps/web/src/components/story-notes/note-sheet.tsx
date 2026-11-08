@@ -84,8 +84,8 @@ type Props = {
   /** What a brand-new sticky starts as. */
   initialType?: StoryNoteType;
   onClose: () => void;
-  onSave: (note: StoryNote) => void;
-  onDelete?: (note: StoryNote) => void;
+  onSave: (note: StoryNote) => unknown;
+  onDelete?: (note: StoryNote) => unknown;
   /** Archive/restore from the read-only header — goes through the flags route,
    *  so it never resends the body. */
   onToggleArchive?: (note: StoryNote) => void;
@@ -96,6 +96,8 @@ type Props = {
   onRetractVote?: (note: StoryNote) => void;
   /** Held while a vote is in flight, so a double tap can't race itself. */
   voting?: boolean;
+  /** Held while a pin/archive/close toggle on this note is in flight. */
+  flagsPending?: boolean;
 };
 
 /**
@@ -120,6 +122,7 @@ export const NoteSheet: FC<Props> = ({
   onVote,
   onRetractVote,
   voting,
+  flagsPending,
 }) => {
   const [mode, setMode] = useState<"view" | "edit">("edit");
   const [title, setTitle] = useState("");
@@ -141,6 +144,18 @@ export const NoteSheet: FC<Props> = ({
   const [uploading, setUploading] = useState(false);
   const [mediaError, setMediaError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  // Held while a delete is in flight: no save and no closing until it lands.
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!note || !onDelete) return;
+    setDeleting(true);
+    try {
+      await onDelete(note);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const handleGifSelect = useCallback((gifUrl: string) => {
     setShowGifPicker(false);
@@ -264,12 +279,15 @@ export const NoteSheet: FC<Props> = ({
       onOpenChange={setConfirmDelete}
       actionButtonLabel="Delete"
       actionColor="negative"
-      onConfirm={() => {
-        setConfirmDelete(false);
-        if (note) onDelete?.(note);
-      }}
+      closeOnConfirm
+      onConfirm={handleDelete}
     />
   );
+
+  /** Closing waits out a delete in flight, from either mode. */
+  const guardedClose = () => {
+    if (!deleting) onClose();
+  };
 
   if (mode === "view" && note) {
     const written = toFormattedDate(
@@ -286,13 +304,14 @@ export const NoteSheet: FC<Props> = ({
         open={open}
         wide
         title={isPoll ? "Poll" : "Note"}
-        onClose={onClose}
+        onClose={guardedClose}
         headerActions={
           <>
             <F.SheetActionButton
               type="button"
               aria-label={isPoll ? "Edit this poll" : "Edit this note"}
               title="Edit"
+              disabled={deleting}
               onClick={() => setMode("edit")}
             >
               <LuPencil size={16} />
@@ -306,6 +325,8 @@ export const NoteSheet: FC<Props> = ({
                     : "Close this poll"
                 }
                 title={note.isPollClosed ? "Reopen" : "Close"}
+                disabled={flagsPending || deleting}
+                aria-busy={flagsPending}
                 onClick={() => onTogglePollClosed(note)}
               >
                 {note.isPollClosed ? (
@@ -322,6 +343,8 @@ export const NoteSheet: FC<Props> = ({
                   note.isArchived ? "Restore this note" : "Archive this note"
                 }
                 title={note.isArchived ? "Restore" : "Archive"}
+                disabled={flagsPending || deleting}
+                aria-busy={flagsPending}
                 onClick={() => onToggleArchive(note)}
               >
                 {note.isArchived ? (
@@ -337,6 +360,7 @@ export const NoteSheet: FC<Props> = ({
                 $variant="danger"
                 aria-label={isPoll ? "Delete this poll" : "Delete this note"}
                 title="Delete"
+                disabled={deleting}
                 onClick={() => setConfirmDelete(true)}
               >
                 <FaRegTrashCan size={14} />
@@ -461,7 +485,7 @@ export const NoteSheet: FC<Props> = ({
       title={editorTitle}
       // Saving mid-upload would store the local blob: URL, which dies with the
       // page — hold the save until the attachment has a real one.
-      confirmDisabled={isBlank || uploading}
+      confirmDisabled={isBlank || uploading || deleting}
       onConfirm={() =>
         onSave({
           color,
@@ -493,7 +517,11 @@ export const NoteSheet: FC<Props> = ({
       }
       // Backing out of an edit returns to the note as saved; a new note has
       // nothing to go back to, so it closes.
-      onClose={() => (note ? setMode("view") : onClose())}
+      onClose={() => {
+        if (deleting) return;
+        if (note) setMode("view");
+        else onClose();
+      }}
     >
       {/* What a sticky *is* is settled when it is written. Switching an
           existing poll to a plain note would throw its votes away, so that
@@ -715,7 +743,11 @@ export const NoteSheet: FC<Props> = ({
       )}
 
       {note && onDelete && (
-        <F.DangerButton type="button" onClick={() => setConfirmDelete(true)}>
+        <F.DangerButton
+          type="button"
+          disabled={deleting}
+          onClick={() => setConfirmDelete(true)}
+        >
           <FaRegTrashCan size={13} />
           {isPollDraft ? "Delete poll" : "Delete note"}
         </F.DangerButton>

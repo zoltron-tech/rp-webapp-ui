@@ -3,7 +3,7 @@
 import { REPORT_SENT_TOAST } from "@/utils/report";
 import type { StoryBoard, StoryBoardEvent } from "@nw/types";
 import { useParams } from "@/lib/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BsThreeDots } from "react-icons/bs";
 import { FaGlobeAmericas, FaHeart, FaLock, FaRegHeart } from "react-icons/fa";
 import { FaRegTrashCan } from "react-icons/fa6";
@@ -131,25 +131,38 @@ export default function UserProfilePage({}) {
       offStoryBoardEvent(EVENTS.STORY_BOARD.REACTED, handleStoryBoardReacted);
   }, [storyboardId, onStoryBoardEvent, offStoryBoardEvent]);
 
+  // Ignores clicks while a toggle is in flight so rapid taps can't race.
+  const likePendingRef = useRef(false);
+
   const onLike = async () => {
-    if (!storyboardId) return;
+    if (!storyboardId || likePendingRef.current) return;
+    likePendingRef.current = true;
 
     const nextReacted = !reacted;
     setReacted(nextReacted);
     setReactionCount((c) => Math.max(0, c + (nextReacted ? 1 : -1)));
 
-    const result = await toggleLike();
-    if ("reactions" in result) {
-      setReactionCount(result.reactions);
-      setReacted(result.reacted);
-      emitStoryBoardEvent(EVENTS.STORY_BOARD.REACTED, {
-        id: storyboardId,
-        reacted: result.reacted,
-        reactions: result.reactions,
-      });
-    } else {
-      setReacted(!nextReacted);
-      setReactionCount((c) => Math.max(0, c + (nextReacted ? -1 : 1)));
+    try {
+      const result = await toggleLike().catch(() => null);
+      if (result && "reactions" in result) {
+        setReactionCount(result.reactions);
+        setReacted(result.reacted);
+        emitStoryBoardEvent(EVENTS.STORY_BOARD.REACTED, {
+          id: storyboardId,
+          reacted: result.reacted,
+          reactions: result.reactions,
+        });
+      } else {
+        setReacted(!nextReacted);
+        setReactionCount((c) => Math.max(0, c + (nextReacted ? -1 : 1)));
+        errorToast(
+          nextReacted
+            ? "Could not like the story. Please try again."
+            : "Could not remove your like. Please try again.",
+        );
+      }
+    } finally {
+      likePendingRef.current = false;
     }
   };
 
@@ -175,10 +188,8 @@ export default function UserProfilePage({}) {
     setEventEditor((prev) => ({ ...prev, open: false }));
   };
 
+  // The form closes itself after a successful save (create or edit).
   const handleEventSaved = (saved: StoryBoardEvent) => {
-    // Only a fresh creation (not an edit) should auto-close the overlay.
-    const wasCreating = eventEditor.eventId === null;
-
     setStoryBoard((prev) => {
       if (!prev) return prev;
       const exists = prev.events.some((e) => e.id === saved.id);
@@ -189,8 +200,6 @@ export default function UserProfilePage({}) {
           : [...prev.events, saved],
       };
     });
-
-    if (wasCreating) closeEventEditor();
   };
 
   const fandom = storyboard?.fandom ?? null;
@@ -217,8 +226,10 @@ export default function UserProfilePage({}) {
   const handleDeleteStory = async () => {
     if (!storyboardId) return;
 
-    const response = await deleteStoryBoardAction(storyboardId);
-    if (response.message === API_MESSAGE.Success) {
+    const response = await deleteStoryBoardAction(storyboardId).catch(
+      () => null,
+    );
+    if (response?.message === API_MESSAGE.Success) {
       successToast("Story deleted.");
       onBackClick();
     } else {
@@ -229,13 +240,19 @@ export default function UserProfilePage({}) {
   const handleReportStory = async () => {
     if (!storyboardId) return;
 
-    const response = await reportAction(storyboardId, "", "STORY_BOARD");
+    const response = await reportAction(storyboardId, "", "STORY_BOARD").catch(
+      () => null,
+    );
     if (response?.message === API_MESSAGE.Success) {
       successToast(REPORT_SENT_TOAST);
     } else {
-      errorToast("There was an issue while reporting this story.");
+      errorToast("Could not report the story. Please try again.");
     }
   };
+
+  // Only the creator can delete (same check as StoryCard's canDelete).
+  const isCreator =
+    !!user?.username && storyboard?.createdBy?.username === user.username;
 
   const dropdownItems = isMember()
     ? [
@@ -244,13 +261,17 @@ export default function UserProfilePage({}) {
           label: "Edit story",
           onClick: onEditStoryClick,
         },
-        { separator: true },
-        {
-          icon: <FaRegTrashCan />,
-          label: "Delete story",
-          onClick: () => setShowDeleteConfirm(true),
-          variant: "danger" as const,
-        },
+        ...(isCreator
+          ? [
+              { separator: true },
+              {
+                icon: <FaRegTrashCan />,
+                label: "Delete story",
+                onClick: () => setShowDeleteConfirm(true),
+                variant: "danger" as const,
+              },
+            ]
+          : []),
       ]
     : [
         {
@@ -526,10 +547,8 @@ export default function UserProfilePage({}) {
         text="This permanently removes the story, its events and all threads. Are you sure?"
         open={showDeleteConfirm}
         onOpenChange={setShowDeleteConfirm}
-        onConfirm={() => {
-          setShowDeleteConfirm(false);
-          handleDeleteStory();
-        }}
+        onConfirm={handleDeleteStory}
+        closeOnConfirm
         actionButtonLabel="Delete"
       />
       <AppAlertDialog
@@ -537,10 +556,8 @@ export default function UserProfilePage({}) {
         text="We strive to maintain a safe and welcoming community. If you notice any misconduct, please report it. Our team will review the issue and take appropriate action as quickly as possible."
         open={showReportConfirm}
         onOpenChange={setShowReportConfirm}
-        onConfirm={() => {
-          setShowReportConfirm(false);
-          handleReportStory();
-        }}
+        onConfirm={handleReportStory}
+        closeOnConfirm
         actionButtonLabel="Report"
       />
       <ReactionLikersDialog

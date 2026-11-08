@@ -55,10 +55,16 @@ export function useQuickAddMuse(onCreated: (muse: Muse) => void) {
     };
 
     setCreatingMuse(true);
-    const result = await updateMuseAction(null, payload);
-    setCreatingMuse(false);
+    let result: Awaited<ReturnType<typeof updateMuseAction>> | null = null;
+    try {
+      result = await updateMuseAction(null, payload);
+    } catch {
+      result = null;
+    } finally {
+      setCreatingMuse(false);
+    }
 
-    if ("message" in result) {
+    if (!result || "message" in result) {
       errorToast("Failed to create character. Please try again.");
       return;
     }

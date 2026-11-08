@@ -1,7 +1,7 @@
 "use client";
 
 import classNames from "classnames";
-import { type FC, type ReactNode, useEffect } from "react";
+import { type FC, type ReactNode, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { IoCheckmark, IoClose } from "react-icons/io5";
 import { useGlobalState } from "@/context/store/stores";
@@ -10,8 +10,12 @@ import * as S from "./styles";
 type Props = {
   open: boolean;
   title: string;
-  /** Omit for a read-only sheet (e.g. a non-member inspecting something). */
-  onConfirm?: () => void;
+  /**
+   * Omit for a read-only sheet (e.g. a non-member inspecting something).
+   * May return a Promise: the confirm button then spins and the sheet can't be
+   * dismissed (or confirmed twice) until it settles.
+   */
+  onConfirm?: () => unknown;
   confirmDisabled?: boolean;
   onClose: () => void;
   /** Roomier on desktop — for editors with a rich-text field. */
@@ -49,11 +53,37 @@ export const ResponsiveSheet: FC<Props> = ({
 }) => {
   const accent = useGlobalState("accent");
   const theme = useGlobalState("theme");
+  const [pending, setPending] = useState(false);
+  // Ref guards a double tap that lands before the pending re-render.
+  const pendingRef = useRef(false);
+
+  const requestClose = () => {
+    if (pendingRef.current) return;
+    onClose();
+  };
+
+  const handleConfirm = () => {
+    if (pendingRef.current || confirmDisabled || !onConfirm) return;
+    const result = onConfirm();
+    if (!result || typeof (result as PromiseLike<unknown>).then !== "function") {
+      return;
+    }
+    pendingRef.current = true;
+    setPending(true);
+    Promise.resolve(result)
+      .catch((error) => {
+        console.error("Sheet confirm failed", error);
+      })
+      .finally(() => {
+        pendingRef.current = false;
+        setPending(false);
+      });
+  };
 
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape" && !pendingRef.current) onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -63,7 +93,7 @@ export const ResponsiveSheet: FC<Props> = ({
 
   return createPortal(
     <div className={classNames(theme, accent)}>
-      <S.SheetOverlay onClick={onClose} />
+      <S.SheetOverlay onClick={requestClose} />
       <S.Sheet
         role="dialog"
         aria-modal
@@ -78,7 +108,8 @@ export const ResponsiveSheet: FC<Props> = ({
             type="button"
             aria-label="Cancel"
             title="Cancel"
-            onClick={onClose}
+            disabled={pending}
+            onClick={requestClose}
           >
             <IoClose size={18} />
           </S.SheetActionButton>
@@ -86,12 +117,20 @@ export const ResponsiveSheet: FC<Props> = ({
             <S.SheetActionButton
               type="button"
               $variant="confirm"
-              aria-label="Save"
+              aria-label={pending ? "Saving" : "Save"}
               title="Save"
-              disabled={confirmDisabled}
-              onClick={onConfirm}
+              // Busy keeps full colour (aria-disabled) so the spinner reads
+              // as progress, not a greyed-out button.
+              disabled={confirmDisabled && !pending}
+              aria-disabled={pending || confirmDisabled}
+              aria-busy={pending}
+              onClick={handleConfirm}
             >
-              <IoCheckmark size={18} />
+              {pending ? (
+                <S.SheetSpinner aria-hidden />
+              ) : (
+                <IoCheckmark size={18} />
+              )}
             </S.SheetActionButton>
           )}
         </S.SheetHeader>

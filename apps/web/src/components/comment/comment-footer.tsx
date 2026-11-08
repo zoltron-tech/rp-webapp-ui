@@ -1,9 +1,16 @@
 "use client";
 
-import { type FC, type MouseEventHandler, useCallback, useMemo } from "react";
+import {
+  type FC,
+  type MouseEventHandler,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import { GoCommentDiscussion } from "react-icons/go";
 import { IoMdArrowForward } from "react-icons/io";
 import { useGlobalState } from "@/context/store/stores";
+import { useUIContext } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useToggleLike } from "@/hooks/use-toggle-like";
 import { ROUTES } from "@/utils/constants/routes";
@@ -21,6 +28,9 @@ export const CommentFooter: FC = () => {
   const { routeToPage } = usePageRouter();
   const authState = useGlobalState("authState");
   const setCommentState = useCommentStateSet();
+  const { errorToast } = useUIContext();
+  // Ignore clicks while a like request is in flight.
+  const likePendingRef = useRef(false);
   const { toggleLike } = useToggleLike({
     id: threadId,
     liked: reacted,
@@ -28,24 +38,34 @@ export const CommentFooter: FC = () => {
   });
 
   const handleLikeToggle = useCallback(async () => {
+    if (likePendingRef.current) return;
+    likePendingRef.current = true;
+    // Captured pre-click state — a failure restores exactly this.
+    const previous = { reacted, reactions };
     setCommentState({
       reacted: !reacted,
       reactions: reacted ? reactions - 1 : reactions + 1,
     });
-    const response = await toggleLike();
-    if (!response || "message" in response) {
-      setCommentState({
-        reacted: reacted,
-        reactions: reacted ? reactions + 1 : reactions - 1,
-      });
-      return;
-    }
+    try {
+      const response = await toggleLike().catch(() => null);
+      if (!response || "message" in response) {
+        setCommentState(previous);
+        errorToast(
+          previous.reacted
+            ? "Couldn't unlike this comment."
+            : "Couldn't like this comment.",
+        );
+        return;
+      }
 
-    setCommentState({
-      reacted: response.reacted,
-      reactions: response.reactions,
-    });
-  }, [toggleLike, setCommentState, reacted, reactions]);
+      setCommentState({
+        reacted: response.reacted,
+        reactions: response.reactions,
+      });
+    } finally {
+      likePendingRef.current = false;
+    }
+  }, [toggleLike, setCommentState, reacted, reactions, errorToast]);
 
   const onLike = useMemo(() => {
     if (authState !== "LOGGED_IN") return undefined;

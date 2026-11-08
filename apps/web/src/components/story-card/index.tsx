@@ -180,6 +180,9 @@ export const StoryCard: FC<Props> = ({
     liked: reacted,
     type: "story_board",
   });
+  // Ignore heart clicks while a like request is in flight, so overlapping
+  // requests can't finish out of order.
+  const reactPendingRef = useRef(false);
 
   const {
     on: onStoryBoardEvent,
@@ -208,14 +211,18 @@ export const StoryCard: FC<Props> = ({
 
   const handleReact = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!storyBoard?.id) return;
+    if (!storyBoard?.id || reactPendingRef.current) return;
+    reactPendingRef.current = true;
 
+    // A failure restores exactly this pre-click state.
+    const previous = { reactionCount, reacted };
     const nextReacted = !reacted;
     setReacted(nextReacted);
     setReactionCount((c) => Math.max(0, c + (nextReacted ? 1 : -1)));
 
-    const result = await toggleLike();
-    if ("reactions" in result) {
+    const result = await toggleLike().catch(() => null);
+    reactPendingRef.current = false;
+    if (result && "reactions" in result) {
       setReactionCount(result.reactions);
       setReacted(result.reacted);
       emitStoryBoardEvent(EVENTS.STORY_BOARD.REACTED, {
@@ -224,8 +231,11 @@ export const StoryCard: FC<Props> = ({
         reactions: result.reactions,
       });
     } else {
-      setReacted(!nextReacted);
-      setReactionCount((c) => Math.max(0, c + (nextReacted ? -1 : 1)));
+      setReacted(previous.reacted);
+      setReactionCount(previous.reactionCount);
+      errorToast(
+        nextReacted ? "Couldn't like this story." : "Couldn't unlike this story.",
+      );
     }
   };
 
@@ -535,6 +545,7 @@ export const StoryCard: FC<Props> = ({
     >
       <ShouldRender if={canDelete}>
         <AppAlertDialog
+          closeOnConfirm
           heading={`Delete ${storyBoard.name}?`}
           text="This permanently removes the story, its events and all threads. Are you sure?"
           open={showDeleteAlert}

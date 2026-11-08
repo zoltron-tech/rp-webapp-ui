@@ -177,17 +177,19 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
       src: pendingCropSrc,
     };
     setAvatarSaving(true);
-    setMuseAvatarAction(muse.id, nwImage).then((result) => {
-      setAvatarSaving(false);
-      if (result && typeof result === "object" && "message" in result) {
-        errorToast("Failed to update avatar.");
-        return;
-      }
-      setAvatarError(false);
-      setTempUploadedImage(null);
-      onMuseUpdate?.({ avatar: result as NWImage });
-      successToast("Avatar updated.");
-    });
+    setMuseAvatarAction(muse.id, nwImage)
+      .then((result) => {
+        if (result && typeof result === "object" && "message" in result) {
+          errorToast("Failed to update avatar.");
+          return;
+        }
+        setAvatarError(false);
+        setTempUploadedImage(null);
+        onMuseUpdate?.({ avatar: result as NWImage });
+        successToast("Avatar updated.");
+      })
+      .catch(() => errorToast("Failed to update avatar."))
+      .finally(() => setAvatarSaving(false));
   }, [
     muse?.id,
     pendingCropSrc,
@@ -1199,6 +1201,7 @@ export function MuseInfoSection({ muse, isOwnMuse, onMuseUpdate }: Props) {
 
       {/* Confirm: change privacy */}
       <AppAlertDialog
+        closeOnConfirm
         heading="Change privacy?"
         text={`Set visibility to "${pendingPrivacy ? PRIVACY_LABELS[pendingPrivacy] : ""}"?`}
         open={pendingPrivacy !== null}

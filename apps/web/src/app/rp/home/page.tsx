@@ -34,6 +34,7 @@ import VideoCard from "@/components/video-card";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useScrollArrows } from "@/hooks/use-scroll-arrows";
+import { useUIContext } from "@/hooks/use-ui-context";
 import { useWindowDimensions } from "@/hooks/use-window-dimentions";
 import {
   FEED_PAGE_SIZES,
@@ -189,6 +190,7 @@ export default function HomePage() {
   const [activitiesHasMore, setActivitiesHasMore] = useState(true);
   const [explorePromptsHasMore, setExplorePromptsHasMore] = useState(true);
   const [feedLoadingMore, setFeedLoadingMore] = useState(false);
+  const { errorToast } = useUIContext();
   // Rendered list — built once after all three sources are ready and appended
   // to on load-more. Positions are stable because we never re-interleave
   // existing items; only new pages are appended to the end.
@@ -419,51 +421,62 @@ export default function HomePage() {
   const loadMoreFeed = async () => {
     if (feedLoadingMore || !feedHasMore) return;
     setFeedLoadingMore(true);
-    const nextActivitiesPage = activitiesPage + 1;
-    const nextExplorePromptsPage = explorePromptsPage + 1;
-    const [moreActivities, moreExplorePrompts] = await Promise.all([
-      activitiesHasMore
-        ? getFriendActivities(
-            nextActivitiesPage,
-            ACTIVITIES_PAGE_SIZE,
-            "friends",
-          )
-        : Promise.resolve(null),
-      explorePromptsHasMore
-        ? getNewPromptsAction(nextExplorePromptsPage, EXPLORE_PROMPTS_PAGE_SIZE)
-        : Promise.resolve(null),
-    ]);
-    const newActivities =
-      moreActivities && !("message" in moreActivities) ? moreActivities : [];
-    const newPrompts =
-      moreExplorePrompts && !("message" in moreExplorePrompts)
-        ? moreExplorePrompts
-        : [];
+    try {
+      const nextActivitiesPage = activitiesPage + 1;
+      const nextExplorePromptsPage = explorePromptsPage + 1;
+      const [moreActivities, moreExplorePrompts] = await Promise.all([
+        activitiesHasMore
+          ? getFriendActivities(
+              nextActivitiesPage,
+              ACTIVITIES_PAGE_SIZE,
+              "friends",
+            )
+          : Promise.resolve(null),
+        explorePromptsHasMore
+          ? getNewPromptsAction(
+              nextExplorePromptsPage,
+              EXPLORE_PROMPTS_PAGE_SIZE,
+            )
+          : Promise.resolve(null),
+      ]);
+      const newActivities =
+        moreActivities && !("message" in moreActivities) ? moreActivities : [];
+      const newPrompts =
+        moreExplorePrompts && !("message" in moreExplorePrompts)
+          ? moreExplorePrompts
+          : [];
 
-    if (newActivities.length > 0) {
-      setActivitiesHasMore(newActivities.length === ACTIVITIES_PAGE_SIZE);
-      setActivitiesPage(nextActivitiesPage);
-    } else if (activitiesHasMore) {
-      setActivitiesHasMore(false);
-    }
-    if (newPrompts.length > 0) {
-      setExplorePromptsHasMore(newPrompts.length === EXPLORE_PROMPTS_PAGE_SIZE);
-      setExplorePromptsPage(nextExplorePromptsPage);
-    } else if (explorePromptsHasMore) {
-      setExplorePromptsHasMore(false);
-    }
+      if (newActivities.length > 0) {
+        setActivitiesHasMore(newActivities.length === ACTIVITIES_PAGE_SIZE);
+        setActivitiesPage(nextActivitiesPage);
+      } else if (activitiesHasMore) {
+        setActivitiesHasMore(false);
+      }
+      if (newPrompts.length > 0) {
+        setExplorePromptsHasMore(
+          newPrompts.length === EXPLORE_PROMPTS_PAGE_SIZE,
+        );
+        setExplorePromptsPage(nextExplorePromptsPage);
+      } else if (explorePromptsHasMore) {
+        setExplorePromptsHasMore(false);
+      }
 
-    // Interleave ONLY the new-page items and append to the stable list.
-    // OOC posts are unpaginated so they don't grow on load-more.
-    const newItems = interleaveFeed(
-      newActivities.filter((a) => !firstPagePromptIds.has(a.target.id)),
-      newPrompts,
-      [],
-    );
-    if (newItems.length > 0) {
-      setMixedFeed((prev) => [...prev, ...newItems]);
+      // Interleave ONLY the new-page items and append to the stable list.
+      // OOC posts are unpaginated so they don't grow on load-more.
+      const newItems = interleaveFeed(
+        newActivities.filter((a) => !firstPagePromptIds.has(a.target.id)),
+        newPrompts,
+        [],
+      );
+      if (newItems.length > 0) {
+        setMixedFeed((prev) => [...prev, ...newItems]);
+      }
+    } catch {
+      // Pages and hasMore flags are untouched, so "Load more" retries.
+      errorToast("Could not load more posts. Please try again.");
+    } finally {
+      setFeedLoadingMore(false);
     }
-    setFeedLoadingMore(false);
   };
 
   /**

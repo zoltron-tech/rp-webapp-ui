@@ -208,50 +208,60 @@ const FullPageForm: FC<InnerFormProps> = ({
       ) {
         pendingSubmitRef.current = async () => {
           setSending(true);
-          const response = await submitPrompt(payload, type);
+          try {
+            const response = await submitPrompt(payload, type);
 
-          if (response.message !== API_MESSAGE.Success) {
-            setError(response.message);
+            if (response.message !== API_MESSAGE.Success) {
+              setError(response.message);
+              emit(PromptEvent.Error, response.message);
+              return;
+            }
+
+            successToast("Sent successfully");
+            emit(PromptEvent.Sent, { muse: selectedSource, payload, type });
+            setError(null);
+            setPromptInputState({
+              featuredSong: null,
+              media: null,
+              promptText: "",
+            });
+            onSend?.(
+              response.prompt ?? buildOptimisticPrompt(selectedSource, payload),
+            );
+          } catch {
+            // Typed text stays in the store so nothing is lost.
+            errorToast(`Could not send your ${type}. Please try again.`);
+          } finally {
             setSending(false);
-            emit(PromptEvent.Error, response.message);
-            return;
           }
-
-          successToast("Sent successfully");
-          emit(PromptEvent.Sent, { muse: selectedSource, payload, type });
-          setSending(false);
-          setError(null);
-          setPromptInputState({
-            featuredSong: null,
-            media: null,
-            promptText: "",
-          });
-          onSend?.(
-            response.prompt ?? buildOptimisticPrompt(selectedSource, payload),
-          );
         };
         setNovelistConfirmOpen(true);
         return;
       }
 
       setSending(true);
-      const response = await submitPrompt(payload, type);
+      try {
+        const response = await submitPrompt(payload, type);
 
-      if (response.message !== API_MESSAGE.Success) {
-        setError(response.message);
+        if (response.message !== API_MESSAGE.Success) {
+          setError(response.message);
+          emit(PromptEvent.Error, response.message);
+          return;
+        }
+
+        successToast("Sent successfully");
+        emit(PromptEvent.Sent, { muse: selectedSource, payload, type });
+        setError(null);
+        setPromptInputState({ media: null, promptText: "" });
+        onSend?.(
+          response.prompt ?? buildOptimisticPrompt(selectedSource, payload),
+        );
+      } catch {
+        // Typed text stays in the store so nothing is lost.
+        errorToast(`Could not send your ${type}. Please try again.`);
+      } finally {
         setSending(false);
-        emit(PromptEvent.Error, response.message);
-        return;
       }
-
-      successToast("Sent successfully");
-      emit(PromptEvent.Sent, { muse: selectedSource, payload, type });
-      setSending(false);
-      setError(null);
-      setPromptInputState({ media: null, promptText: "" });
-      onSend?.(
-        response.prompt ?? buildOptimisticPrompt(selectedSource, payload),
-      );
     },
     [
       sources,
@@ -263,6 +273,8 @@ const FullPageForm: FC<InnerFormProps> = ({
       privacySelectedFriends,
       emit,
       onSend,
+      errorToast,
+      successToast,
     ],
   );
 

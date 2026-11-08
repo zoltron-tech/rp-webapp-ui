@@ -103,6 +103,9 @@ export default function StoryboardEventPage({}) {
   const [bookTarget, setBookTarget] = useState<number | null>(null);
   /** The reader's saved bookmark (global thread index), if any. */
   const [bookmarkIndex, setBookmarkIndex] = useState<number | null>(null);
+  /** A bookmark save/remove is in flight — blocks duplicate requests. */
+  const [bookmarkBusy, setBookmarkBusy] = useState(false);
+  const bookmarkBusyRef = useRef(false);
   /** One-shot command telling a mounted BookView to snap to a thread. */
   const [jumpRequest, setJumpRequest] = useState<{
     index: number;
@@ -534,11 +537,28 @@ export default function StoryboardEventPage({}) {
     setMode(next);
   };
 
+  /** Starts a bookmark write unless one is already in flight (ref guards
+   *  double-clicks that land before the busy re-render). */
+  const beginBookmarkWrite = () => {
+    if (bookmarkBusyRef.current) return false;
+    bookmarkBusyRef.current = true;
+    setBookmarkBusy(true);
+    return true;
+  };
+
+  const endBookmarkWrite = () => {
+    bookmarkBusyRef.current = false;
+    setBookmarkBusy(false);
+  };
+
   const saveBookmarkAt = async (threadIndex: number) => {
+    if (!beginBookmarkWrite()) return;
     const saved = await saveStoryboardEventBookmarkAction({
       storyBoardEventId: storyboardEventId,
       threadIndex,
-    });
+    })
+      .catch(() => null)
+      .finally(endBookmarkWrite);
 
     if (saved && "threadIndex" in saved) {
       setBookmarkIndex(threadIndex);
@@ -555,9 +575,12 @@ export default function StoryboardEventPage({}) {
   const handleSaveBookmark = () => saveBookmarkAt(currentIndexRef.current);
 
   const handleRemoveBookmark = async () => {
-    const result = await deleteStoryboardEventBookmarkAction(storyboardEventId);
+    if (!beginBookmarkWrite()) return;
+    const result = await deleteStoryboardEventBookmarkAction(storyboardEventId)
+      .catch(() => null)
+      .finally(endBookmarkWrite);
 
-    if (result.message === API_MESSAGE.Success) {
+    if (result?.message === API_MESSAGE.Success) {
       setBookmarkIndex(null);
       successToast("Bookmark removed.");
       setSearchParams((params) => params.delete("t"));
@@ -669,6 +692,7 @@ export default function StoryboardEventPage({}) {
   return (
     <S.ParentContainer className={classNames([accent, theme])}>
       <AppAlertDialog
+        closeOnConfirm
         heading="Delete this thread?"
         text="This action is permanent. Are you sure?"
         open={Boolean(threadToDelete)}
@@ -709,6 +733,7 @@ export default function StoryboardEventPage({}) {
         {authState === "LOGGED_IN" && (
           <S.BookmarkButton
             onClick={handleSaveBookmark}
+            disabled={bookmarkBusy}
             aria-label="Bookmark your current spot"
             title="Bookmark your current spot"
           >

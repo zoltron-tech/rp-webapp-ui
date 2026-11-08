@@ -14,6 +14,7 @@ import { IoMdAdd } from "react-icons/io";
 import { LuArrowLeftRight, LuArrowRight, LuX } from "react-icons/lu";
 import { ResponsiveSheet } from "@/components/common/responsive-sheet";
 import * as F from "@/components/common/responsive-sheet/styles";
+import { AppAlertDialog } from "@/components/dialog";
 import { useGlobalState } from "@/context/store/stores";
 import { CODEX_COLORS } from "../icons";
 import * as S from "./styles";
@@ -37,11 +38,12 @@ type Props = {
   tones: CodexTone[];
   canEdit: boolean;
   onClose: () => void;
-  onSave: (relationship: CodexRelationship) => void;
-  onDelete?: (relationship: CodexRelationship) => void;
+  onSave: (relationship: CodexRelationship) => unknown;
+  onDelete?: (relationship: CodexRelationship) => unknown;
   /** Returns the saved tone so it can be selected the moment it exists. */
   onSaveTone: (tone: CodexTone) => Promise<CodexTone | null>;
-  onDeleteTone: (tone: CodexTone) => void;
+  /** Resolves true once the tone is gone. */
+  onDeleteTone: (tone: CodexTone) => Promise<boolean>;
 };
 
 const STRENGTH_LABELS = ["Passing", "Real", "Defining"];
@@ -89,6 +91,36 @@ export const RelationshipSheet: FC<Props> = ({
   const [savingTone, setSavingTone] = useState(false);
   const [isDirected, setIsDirected] = useState(false);
   const [strength, setStrength] = useState(2);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  /** The custom tone waiting on "Retire it?" — null when nothing is asked. */
+  const [retiring, setRetiring] = useState<CodexTone | null>(null);
+  // Held while a delete is in flight: no save and no closing until it lands.
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!relationship || !onDelete) return;
+    setDeleting(true);
+    try {
+      await onDelete(relationship);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const handleRetireTone = async () => {
+    if (!retiring) return;
+    const custom = retiring;
+    setDeleting(true);
+    try {
+      // Fall back only once it is really gone, so a failed retire leaves the
+      // sheet on the tone the author had.
+      if (await onDeleteTone(custom)) {
+        setToneId((current) => (current === custom.id ? null : current));
+      }
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -106,6 +138,8 @@ export const RelationshipSheet: FC<Props> = ({
     setSavingTone(false);
     setIsDirected(relationship?.isDirected ?? false);
     setStrength(relationship?.strength ?? 2);
+    setConfirmDelete(false);
+    setRetiring(null);
   }, [open, relationship, cast]);
 
   const trimmed = label.trim();
@@ -119,7 +153,7 @@ export const RelationshipSheet: FC<Props> = ({
     <ResponsiveSheet
       open={open}
       title={relationship ? "Relationship" : "New relationship"}
-      confirmDisabled={!valid}
+      confirmDisabled={!valid || deleting}
       onConfirm={
         canEdit && fromId && toId
           ? () =>
@@ -132,11 +166,14 @@ export const RelationshipSheet: FC<Props> = ({
                 strength,
                 toId,
                 tone,
+                toneId,
                 toType,
               })
           : undefined
       }
-      onClose={onClose}
+      onClose={() => {
+        if (!deleting) onClose();
+      }}
     >
       {!canEdit ? (
         <F.Hint>
@@ -255,12 +292,8 @@ export const RelationshipSheet: FC<Props> = ({
               return (
                 <S.ToneRetire
                   type="button"
-                  onClick={() => {
-                    onDeleteTone(custom);
-                    // Fall back here too, so the sheet is never left pointing
-                    // at a tone that no longer exists.
-                    setToneId(null);
-                  }}
+                  disabled={deleting}
+                  onClick={() => setRetiring(custom)}
                 >
                   <LuX size={13} />
                   Retire &ldquo;{custom.label}&rdquo; from this story
@@ -404,7 +437,8 @@ export const RelationshipSheet: FC<Props> = ({
           {relationship && onDelete && (
             <F.DangerButton
               type="button"
-              onClick={() => onDelete(relationship)}
+              disabled={deleting}
+              onClick={() => setConfirmDelete(true)}
             >
               <FaRegTrashCan size={13} />
               Delete relationship
@@ -412,6 +446,30 @@ export const RelationshipSheet: FC<Props> = ({
           )}
         </>
       )}
+
+      <AppAlertDialog
+        heading="Delete this relationship?"
+        text="The line between these two comes off the mesh for every co-author. This cannot be undone."
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        actionButtonLabel="Delete"
+        actionColor="negative"
+        closeOnConfirm
+        onConfirm={handleDelete}
+      />
+
+      <AppAlertDialog
+        heading={`Retire “${retiring?.label ?? ""}”?`}
+        text="It leaves this story's palette. Relationships drawn in it stay, and go back to their built-in tone."
+        open={retiring !== null}
+        onOpenChange={(next) => {
+          if (!next) setRetiring(null);
+        }}
+        actionButtonLabel="Retire"
+        actionColor="negative"
+        closeOnConfirm
+        onConfirm={handleRetireTone}
+      />
     </ResponsiveSheet>
   );
 };

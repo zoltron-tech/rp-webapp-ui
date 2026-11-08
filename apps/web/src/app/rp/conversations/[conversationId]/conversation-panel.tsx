@@ -81,7 +81,11 @@ type OptimisticMessage = {
   msg: Message;
   failed: boolean;
   hideSender: boolean;
-  socketPayload: object;
+  /** Plaintext, kept only for the local bubble and to re-encrypt on retry. */
+  text: string;
+  /** Everything but `message`: the wire text is encrypted per send attempt,
+   *  so plaintext is never stored here and never sent. */
+  socketPayload: { conversationId: string; [key: string]: unknown };
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -201,6 +205,7 @@ export function ConversationPanel({
   );
   const [messages, setMessages] = useState<Message[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(true);
+  const [messagesError, setMessagesError] = useState(false);
   const [messageText, setMessageText] = useState("");
   const [messageHtml, setMessageHtml] = useState("");
   const [sending, setSending] = useState(false);
@@ -250,6 +255,7 @@ export function ConversationPanel({
     setConversation(cached);
     setMessages([]);
     setMessagesLoading(true);
+    setMessagesError(false);
     setOptimisticMessages([]);
     setReplyingTo(null);
     setReportingMessage(null);
@@ -414,45 +420,62 @@ export function ConversationPanel({
     async (convId: string, pageNumber = 1, append = false) => {
       if (!convId) return false;
 
-      if (!append) setMessagesLoading(true);
+      if (!append) {
+        setMessagesLoading(true);
+        setMessagesError(false);
+      }
 
-      const rawResult = await getConversationMessagesAction(
-        convId,
-        pageNumber,
-        PAGE_SIZE,
-      );
+      try {
+        const rawResult = await getConversationMessagesAction(
+          convId,
+          pageNumber,
+          PAGE_SIZE,
+        );
 
-      if (!append) setMessagesLoading(false);
+        const result =
+          rawResult && Array.isArray(rawResult)
+            ? (rawResult as Message[])
+            : null;
 
-      const result =
-        rawResult && Array.isArray(rawResult) ? (rawResult as Message[]) : null;
+        if (!result) {
+          // A failed read is not an empty conversation: say so, with Retry.
+          if (!append) {
+            setMessages([]);
+            setMessagesError(true);
+          }
+          return false;
+        }
 
-      if (!result) {
-        if (!append) setMessages([]);
+        if (result.length < PAGE_SIZE) {
+          setHasMore(false);
+        } else {
+          setHasMore(true);
+        }
+
+        const batch = [...(await decryptMessages(result, convId))].reverse();
+
+        if (append) {
+          const container = messagesContainerRef.current;
+          const prevScrollHeight = container?.scrollHeight ?? 0;
+          setMessages((prev) => [...batch, ...prev]);
+          requestAnimationFrame(() => {
+            if (!container) return;
+            container.scrollTop = container.scrollHeight - prevScrollHeight;
+          });
+        } else {
+          setMessages(batch);
+        }
+
+        return result.length > 0;
+      } catch {
+        if (!append) {
+          setMessages([]);
+          setMessagesError(true);
+        }
         return false;
+      } finally {
+        if (!append) setMessagesLoading(false);
       }
-
-      if (result.length < PAGE_SIZE) {
-        setHasMore(false);
-      } else {
-        setHasMore(true);
-      }
-
-      const batch = [...(await decryptMessages(result, convId))].reverse();
-
-      if (append) {
-        const container = messagesContainerRef.current;
-        const prevScrollHeight = container?.scrollHeight ?? 0;
-        setMessages((prev) => [...batch, ...prev]);
-        requestAnimationFrame(() => {
-          if (!container) return;
-          container.scrollTop = container.scrollHeight - prevScrollHeight;
-        });
-      } else {
-        setMessages(batch);
-      }
-
-      return result.length > 0;
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [PAGE_SIZE],
@@ -493,39 +516,41 @@ export function ConversationPanel({
   const loadMoreMessages = async () => {
     if (loadingMore || !hasMore || !conversationId) return;
     setLoadingMore(true);
-    const nextPage = page + 1;
-    const loaded = await fetchMessages(conversationId, nextPage, true);
-    if (loaded) setPage(nextPage);
-    setLoadingMore(false);
+    try {
+      const nextPage = page + 1;
+      const loaded = await fetchMessages(conversationId, nextPage, true);
+      if (loaded) setPage(nextPage);
+    } finally {
+      setLoadingMore(false);
+    }
   };
 
   const sendMessage = async (
     text: string,
     attachments: { url: string }[] | null = null,
     type = "TEXT",
-  ) => {
+  ): Promise<boolean> => {
     if (!conversationId) {
       errorToast("Unable to resolve recipient for this conversation.");
-      return;
+      return false;
     }
 
     if (!socket || !isConnected) {
       errorToast("Not connected. Please wait and try again.");
-      return;
+      return false;
     }
 
     const tempId = `optimistic-${Date.now()}-${Math.random()}`;
     const activeSender = selectedSender;
     const capturedReplyingTo = replyingTo;
 
-    // Built with plaintext; encrypted in place right before the socket send
-    // (see below) so the optimistic bubble renders without waiting on key
-    // resolution. The same object is stored for retrySend, so retries reuse
-    // the encrypted text.
+    // Everything but the text. The text is encrypted right before the socket
+    // send (see below), so the optimistic bubble renders without waiting on
+    // key resolution; retrySend encrypts it again from the entry's `text`.
+    // Plaintext never goes on the wire.
     const socketPayload = {
       attachments,
       conversationId,
-      message: text,
       repliedTo: capturedReplyingTo
         ? { id: capturedReplyingTo.id, type: "MESSAGE" }
         : null,
@@ -584,6 +609,7 @@ export function ConversationPanel({
         id: tempId,
         msg: optimisticMsg,
         socketPayload,
+        text,
       },
     ]);
     setLatestSentMessageId(tempId);
@@ -594,9 +620,15 @@ export function ConversationPanel({
     setSending(true);
     try {
       // Encrypt for the wire as late as possible, so the optimistic bubble
-      // renders without waiting on the conversation key fetch.
-      socketPayload.message = await encryptMessageText(conversationId, text);
-      socket.send(JSON.stringify({ payload: socketPayload, type: "message" }));
+      // renders without waiting on the conversation key fetch. Nothing is
+      // sent unless this succeeds.
+      const wireText = await encryptMessageText(conversationId, text);
+      socket.send(
+        JSON.stringify({
+          payload: { ...socketPayload, message: wireText },
+          type: "message",
+        }),
+      );
       // They will want to hear when this is answered.
       suggestPushPrimer();
     } catch {
@@ -606,31 +638,44 @@ export function ConversationPanel({
     } finally {
       setSending(false);
     }
+    // Queued: the bubble shows it, and a failure leaves Retry on the bubble.
+    return true;
   };
 
-  const retrySend = useCallback(
-    (optimisticId: string) => {
-      if (!socket || !isConnected) {
-        errorToast("Not connected. Please wait and try again.");
-        return;
-      }
-      setOptimisticMessages((prev) => {
-        const entry = prev.find((o) => o.id === optimisticId);
-        if (!entry) return prev;
-        try {
-          socket.send(
-            JSON.stringify({ payload: entry.socketPayload, type: "message" }),
-          );
-          return prev.map((o) =>
-            o.id === optimisticId ? { ...o, failed: false } : o,
-          );
-        } catch {
-          return prev;
-        }
-      });
-    },
-    [socket, isConnected, errorToast],
-  );
+  const retrySend = async (optimisticId: string) => {
+    if (!socket || !isConnected) {
+      errorToast("Not connected. Please wait and try again.");
+      return;
+    }
+    const entry = optimisticMessages.find((o) => o.id === optimisticId);
+    if (!entry) return;
+    const markFailed = (failed: boolean) =>
+      setOptimisticMessages((prev) =>
+        prev.map((o) => (o.id === optimisticId ? { ...o, failed } : o)),
+      );
+    markFailed(false);
+    try {
+      // Encrypted again from the plaintext on every attempt; a payload goes
+      // out only once encryption has succeeded.
+      const wireText = await encryptMessageText(
+        entry.socketPayload.conversationId,
+        entry.text,
+      );
+      socket.send(
+        JSON.stringify({
+          payload: { ...entry.socketPayload, message: wireText },
+          type: "message",
+        }),
+      );
+    } catch {
+      markFailed(true);
+    }
+  };
+
+  // An unsent bubble has only a local id: dropping it is local too.
+  const removeOptimisticMessage = (optimisticId: string) => {
+    setOptimisticMessages((prev) => prev.filter((o) => o.id !== optimisticId));
+  };
 
   const mentionItems = useMemo<MentionDataItem[]>(() => {
     const items: MentionDataItem[] = [];
@@ -655,16 +700,20 @@ export function ConversationPanel({
     [conversationId],
   );
 
-  const onSendMessage = async () => {
+  // Resolves true when the text was taken; the draft is cleared only then, so
+  // a send that never started (not connected) keeps what was typed.
+  const onSendMessage = async (): Promise<boolean> => {
     const text = messageHtml || messageText.trim();
-    if (!text || sending) return;
+    if (!text || sending) return false;
     if (editingMessage) {
-      await submitEdit(text);
-      return;
+      return submitEdit(text);
     }
-    await sendMessage(text);
-    setMessageText("");
-    setMessageHtml("");
+    const sent = await sendMessage(text);
+    if (sent) {
+      setMessageText("");
+      setMessageHtml("");
+    }
+    return sent;
   };
 
   // ── Edit message ────────────────────────────────────────────────────────────
@@ -683,15 +732,16 @@ export function ConversationPanel({
     setMessageHtml("");
   }, []);
 
-  const submitEdit = async (text: string) => {
-    if (!editingMessage) return;
+  const submitEdit = async (text: string): Promise<boolean> => {
+    if (!editingMessage) return false;
 
     if (!socket || !isConnected) {
       errorToast("Not connected. Please wait and try again.");
-      return;
+      return false;
     }
 
     const messageId = editingMessage.id;
+    const previousText = editingMessage.message;
 
     // 1. Optimistically reflect the new text locally.
     setMessages((prev) =>
@@ -701,6 +751,7 @@ export function ConversationPanel({
     // 2. Send the edit over the chat-server socket, which persists it via the
     //    backend and broadcasts the updated message to every participant.
     setSending(true);
+    let saved = false;
     try {
       const wireText = await encryptMessageText(conversationId, text);
       socket.send(
@@ -712,15 +763,26 @@ export function ConversationPanel({
           }),
         ),
       );
+      saved = true;
     } catch {
+      // Put the bubble back; edit mode and the draft stay for another try.
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === messageId && m.message === text
+            ? { ...m, message: previousText }
+            : m,
+        ),
+      );
       errorToast("Could not save your changes. Please try again.");
     } finally {
       setSending(false);
     }
+    if (!saved) return false;
 
     setEditingMessage(null);
     setMessageText("");
     setMessageHtml("");
+    return true;
   };
 
   const onSendGif = async (gifUrl: string) => {
@@ -738,26 +800,36 @@ export function ConversationPanel({
     await sendMessage(clipUrl);
   };
 
-  const onSendMedia = async (urls: string[]) => {
-    if (!urls.length || sending) return;
+  // Same contract as onSendMessage: true when sent, and only then are the
+  // caption (here) and the picked media (in the composer) cleared.
+  const onSendMedia = async (urls: string[]): Promise<boolean> => {
+    if (!urls.length || sending) return false;
     const text = messageHtml || messageText.trim();
-    await sendMessage(
+    const sent = await sendMessage(
       text,
       urls.map((url) => ({ url })),
     );
-    setMessageText("");
-    setMessageHtml("");
+    if (sent) {
+      setMessageText("");
+      setMessageHtml("");
+    }
+    return sent;
   };
 
   const handleReportMessage = async () => {
     if (!reportingMessage) return;
-    const response = await reportMessageAction(reportingMessage.id);
-    if (response === true) {
-      successToast(REPORT_SENT_TOAST);
-    } else {
+    try {
+      const response = await reportMessageAction(reportingMessage.id);
+      if (response === true) {
+        successToast(REPORT_SENT_TOAST);
+      } else {
+        errorToast("There was an issue while reporting this message.");
+      }
+    } catch {
       errorToast("There was an issue while reporting this message.");
+    } finally {
+      setReportingMessage(null);
     }
-    setReportingMessage(null);
   };
 
   // ── Delete message ──────────────────────────────────────────────────────────
@@ -787,6 +859,13 @@ export function ConversationPanel({
 
   const handleDeleteMessage = async () => {
     if (!deletingMessage) return;
+
+    // Never reached the server: nothing to delete there.
+    if (deletingMessage.id.startsWith("optimistic-")) {
+      removeOptimisticMessage(deletingMessage.id);
+      setDeletingMessage(null);
+      return;
+    }
 
     if (!socket || !isConnected) {
       errorToast("Not connected. Please wait and try again.");
@@ -1208,6 +1287,20 @@ export function ConversationPanel({
                   <S.SkeletonBubble $align="right" $width="60%" />
                 </S.SkeletonRow>
               </S.MessagesLoadingState>
+            ) : messagesError && optimisticMessages.length === 0 ? (
+              <S.HelloState>
+                <S.HelloBox
+                  type="button"
+                  onClick={() =>
+                    fetchMessages(conversationId, 1).then((loaded) => {
+                      if (loaded) scrollToBottom();
+                    })
+                  }
+                >
+                  <S.EmptyText>Messages could not be loaded.</S.EmptyText>
+                  <S.HelloLabel>Tap to retry</S.HelloLabel>
+                </S.HelloBox>
+              </S.HelloState>
             ) : fallbackMessages.length > 0 ? (
               <S.MessagesList>
                 <LoadMore
@@ -1287,7 +1380,13 @@ export function ConversationPanel({
                         onReport={(msg) => setReportingMessage(msg)}
                         onReact={handleReact}
                         onEdit={startEditing}
-                        onDelete={(msg) => setDeletingMessage(msg)}
+                        onDelete={(msg) =>
+                          // An unsent bubble is only local: "Remove" drops it
+                          // without the delete-for-everyone confirm.
+                          msg.id.startsWith("optimistic-")
+                            ? removeOptimisticMessage(msg.id)
+                            : setDeletingMessage(msg)
+                        }
                       />
                     </span>
                   );
@@ -1375,6 +1474,7 @@ export function ConversationPanel({
       </S.ChatWrapper>
 
       <AppAlertDialog
+        closeOnConfirm
         heading="Report this message?"
         text="We strive to maintain a safe and welcoming community. If this message violates our guidelines, please report it. Our team will review and take appropriate action as quickly as possible."
         open={!!reportingMessage}
@@ -1386,6 +1486,7 @@ export function ConversationPanel({
       />
 
       <AppAlertDialog
+        closeOnConfirm
         heading="Delete this message?"
         text="It will be removed for everyone in this conversation. This cannot be undone."
         open={!!deletingMessage}

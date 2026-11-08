@@ -43,7 +43,7 @@ export function StorySection({
       result = await save();
     } catch (err) {
       console.error("[StorySection] save() threw:", err);
-      setSaveError("Unexpected error. Check console.");
+      setSaveError("Something went wrong. Please try again.");
       return;
     }
     if (!result.ok) {
@@ -61,7 +61,7 @@ export function StorySection({
         result = await save();
       } catch (err) {
         console.error("[StorySection] save() threw:", err);
-        setSaveError("Unexpected error. Check console.");
+        setSaveError("Something went wrong. Please try again.");
         return;
       }
       if (!result.ok) {

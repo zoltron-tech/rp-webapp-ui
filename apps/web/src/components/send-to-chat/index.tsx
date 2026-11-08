@@ -22,6 +22,7 @@ import { LoadMore } from "@/components/load-more/page";
 import { useSocket } from "@/context/socket";
 import { useGlobalState } from "@/context/store/stores";
 import { encryptMessageText } from "@/utils/e2e-crypto";
+import { sendAndAwaitAnswer } from "./await-send";
 import * as S from "./styles";
 
 /**
@@ -190,8 +191,14 @@ export const SendToChatPanel = ({
         },
         type: "TEXT",
       };
-      socket.send(JSON.stringify({ payload, type: "message" }));
-      setSentIds((prev) => new Set(prev).add(conversationId));
+      // Wait for chat-server's answer, so a refusal (blocked, unavailable)
+      // shows instead of a "Sent" that never arrived.
+      const outcome = await sendAndAwaitAnswer(socket, payload, user?.username);
+      if (outcome.ok) {
+        setSentIds((prev) => new Set(prev).add(conversationId));
+      } else {
+        setError(outcome.message);
+      }
     } catch {
       setError("Couldn't send it. Please try again.");
     } finally {

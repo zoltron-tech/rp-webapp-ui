@@ -55,19 +55,22 @@ export const UsernameStep: FC<UsernameStepProps> = ({ handleNext }) => {
 
   const usernameCheck = useCallback(
     async (value: string) => {
+      let checking = false;
       try {
         if (value === user?.username) return false; // No change, no error
 
         if (checkUsernameInvalidity(value)) return true; // Invalid username format
 
+        checking = true;
         setLoading(true);
         const available = await checkUsernameAvailability(value);
-        setLoading(false);
 
         if (!available) return true;
         return false;
       } catch (error) {
         return false;
+      } finally {
+        if (checking) setLoading(false);
       }
     },
     [user],

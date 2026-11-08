@@ -1,11 +1,13 @@
 "use client";
 
 import type { StoryMap } from "@nw/types";
+import { pluralize } from "@nw/utils";
 import { type FC, useEffect, useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { LuImageUp } from "react-icons/lu";
 import { ResponsiveSheet } from "@/components/common/responsive-sheet";
 import * as F from "@/components/common/responsive-sheet/styles";
+import { AppAlertDialog } from "@/components/dialog";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { API_MESSAGE } from "@/utils/constants";
 import * as S from "./styles";
@@ -23,8 +25,8 @@ type Props = {
   map: StoryMap | null;
   storyboardId: string;
   onClose: () => void;
-  onSave: (map: StoryMap) => void;
-  onDelete?: (map: StoryMap) => void;
+  onSave: (map: StoryMap) => unknown;
+  onDelete?: (map: StoryMap) => unknown;
 };
 
 /** Upload / rename / replace / delete one map. */
@@ -43,6 +45,19 @@ export const MapSheet: FC<Props> = ({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [oversized, setOversized] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  // Held while a delete is in flight: no save and no closing until it lands.
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!map || !onDelete) return;
+    setDeleting(true);
+    try {
+      await onDelete(map);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -51,7 +66,11 @@ export const MapSheet: FC<Props> = ({
     setUploading(false);
     setError(null);
     setOversized(false);
+    setConfirmDelete(false);
   }, [open, map]);
+
+  const pinCount = map?.pins.length ?? 0;
+  const pinsLabel = `${pinCount} ${pluralize("pin", pinCount)}`;
 
   const handleFile = async (file: File | null) => {
     if (!file) return;
@@ -104,7 +123,9 @@ export const MapSheet: FC<Props> = ({
     <ResponsiveSheet
       open={open}
       title={map ? "Edit map" : "Upload a map"}
-      confirmDisabled={trimmed.length === 0 || uploading || (!map && !image)}
+      confirmDisabled={
+        trimmed.length === 0 || uploading || deleting || (!map && !image)
+      }
       onConfirm={() =>
         onSave({
           id: map?.id ?? null,
@@ -114,7 +135,9 @@ export const MapSheet: FC<Props> = ({
           pins: map?.pins ?? [],
         })
       }
-      onClose={onClose}
+      onClose={() => {
+        if (!deleting) onClose();
+      }}
     >
       <F.Field>
         Name
@@ -164,11 +187,30 @@ export const MapSheet: FC<Props> = ({
       </F.Hint>
 
       {map && onDelete && (
-        <F.DangerButton type="button" onClick={() => onDelete(map)}>
+        <F.DangerButton
+          type="button"
+          disabled={deleting}
+          onClick={() => setConfirmDelete(true)}
+        >
           <FaRegTrashCan size={13} />
-          Delete map{map.pins.length > 0 && ` and its ${map.pins.length} pins`}
+          Delete map{pinCount > 0 && ` and its ${pinsLabel}`}
         </F.DangerButton>
       )}
+
+      <AppAlertDialog
+        heading="Delete this map?"
+        text={
+          pinCount > 0
+            ? `Its ${pinsLabel} ${pinCount === 1 ? "goes" : "go"} with it, for every co-author on this story. This cannot be undone.`
+            : "It disappears for every co-author on this story. This cannot be undone."
+        }
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        actionButtonLabel="Delete"
+        actionColor="negative"
+        closeOnConfirm
+        onConfirm={handleDelete}
+      />
     </ResponsiveSheet>
   );
 };

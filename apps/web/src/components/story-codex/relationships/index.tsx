@@ -29,14 +29,16 @@ type Props = {
   /** The houses, clans and affiliations this story sorts its cast into. */
   groups: CodexGroup[];
   canEdit: boolean;
-  onSave: (relationship: CodexRelationship) => void;
-  onDelete: (relationship: CodexRelationship) => void;
+  /** Each of these resolves true once the server has it, so the sheet that
+   *  asked closes only on success and keeps the author's picks on a failure. */
+  onSave: (relationship: CodexRelationship) => Promise<boolean>;
+  onDelete: (relationship: CodexRelationship) => Promise<boolean>;
   /** Creating a tone happens inside the relationship sheet — an author reaches
    *  for a new colour while recording the relationship that needs it. */
   onSaveTone: (tone: CodexTone) => Promise<CodexTone | null>;
-  onDeleteTone: (tone: CodexTone) => void;
-  onSaveGroup: (group: CodexGroup) => void;
-  onDeleteGroup: (group: CodexGroup) => void;
+  onDeleteTone: (tone: CodexTone) => Promise<boolean>;
+  onSaveGroup: (group: CodexGroup) => Promise<boolean>;
+  onDeleteGroup: (group: CodexGroup) => Promise<boolean>;
 };
 
 type Mode = "mesh" | "table";
@@ -534,13 +536,15 @@ export const RelationshipsSection: FC<Props> = ({
           .map((group) => group.color)}
         canEdit={canEdit}
         onClose={() => setGroupSheet({ group: null, open: false })}
-        onSave={(group) => {
-          onSaveGroup(group);
-          setGroupSheet({ group: null, open: false });
+        onSave={async (group) => {
+          if (await onSaveGroup(group)) {
+            setGroupSheet({ group: null, open: false });
+          }
         }}
-        onDelete={(group) => {
-          onDeleteGroup(group);
-          setGroupSheet({ group: null, open: false });
+        onDelete={async (group) => {
+          if (await onDeleteGroup(group)) {
+            setGroupSheet({ group: null, open: false });
+          }
         }}
       />
 
@@ -554,13 +558,15 @@ export const RelationshipsSection: FC<Props> = ({
         onSaveTone={onSaveTone}
         onDeleteTone={onDeleteTone}
         onClose={() => setSheet({ open: false, relationship: null })}
-        onSave={(relationship) => {
-          onSave(relationship);
-          setSheet({ open: false, relationship: null });
+        onSave={async (relationship) => {
+          if (await onSave(relationship)) {
+            setSheet({ open: false, relationship: null });
+          }
         }}
-        onDelete={(relationship) => {
-          onDelete(relationship);
-          setSheet({ open: false, relationship: null });
+        onDelete={async (relationship) => {
+          if (await onDelete(relationship)) {
+            setSheet({ open: false, relationship: null });
+          }
         }}
       />
     </S.Root>

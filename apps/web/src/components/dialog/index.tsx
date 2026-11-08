@@ -2,7 +2,7 @@
 
 import classNames from "classnames";
 import { AlertDialog } from "radix-ui";
-import type { ReactNode } from "react";
+import { type ReactNode, useRef, useState } from "react";
 import { useGlobalState } from "@/context/store/stores";
 import * as S from "./styled";
 
@@ -13,7 +13,19 @@ interface AlertProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   onCancel?: () => void;
-  onConfirm?: () => void;
+  /**
+   * May return a Promise: the confirm button then shows a spinner and the
+   * dialog can't be dismissed until it settles.
+   */
+  onConfirm?: () => unknown;
+  /**
+   * Close the dialog (via `onOpenChange(false)`) once `onConfirm` finishes —
+   * on success AND failure. Use for yes/no confirmations; leave off for forms
+   * that must stay open when validation fails.
+   */
+  closeOnConfirm?: boolean;
+  /** Show the confirm spinner for work the caller tracks itself. */
+  isConfirmLoading?: boolean;
   actionButtonLabel?: string;
   showConfirm?: boolean;
   closeButtonText?: string;
@@ -24,6 +36,9 @@ interface AlertProps {
   size?: "default" | "lg";
 }
 
+const isThenable = (value: unknown): value is PromiseLike<unknown> =>
+  !!value && typeof (value as PromiseLike<unknown>).then === "function";
+
 export const AppAlertDialog = ({
   heading,
   text,
@@ -32,6 +47,8 @@ export const AppAlertDialog = ({
   onOpenChange,
   onCancel,
   onConfirm,
+  closeOnConfirm = false,
+  isConfirmLoading = false,
   actionButtonLabel = "Confirm",
   showConfirm = true,
   closeButtonText = "Cancel",
@@ -42,9 +59,49 @@ export const AppAlertDialog = ({
 }: AlertProps) => {
   const accent = useGlobalState("accent");
   const theme = useGlobalState("theme");
+  const [pending, setPending] = useState(false);
+  // Ref guards double-clicks that land before the pending re-render.
+  const pendingRef = useRef(false);
+  const busy = pending || isConfirmLoading;
+
+  const close = () => {
+    if (closeOnConfirm) onOpenChange?.(false);
+  };
+
+  const handleConfirm = () => {
+    if (pendingRef.current || isConfirmLoading || isConfirmDisabled) return;
+    let result: unknown;
+    try {
+      result = onConfirm?.();
+    } catch (error) {
+      close();
+      throw error;
+    }
+    if (!isThenable(result)) {
+      close();
+      return;
+    }
+    pendingRef.current = true;
+    setPending(true);
+    Promise.resolve(result)
+      .catch((error) => {
+        console.error("Dialog confirm failed", error);
+      })
+      .finally(() => {
+        pendingRef.current = false;
+        setPending(false);
+        close();
+      });
+  };
+
+  // No Escape / overlay / Cancel dismissal while the confirm is in flight.
+  const handleOpenChange = (next: boolean) => {
+    if (!next && (pendingRef.current || isConfirmLoading)) return;
+    onOpenChange?.(next);
+  };
 
   return (
-    <AlertDialog.Root open={open} onOpenChange={onOpenChange}>
+    <AlertDialog.Root open={open} onOpenChange={handleOpenChange}>
       <AlertDialog.Portal>
         {/* Radix portals render in document.body, but React synthetic events
             still bubble through the React tree — so clicks inside the dialog
@@ -69,16 +126,23 @@ export const AppAlertDialog = ({
           <S.Actions>
             {!isCancelHidden && (
               <AlertDialog.Cancel onClick={onCancel} asChild>
-                <S.CancelButton>{closeButtonText}</S.CancelButton>
+                <S.CancelButton disabled={busy}>{closeButtonText}</S.CancelButton>
               </AlertDialog.Cancel>
             )}
 
             {showConfirm && (
               <S.ActionButton
-                onClick={onConfirm}
+                type="button"
+                onClick={handleConfirm}
                 colorVariant={actionColor}
-                disabled={isConfirmDisabled}
+                // Busy keeps its colour (aria-disabled, not disabled) so the
+                // spinner reads as progress rather than a greyed-out button.
+                disabled={isConfirmDisabled && !busy}
+                aria-disabled={busy || isConfirmDisabled}
+                aria-busy={busy}
+                $busy={busy}
               >
+                {busy && <S.ButtonSpinner aria-hidden />}
                 {actionButtonLabel}
               </S.ActionButton>
             )}

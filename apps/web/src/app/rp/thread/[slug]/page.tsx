@@ -240,48 +240,65 @@ const ReplyItem = ({
   const authState = useGlobalState("authState");
   const novelist = useGlobalState("novelist");
 
-  const toggleReplyLike = useToggleLike({
-    id: reply.id || "",
-    liked: reply.reacted || false,
-    type: "reply",
-  });
+  const { errorToast } = useUIContext();
 
   const [replyState, setReplyState] = useState({
     reacted: false,
     reactions: 0,
   });
 
+  // Live state, not the fetched prop: the prop never updates after a like,
+  // so passing it would make the next click like again instead of unliking.
+  const toggleReplyLike = useToggleLike({
+    id: reply.id || "",
+    liked: replyState.reacted,
+    type: "reply",
+  });
+  const replyLikePendingRef = useRef(false);
+
+  // Re-sync only when the fetched like data changes. A text edit replaces
+  // the reply object and must not reset the heart to the stale fetched value.
+  const fetchedReplyReacted = reply.reacted || false;
+  const fetchedReplyReactions = reply.reactions || 0;
   useEffect(() => {
-    if (reply) {
-      setReplyState({
-        reacted: reply.reacted || false,
-        reactions: reply.reactions || 0,
-      });
-    }
-  }, [reply]);
+    setReplyState({
+      reacted: fetchedReplyReacted,
+      reactions: fetchedReplyReactions,
+    });
+  }, [fetchedReplyReacted, fetchedReplyReactions]);
 
   const handleReplyLikeToggle = useCallback(async () => {
-    setReplyState((prev) => ({
-      ...prev,
-      reacted: !prev.reacted,
-      reactions: prev.reacted ? prev.reactions - 1 : prev.reactions + 1,
-    }));
-
-    const response = await toggleReplyLike.toggleLike();
-
-    if (!response || "message" in response) {
-      setReplyState({
-        reacted: reply.reacted || false,
-        reactions: reply.reactions || 0,
-      });
-      return;
-    }
-
+    if (replyLikePendingRef.current) return;
+    replyLikePendingRef.current = true;
+    const previous = replyState;
     setReplyState({
-      reacted: response.reacted,
-      reactions: response.reactions,
+      reacted: !previous.reacted,
+      reactions: previous.reacted
+        ? previous.reactions - 1
+        : previous.reactions + 1,
     });
-  }, [toggleReplyLike, reply?.reacted, reply?.reactions]);
+
+    try {
+      const response = await toggleReplyLike.toggleLike().catch(() => null);
+
+      if (!response || "message" in response) {
+        setReplyState(previous);
+        errorToast(
+          previous.reacted
+            ? "Couldn't unlike this reply."
+            : "Couldn't like this reply.",
+        );
+        return;
+      }
+
+      setReplyState({
+        reacted: response.reacted,
+        reactions: response.reactions,
+      });
+    } finally {
+      replyLikePendingRef.current = false;
+    }
+  }, [toggleReplyLike, replyState, errorToast]);
 
   const onReplyLike = useMemo(() => {
     if (authState !== "LOGGED_IN") return undefined;
@@ -430,18 +447,22 @@ export default function ThreadPage({}) {
     null,
   );
 
-  // Top level of ThreadPage
-  const togglePromptLike = useToggleLike({
-    id: comment?.prompt?.id || "",
-    liked: comment?.prompt?.reacted || false,
-    type: "prompt",
-  });
+  const { successToast, errorToast } = useUIContext();
 
   // State for optimistic updates
   const [promptState, setPromptState] = useState({
     reacted: false,
     reactions: 0,
   });
+
+  // Top level of ThreadPage. `liked` is the live state, not the fetched prop,
+  // so a second click unlikes instead of liking again.
+  const togglePromptLike = useToggleLike({
+    id: comment?.prompt?.id || "",
+    liked: promptState.reacted,
+    type: "prompt",
+  });
+  const promptLikePendingRef = useRef(false);
 
   useEffect(() => {
     if (comment?.prompt) {
@@ -454,28 +475,38 @@ export default function ThreadPage({}) {
 
   // Handle toggle
   const handlePromptLikeToggle = useCallback(async () => {
-    setPromptState((prev) => ({
-      ...prev,
-      reacted: !prev.reacted,
-      reactions: prev.reacted ? prev.reactions - 1 : prev.reactions + 1,
-    }));
-
-    const response = await togglePromptLike.toggleLike();
-
-    if (!response || "message" in response) {
-      // rollback
-      setPromptState({
-        reacted: comment?.prompt?.reacted || false,
-        reactions: comment?.prompt?.reactions || 0,
-      });
-      return;
-    }
-
+    if (promptLikePendingRef.current) return;
+    promptLikePendingRef.current = true;
+    const previous = promptState;
     setPromptState({
-      reacted: response.reacted,
-      reactions: response.reactions,
+      reacted: !previous.reacted,
+      reactions: previous.reacted
+        ? previous.reactions - 1
+        : previous.reactions + 1,
     });
-  }, [togglePromptLike, comment?.prompt?.reacted, comment?.prompt?.reactions]);
+
+    try {
+      const response = await togglePromptLike.toggleLike().catch(() => null);
+
+      if (!response || "message" in response) {
+        // rollback to the exact pre-click state
+        setPromptState(previous);
+        errorToast(
+          previous.reacted
+            ? "Couldn't unlike this prompt."
+            : "Couldn't like this prompt.",
+        );
+        return;
+      }
+
+      setPromptState({
+        reacted: response.reacted,
+        reactions: response.reactions,
+      });
+    } finally {
+      promptLikePendingRef.current = false;
+    }
+  }, [togglePromptLike, promptState, errorToast]);
 
   // Memoized onLike
   const onPromptLike = useMemo(() => {
@@ -483,48 +514,62 @@ export default function ThreadPage({}) {
     return handlePromptLikeToggle;
   }, [authState, handlePromptLikeToggle]);
 
-  const toggleCommentLike = useToggleLike({
-    id: comment?.id || "",
-    liked: comment?.reacted || false,
-    type: "comment",
-  });
-
   const [commentState, setCommentState] = useState({
     reacted: false,
     reactions: 0,
   });
 
+  // Live state, not the fetched prop (see togglePromptLike).
+  const toggleCommentLike = useToggleLike({
+    id: comment?.id || "",
+    liked: commentState.reacted,
+    type: "comment",
+  });
+  const commentLikePendingRef = useRef(false);
+
+  // Re-sync only when the fetched like data changes. Concluding the thread
+  // replaces the comment object and must not reset the heart.
+  const fetchedCommentReacted = comment?.reacted || false;
+  const fetchedCommentReactions = comment?.reactions || 0;
   useEffect(() => {
-    if (comment) {
-      setCommentState({
-        reacted: comment.reacted || false,
-        reactions: comment.reactions || 0,
-      });
-    }
-  }, [comment]);
+    setCommentState({
+      reacted: fetchedCommentReacted,
+      reactions: fetchedCommentReactions,
+    });
+  }, [fetchedCommentReacted, fetchedCommentReactions]);
 
   const handleCommentLikeToggle = useCallback(async () => {
-    setCommentState((prev) => ({
-      ...prev,
-      reacted: !prev.reacted,
-      reactions: prev.reacted ? prev.reactions - 1 : prev.reactions + 1,
-    }));
-
-    const response = await toggleCommentLike.toggleLike();
-
-    if (!response || "message" in response) {
-      setCommentState({
-        reacted: comment?.reacted || false,
-        reactions: comment?.reactions || 0,
-      });
-      return;
-    }
-
+    if (commentLikePendingRef.current) return;
+    commentLikePendingRef.current = true;
+    const previous = commentState;
     setCommentState({
-      reacted: response.reacted,
-      reactions: response.reactions,
+      reacted: !previous.reacted,
+      reactions: previous.reacted
+        ? previous.reactions - 1
+        : previous.reactions + 1,
     });
-  }, [toggleCommentLike, comment?.reacted, comment?.reactions]);
+
+    try {
+      const response = await toggleCommentLike.toggleLike().catch(() => null);
+
+      if (!response || "message" in response) {
+        setCommentState(previous);
+        errorToast(
+          previous.reacted
+            ? "Couldn't unlike this comment."
+            : "Couldn't like this comment.",
+        );
+        return;
+      }
+
+      setCommentState({
+        reacted: response.reacted,
+        reactions: response.reactions,
+      });
+    } finally {
+      commentLikePendingRef.current = false;
+    }
+  }, [toggleCommentLike, commentState, errorToast]);
 
   const onCommentLike = useMemo(() => {
     if (authState !== "LOGGED_IN") return undefined;
@@ -553,7 +598,6 @@ export default function ThreadPage({}) {
   const canConcludeComment = isCommentOwner || isPromptOwner;
 
   const { routeToPage } = usePageRouter();
-  const { successToast, errorToast } = useUIContext();
   useBindPageLoader(loadingComments);
   const { width } = useWindowDimensions();
   const isMobile = (width ?? 0) <= 800;
@@ -685,7 +729,7 @@ export default function ThreadPage({}) {
       setSelectedReplyId("");
       successToast(REPORT_SENT_TOAST);
     } else {
-      errorToast("There was an issue while reporting this prompt.");
+      errorToast("There was an issue while reporting this reply.");
     }
   };
 
@@ -697,7 +741,7 @@ export default function ThreadPage({}) {
       setReplies((prev) => prev.filter((r) => r.id !== selectedReplyId));
       setSelectedReplyId("");
       setShowDeleteAlert(false);
-      successToast(`Deleted successfully`);
+      successToast("Reply deleted.");
     } else {
       errorToast("There was an issue while deleting this reply.");
     }
@@ -708,10 +752,10 @@ export default function ThreadPage({}) {
 
     const response = await deleteCommentAction(comment.id);
     if (response?.message === API_MESSAGE.Success) {
-      successToast(`Deleted successfully`);
+      successToast("Thread deleted.");
       onBackClick();
     } else {
-      errorToast("There was an issue while deleting this reply.");
+      errorToast("There was an issue while deleting this thread.");
     }
   };
 
@@ -720,10 +764,10 @@ export default function ThreadPage({}) {
 
     const response = await deletePromptAction(comment.prompt.id);
     if (response?.message === API_MESSAGE.Success) {
-      successToast(`Deleted successfully`);
-      onAvatarClick(comment.prompt.source.sourceId);
+      successToast("Prompt deleted.");
+      routeToPromptSource(comment.prompt.source);
     } else {
-      errorToast("There was an issue while deleting this reply.");
+      errorToast("There was an issue while deleting this prompt.");
     }
   };
 
@@ -747,7 +791,7 @@ export default function ThreadPage({}) {
     if (response?.message === API_MESSAGE.Success) {
       setComment((prev) => (prev ? { ...prev, concluded: next } : prev));
       successToast(
-        next ? `Thread marked as concluded` : `Thread reopened`,
+        next ? "Thread marked as concluded." : "Thread reopened.",
       );
       // Concluding answers/closes the thread — drop it from the outgoing
       // pending list if we owed a reply on it.
@@ -769,9 +813,19 @@ export default function ThreadPage({}) {
     variant: "danger" as const,
   };
 
-  const onAvatarClick = (sourceId: string | undefined) => {
-    if (!sourceId) return;
-    routeToPage(ROUTES.Muse.View(sourceId));
+  // After deleting the prompt, land on its author's page: a muse page for
+  // in-character posts, the novelist's profile for OOC posts.
+  const routeToPromptSource = (source: PromptSource | undefined) => {
+    if (!source?.sourceId) return;
+    if (source.sourceType === "NOVELIST") {
+      routeToPage(
+        source.urlProp
+          ? ROUTES.Profile.View(source.urlProp).Index
+          : ROUTES.Home,
+      );
+      return;
+    }
+    routeToPage(ROUTES.Muse.View(source.sourceId));
   };
 
   const onBackClick = () => {
@@ -869,6 +923,7 @@ export default function ThreadPage({}) {
   return (
     <S.ParentContainer>
       <AppAlertDialog
+        closeOnConfirm
         heading={`Report this prompt?`}
         text={`We strive to maintain a safe and welcoming community. If you notice any misconduct from anyone, please report it. Our team will review the issue and take appropriate action as quickly as possible.`}
         open={showReportPromptAlert}
@@ -877,14 +932,16 @@ export default function ThreadPage({}) {
         actionButtonLabel="Report"
       />
       <AppAlertDialog
+        closeOnConfirm
         heading={`Delete this prompt?`}
-        text={`Deleting the prompt will remove all of its threads and replies too. Are you sure you want to delete this reply?`}
+        text={`Deleting the prompt will remove all of its threads and replies too. Are you sure you want to delete this prompt?`}
         open={showDeletePromptAlert}
         onOpenChange={setShowDeletePromptAlert}
         onConfirm={handleDeletePrompt}
         actionButtonLabel="Delete"
       />
       <AppAlertDialog
+        closeOnConfirm
         heading={`Report this reply?`}
         text={`We strive to maintain a safe and welcoming community. If you notice any misconduct from anyone, please report it. Our team will review the issue and take appropriate action as quickly as possible.`}
         open={showReportCommentAlert}
@@ -893,14 +950,16 @@ export default function ThreadPage({}) {
         actionButtonLabel="Report"
       />
       <AppAlertDialog
-        heading={`Delete this reply?`}
-        text={`Deleting this will remove all of the subsequent replies. Are you sure you want to delete this reply?`}
+        closeOnConfirm
+        heading={`Delete this thread?`}
+        text={`Deleting this thread will remove all of its replies too. Are you sure you want to delete this thread?`}
         open={showDeleteCommentAlert}
         onOpenChange={setShowDeleteCommentAlert}
         onConfirm={handleDeleteComment}
         actionButtonLabel="Delete"
       />
       <AppAlertDialog
+        closeOnConfirm
         heading={`Report this reply?`}
         text={`We strive to maintain a safe and welcoming community. If you notice any misconduct from anyone, please report it. Our team will review the issue and take appropriate action as quickly as possible.`}
         open={showReportAlert}
@@ -909,6 +968,7 @@ export default function ThreadPage({}) {
         actionButtonLabel="Report"
       />
       <AppAlertDialog
+        closeOnConfirm
         heading={`Delete this reply?`}
         text={`This action is permanent. Are you sure you want to delete this reply?`}
         open={showDeleteAlert}

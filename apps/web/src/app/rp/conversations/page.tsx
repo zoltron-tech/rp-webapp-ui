@@ -98,7 +98,7 @@ export default function ConversationsPage() {
   const setGlobalState = useGlobalStoreSet();
   const { lastIncomingMessage } = useSocket();
   const { baseDataLoader, routeToPage, stopPageLoading } = usePageRouter();
-  const { errorToast } = useUIContext();
+  const { errorToast, successToast } = useUIContext();
   const { width } = useWindowDimensions();
   const isMobile = (width ?? 0) <= 680;
 
@@ -177,7 +177,11 @@ export default function ConversationsPage() {
   const [archivedPage, setArchivedPage] = useState(1);
   const [archivedHasMore, setArchivedHasMore] = useState(true);
   const [archivedLoading, setArchivedLoading] = useState(false);
-  const [movingId, setMovingId] = useState<string | null>(null);
+  // Every row whose move is in flight, so one move settling never re-enables
+  // another row's archive button mid-request.
+  const [movingIds, setMovingIds] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
   const showingArchive = filter === "archived";
   const [search, setSearch] = useState("");
   const [contactSupportLoading, setContactSupportLoading] = useState(false);
@@ -200,16 +204,21 @@ export default function ConversationsPage() {
 
   const handleContactSupport = useCallback(async () => {
     setContactSupportLoading(true);
-    const conversation = await baseDataLoader(() =>
-      // The account both clients message. Shared, so a change here cannot send
-      // one client's support requests somewhere nobody is reading.
-      getConversationByUsernameAction(SUPPORT_USERNAME),
-    );
-    setContactSupportLoading(false);
-    if (conversation) {
+    try {
+      const conversation = await baseDataLoader(() =>
+        // The account both clients message. Shared, so a change here cannot send
+        // one client's support requests somewhere nobody is reading.
+        getConversationByUsernameAction(SUPPORT_USERNAME),
+      ).catch(() => null);
+      if (!conversation) {
+        errorToast("Could not open the support chat. Please try again.");
+        return;
+      }
       routeToPage(ROUTES.Conversation.View(conversation.id));
+    } finally {
+      setContactSupportLoading(false);
     }
-  }, [baseDataLoader, routeToPage]);
+  }, [baseDataLoader, errorToast, routeToPage]);
 
   const fetchConversations = useCallback(
     async (pageNumber: number, append = false) => {
@@ -278,13 +287,29 @@ export default function ConversationsPage() {
     async (conversation: Conversation) => {
       const to: InboxBucket =
         conversation.bucket === "ARCHIVED" ? "INBOX" : "ARCHIVED";
-      setMovingId(conversation.id);
-      const result = await setConversationBucketAction(conversation.id, to);
-      setMovingId(null);
+      const id = conversation.id;
+      setMovingIds((prev) => new Set(prev).add(id));
+      let result: unknown = null;
+      try {
+        result = await setConversationBucketAction(id, to).catch(() => null);
+      } finally {
+        setMovingIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+      }
       if (result !== true) {
         errorToast("That conversation could not be moved. Try again.");
         return;
       }
+      // The toast takes no action, so no Undo: the row's button in the other
+      // list moves it back.
+      successToast(
+        to === "ARCHIVED"
+          ? "Conversation archived."
+          : "Conversation moved to inbox.",
+      );
       const without = (list: Conversation[] | null) =>
         list ? list.filter((row) => row.id !== conversation.id) : list;
       if (to === "ARCHIVED") {
@@ -300,7 +325,7 @@ export default function ConversationsPage() {
         void fetchConversations(1);
       }
     },
-    [errorToast, fetchConversations, setGlobalState],
+    [errorToast, fetchConversations, setGlobalState, successToast],
   );
 
   // Always fetch page 1 on mount. Cached data (a small preview slice seeded
@@ -324,7 +349,11 @@ export default function ConversationsPage() {
   }, []);
 
   const handleIceBreakerCreated = useCallback((iceBreaker: IceBreaker) => {
-    setIceBreakers((prev) => [iceBreaker, ...prev]);
+    // One ice breaker per sender: the new one replaces the sender's old card.
+    setIceBreakers((prev) => [
+      iceBreaker,
+      ...prev.filter((ib) => ib.sourceId !== iceBreaker.sourceId),
+    ]);
   }, []);
 
   const handleOpenIceBreaker = useCallback((iceBreaker: IceBreaker) => {
@@ -342,8 +371,14 @@ export default function ConversationsPage() {
   // letting them open the create-group dialog.
   const handleCreateGroupClick = useCallback(async () => {
     setCheckingGroupLimit(true);
-    const count = await getGroupCountAction();
-    setCheckingGroupLimit(false);
+    let count: Awaited<ReturnType<typeof getGroupCountAction>> | null = null;
+    try {
+      count = await getGroupCountAction();
+    } catch {
+      count = null;
+    } finally {
+      setCheckingGroupLimit(false);
+    }
 
     if (typeof count !== "number") {
       errorToast("Could not verify your group limit. Please try again.");
@@ -367,8 +402,9 @@ export default function ConversationsPage() {
   // and bump the cached group count.
   const handleGroupCreated = useCallback(async () => {
     setGlobalState({ groupCount: (groupCount ?? 0) + 1 });
-    await fetchConversations(1);
-  }, [fetchConversations, groupCount, setGlobalState]);
+    successToast("Group created.");
+    await fetchConversations(1).catch(() => null);
+  }, [fetchConversations, groupCount, setGlobalState, successToast]);
 
   // Update the matching conversation's lastMessage when a new real-time message arrives,
   // then re-sort so the most recently active conversation floats to the top.
@@ -418,13 +454,17 @@ export default function ConversationsPage() {
 
     setLoadingMore(true);
     const nextPage = page + 1;
-    const loaded = await fetchConversations(nextPage, true);
+    try {
+      const loaded = await fetchConversations(nextPage, true);
 
-    if (loaded) {
-      setPage(nextPage);
+      if (loaded) {
+        setPage(nextPage);
+      }
+    } catch {
+      errorToast("Could not load more conversations. Please try again.");
+    } finally {
+      setLoadingMore(false);
     }
-
-    setLoadingMore(false);
   };
 
   const unreadBadgeCount = useMemo(() => {
@@ -493,8 +533,13 @@ export default function ConversationsPage() {
     if (loadingMore || !archivedHasMore) return;
     setLoadingMore(true);
     const nextPage = archivedPage + 1;
-    if (await fetchArchived(nextPage, true)) setArchivedPage(nextPage);
-    setLoadingMore(false);
+    try {
+      if (await fetchArchived(nextPage, true)) setArchivedPage(nextPage);
+    } catch {
+      errorToast("Could not load more conversations. Please try again.");
+    } finally {
+      setLoadingMore(false);
+    }
   };
 
   return (
@@ -648,7 +693,7 @@ export default function ConversationsPage() {
                         key={conversation.id}
                         conversation={conversation}
                         onMove={handleMove}
-                        moving={movingId === conversation.id}
+                        moving={movingIds.has(conversation.id)}
                         onOpen={
                           isMobile
                             ? (convId, target) =>

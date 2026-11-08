@@ -342,20 +342,26 @@ export default function MuseProfilePage({}) {
       src: pendingCardBgSrc,
     };
     setCardBgSaving(true);
-    setMuseCardBackgroundAction(muse.id, nwImage).then((result) => {
-      setCardBgSaving(false);
-      if (result && typeof result === "object" && "message" in result) {
-        errorToast("Failed to update card background.");
-        return;
-      }
-      setTempUploadedCardBg(null);
-      setMuse((prev) =>
-        prev
-          ? { ...prev, cardBackground: result as NWImage, useExtraImages: true }
-          : prev,
-      );
-      successToast("Card background updated.");
-    });
+    setMuseCardBackgroundAction(muse.id, nwImage)
+      .then((result) => {
+        if (result && typeof result === "object" && "message" in result) {
+          errorToast("Failed to update card background.");
+          return;
+        }
+        setTempUploadedCardBg(null);
+        setMuse((prev) =>
+          prev
+            ? {
+                ...prev,
+                cardBackground: result as NWImage,
+                useExtraImages: true,
+              }
+            : prev,
+        );
+        successToast("Card background updated.");
+      })
+      .catch(() => errorToast("Failed to update card background."))
+      .finally(() => setCardBgSaving(false));
   }, [
     muse?.id,
     pendingCardBgSrc,
@@ -639,27 +645,43 @@ export default function MuseProfilePage({}) {
   const [songPickerOpen, setSongPickerOpen] = useState(false);
   const [confirmRemoveSong, setConfirmRemoveSong] = useState(false);
   const [songRemoving, setSongRemoving] = useState(false);
+  // The picker (commit=false) closes itself right after handing over the
+  // pick; while the save is in flight that close is held back, so a failed
+  // save leaves the picker open for another try.
+  const songSavingRef = useRef(false);
+
+  const handleSongPickerOpenChange = useCallback((open: boolean) => {
+    if (!open && songSavingRef.current) return;
+    setSongPickerOpen(open);
+  }, []);
 
   const handleSongSelected = useCallback(
-    async (song: ProfileSong) => {
-      if (!muse?.id) return;
-      setSongPickerOpen(false);
-      const result = await setMuseSongAction(muse.id, {
-        artist: song.artist ?? undefined,
-        externalUrl: song.externalUrl ?? undefined,
-        imageUrl: song.imageUrl ?? undefined,
-        songId: song.songId ?? undefined,
-        source: song.source,
-        spotifyTrackId: song.spotifyTrackId ?? undefined,
-        title: song.title,
-        url: song.url ?? undefined,
-      });
-      if ("message" in result) {
-        errorToast("Failed to set song.");
-        return;
+    async (song: ProfileSong): Promise<boolean> => {
+      if (!muse?.id || songSavingRef.current) return false;
+      songSavingRef.current = true;
+      try {
+        const result = await setMuseSongAction(muse.id, {
+          artist: song.artist ?? undefined,
+          externalUrl: song.externalUrl ?? undefined,
+          imageUrl: song.imageUrl ?? undefined,
+          songId: song.songId ?? undefined,
+          source: song.source,
+          spotifyTrackId: song.spotifyTrackId ?? undefined,
+          title: song.title,
+          url: song.url ?? undefined,
+        }).catch(() => null);
+        if (!result || "message" in result) {
+          errorToast("Failed to set song.");
+          return false;
+        }
+        setMuse((prev) => (prev ? { ...prev, featuredSong: result } : prev));
+        successToast("Song updated.");
+        songSavingRef.current = false;
+        setSongPickerOpen(false);
+        return true;
+      } finally {
+        songSavingRef.current = false;
       }
-      setMuse((prev) => (prev ? { ...prev, featuredSong: result } : prev));
-      successToast("Song updated.");
     },
     [muse?.id, errorToast, successToast],
   );
@@ -1534,7 +1556,7 @@ export default function MuseProfilePage({}) {
       {isOwnMuse && (
         <SongPickerDialog
           open={songPickerOpen}
-          onOpenChange={setSongPickerOpen}
+          onOpenChange={handleSongPickerOpenChange}
           onSelected={handleSongSelected}
           commit={false}
           title={muse?.featuredSong ? "Change song" : "Add a song"}

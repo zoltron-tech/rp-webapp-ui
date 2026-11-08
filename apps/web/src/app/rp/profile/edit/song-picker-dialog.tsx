@@ -18,6 +18,7 @@ import {
   type SpotifyEmbedController,
 } from "@/components/profile-song/spotify-iframe-api";
 import { useGlobalState } from "@/context/store/stores";
+import { useUIContext } from "@/hooks/use-ui-context";
 import { getOwnMusicAction } from "../[slug]/music/action";
 import {
   searchSpotifyTracksAction,
@@ -36,7 +37,12 @@ const mmss = (seconds: number) => {
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelected: (song: ProfileSong) => void;
+  /**
+   * With `commit={false}` it may return a Promise (the caller saves the pick
+   * itself): the row spins meanwhile, and a result of `false` keeps the picker
+   * open.
+   */
+  onSelected: (song: ProfileSong) => unknown;
   /** Dialog heading. Defaults to the profile-song wording. */
   title?: string;
   /**
@@ -57,6 +63,7 @@ export const SongPickerDialog: FC<Props> = ({
 }) => {
   const accent = useGlobalState("accent");
   const theme = useGlobalState("theme");
+  const { errorToast } = useUIContext();
 
   const [tab, setTab] = useState<Tab>("library");
   const [ownSongs, setOwnSongs] = useState<Song[]>([]);
@@ -302,7 +309,7 @@ export const SongPickerDialog: FC<Props> = ({
     // Resolve-only mode: hand a fully-formed song back to the parent form
     // without persisting anything server-side.
     if (!commit) {
-      onSelected({
+      const outcome = onSelected({
         artist: payload.artist ?? null,
         externalUrl: payload.externalUrl ?? null,
         imageUrl: payload.imageUrl ?? null,
@@ -312,17 +319,25 @@ export const SongPickerDialog: FC<Props> = ({
         title: payload.title,
         url: payload.url ?? null,
       });
+      if (outcome instanceof Promise) {
+        setSavingId(key);
+        const saved = await outcome.catch(() => false);
+        setSavingId(null);
+        if (saved === false) return;
+      }
       onOpenChange(false);
       return;
     }
 
     setSavingId(key);
-    const result = await setProfileSongAction(payload);
+    const result = await setProfileSongAction(payload).catch(() => null);
     setSavingId(null);
-    if ("source" in result) {
+    if (result && "source" in result) {
       onSelected(result);
       onOpenChange(false);
+      return;
     }
+    errorToast("Could not set that song. Please try again.");
   };
 
   const pickLibrary = (song: Song) =>

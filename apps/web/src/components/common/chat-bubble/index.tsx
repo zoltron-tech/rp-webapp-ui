@@ -31,6 +31,7 @@ import {
   useState,
 } from "react";
 import {
+  BsArrowClockwise,
   BsChevronLeft,
   BsChevronRight,
   BsForward,
@@ -931,12 +932,15 @@ export const ChatBubble: FC<Props> = ({
   onEdit,
   onDelete,
 }) => {
-  const { successToast } = useUIContext();
+  const { successToast, errorToast } = useUIContext();
   const today = moment().format("YYYY-MM-DD");
   const messageDate = moment.utc(message.createdAt).local();
   const [imgError, setImgError] = useState(false);
 
   const isSender = message.sender.username === currentUsername;
+  // Still sending (or failed): the id is local, so nothing that needs a server
+  // id — edit, reply, forward, react, delete — can act on it yet.
+  const isOptimistic = message.id.startsWith("optimistic-");
   const isActivityMessage = message.type?.toLowerCase() === "activity";
 
   const rawMessageText = message.message || "";
@@ -1034,6 +1038,9 @@ export const ChatBubble: FC<Props> = ({
   };
 
   const fireReaction = (reactionKey: string) => {
+    // The panel drops reactions on unsent bubbles; no burst for one that
+    // will not land.
+    if (isOptimistic) return;
     // Fire the floating burst animation locally for instant feedback.
     setBurstReaction(reactionKey);
     if (burstTimeoutRef.current) clearTimeout(burstTimeoutRef.current);
@@ -1186,7 +1193,7 @@ export const ChatBubble: FC<Props> = ({
     e.stopPropagation();
 
     const SWIPE_THRESHOLD = 60;
-    if (Math.abs(swipeRawDeltaX.current) >= SWIPE_THRESHOLD) {
+    if (Math.abs(swipeRawDeltaX.current) >= SWIPE_THRESHOLD && !isOptimistic) {
       onReply?.(message);
     }
 
@@ -1208,8 +1215,10 @@ export const ChatBubble: FC<Props> = ({
           .replace(/&amp;/g, "&")
           .trim()
       : messageText;
-    navigator.clipboard.writeText(plain).catch(() => {});
-    successToast("Message copied to clipboard");
+    navigator.clipboard
+      .writeText(plain)
+      .then(() => successToast("Message copied."))
+      .catch(() => errorToast("Could not copy the message."));
   };
 
   const menuItems = useMemo(
@@ -1261,6 +1270,27 @@ export const ChatBubble: FC<Props> = ({
     ],
   );
 
+  // An unsent bubble has a local id only: copy it, retry it, or drop it.
+  const bubbleMenuItems = isOptimistic
+    ? [
+        { icon: <FiCopy />, label: "Copy message", onClick: handleCopyMessage },
+        ...(failed && onRetry
+          ? [{ icon: <BsArrowClockwise />, label: "Retry", onClick: onRetry }]
+          : []),
+        ...(failed && isSender && onDelete
+          ? [
+              { separator: true as const },
+              {
+                icon: <BsTrash />,
+                label: "Remove",
+                onClick: () => onDelete(message),
+                variant: "danger" as const,
+              },
+            ]
+          : []),
+      ]
+    : menuItems;
+
   // Clear any pending burst-animation timer on unmount.
   useEffect(() => {
     return () => {
@@ -1286,7 +1316,7 @@ export const ChatBubble: FC<Props> = ({
     });
   };
 
-  const reactionPicker = onReact ? (
+  const reactionPicker = onReact && !isOptimistic ? (
     <S.ReactionPickerWrapper
       onTouchStart={(e) => e.stopPropagation()}
       onTouchMove={(e) => e.stopPropagation()}
@@ -1459,7 +1489,7 @@ export const ChatBubble: FC<Props> = ({
       >
         <AppDropdownMenuResponsive
           trigger={<BsThreeDots size={14} />}
-          items={menuItems}
+          items={bubbleMenuItems}
           headerContent={reactionPicker}
           {...(isSender ? { onOpenChange: setMenuOpen, open: menuOpen } : {})}
         />
@@ -1735,7 +1765,7 @@ export const ChatBubble: FC<Props> = ({
       >
         <AppDropdownMenuResponsive
           trigger={<BsThreeDots size={14} />}
-          items={menuItems}
+          items={bubbleMenuItems}
           headerContent={reactionPicker}
           {...(!isSender ? { onOpenChange: setMenuOpen, open: menuOpen } : {})}
         />

@@ -62,6 +62,14 @@ export const FullPageEditMuseAboutSection = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showGifPicker, setShowGifPicker] = useState(false);
+  const [showDiscardAlert, setShowDiscardAlert] = useState(false);
+  // What the form held when it opened (or after the section loaded), so the
+  // close button can tell whether anything typed would be thrown away.
+  const savedRef = useRef<{
+    imageUrl: string | null;
+    ordinal: number;
+    text: string;
+  } | null>(null);
 
   const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
@@ -83,6 +91,11 @@ export const FullPageEditMuseAboutSection = ({
         setOrdinal(section.ordinal ?? 0);
         setResolvedSectionId(section.id ?? null);
         setImageUrl(section.image ?? null);
+        savedRef.current = {
+          imageUrl: section.image ?? null,
+          ordinal: section.ordinal ?? 0,
+          text: section.text ?? "",
+        };
       }
     };
 
@@ -201,12 +214,48 @@ export const FullPageEditMuseAboutSection = ({
     errorToast,
   ]);
 
-  const handleBack = useCallback(async () => {
+  const leave = useCallback(async () => {
     if (tempUpload) {
-      await deleteMedia(tempUpload);
+      await deleteMedia(tempUpload).catch(() => null);
     }
     routeToPage(ROUTES.Profile.Muses.About(museId));
   }, [museId, tempUpload, routeToPage]);
+
+  // Compare what a reader would see, not the raw HTML: the rich-text editor
+  // re-serialises its value on load, which alone must not count as an edit.
+  const isDirty = () => {
+    // A new section starts empty, at the slot after the last one.
+    const saved = savedRef.current ?? {
+      imageUrl: null,
+      ordinal:
+        !sectionId && sectionCount !== undefined ? sectionCount + 1 : ordinal,
+      text: "",
+    };
+    const shape = (html: string) => ({
+      images: (html.match(/<img\b/gi) ?? []).length,
+      words: html
+        .replace(/<[^>]*>/g, " ")
+        .replace(/&nbsp;/g, " ")
+        .replace(/\s+/g, " ")
+        .trim(),
+    });
+    const now = shape(text);
+    const before = shape(saved.text);
+    return (
+      now.words !== before.words ||
+      now.images !== before.images ||
+      (imageUrl ?? null) !== saved.imageUrl ||
+      ordinal !== saved.ordinal
+    );
+  };
+
+  const handleBack = () => {
+    if (isDirty()) {
+      setShowDiscardAlert(true);
+      return;
+    }
+    void leave();
+  };
 
   const submitText = resolvedSectionId
     ? loading
@@ -324,6 +373,17 @@ export const FullPageEditMuseAboutSection = ({
         onOpenChange={setShowGifPicker}
         showConfirm={false}
         closeButtonText="Close"
+      />
+
+      <AppAlertDialog
+        heading="Discard changes?"
+        text="What you've written in this section will be lost."
+        open={showDiscardAlert}
+        onOpenChange={setShowDiscardAlert}
+        actionButtonLabel="Discard"
+        closeButtonText="Keep editing"
+        closeOnConfirm
+        onConfirm={leave}
       />
     </S.FPRoot>
   );

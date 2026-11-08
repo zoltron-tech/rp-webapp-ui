@@ -159,44 +159,54 @@ export default function ConversationDetailsPage() {
   const handleConfirmRemoveMember = useCallback(async () => {
     if (!memberToRemove) return;
     setRemoving(true);
-    const result = await removeGroupMemberAction(
-      conversationId,
-      memberToRemove.novelistId,
-    );
-    setRemoving(false);
+    try {
+      const result = await removeGroupMemberAction(
+        conversationId,
+        memberToRemove.novelistId,
+      );
 
-    if (!result || (typeof result === "object" && "message" in result)) {
+      if (!result || (typeof result === "object" && "message" in result)) {
+        errorToast("Failed to remove member. Please try again.");
+        return;
+      }
+
+      setMembers((prev) =>
+        prev.filter((m) => m.novelistId !== memberToRemove.novelistId),
+      );
+      successToast("Member removed from group.");
+      setMemberToRemove(null);
+    } catch {
       errorToast("Failed to remove member. Please try again.");
-      return;
+    } finally {
+      setRemoving(false);
     }
-
-    setMembers((prev) =>
-      prev.filter((m) => m.novelistId !== memberToRemove.novelistId),
-    );
-    successToast("Member removed from group.");
-    setMemberToRemove(null);
   }, [conversationId, errorToast, memberToRemove, successToast]);
 
   const handleConfirmLeave = useCallback(async () => {
     setLeaving(true);
-    const result = await leaveGroupAction(conversationId);
-    setLeaving(false);
+    try {
+      const result = await leaveGroupAction(conversationId);
 
-    if (!result || (typeof result === "object" && "message" in result)) {
+      if (!result || (typeof result === "object" && "message" in result)) {
+        errorToast("Failed to leave group. Please try again.");
+        return;
+      }
+
+      // Remove this conversation from the cached list and navigate to inbox.
+      if (cachedConversations) {
+        setGlobalState({
+          cachedConversations: cachedConversations.filter(
+            (conv) => conv.id !== conversationId,
+          ),
+        });
+      }
+      setGlobalState({ activeConversation: null });
+      routeToPage(ROUTES.conversations);
+    } catch {
       errorToast("Failed to leave group. Please try again.");
-      return;
+    } finally {
+      setLeaving(false);
     }
-
-    // Remove this conversation from the cached list and navigate to inbox.
-    if (cachedConversations) {
-      setGlobalState({
-        cachedConversations: cachedConversations.filter(
-          (conv) => conv.id !== conversationId,
-        ),
-      });
-    }
-    setGlobalState({ activeConversation: null });
-    routeToPage(ROUTES.conversations);
   }, [
     cachedConversations,
     conversationId,
@@ -207,23 +217,28 @@ export default function ConversationDetailsPage() {
 
   const handleConfirmDelete = useCallback(async () => {
     setDeleting(true);
-    const result = await deleteGroupAction(conversationId);
-    setDeleting(false);
+    try {
+      const result = await deleteGroupAction(conversationId);
 
-    if (!result || (typeof result === "object" && "message" in result)) {
+      if (!result || (typeof result === "object" && "message" in result)) {
+        errorToast("Failed to delete group. Please try again.");
+        return;
+      }
+
+      if (cachedConversations) {
+        setGlobalState({
+          cachedConversations: cachedConversations.filter(
+            (conv) => conv.id !== conversationId,
+          ),
+        });
+      }
+      setGlobalState({ activeConversation: null });
+      routeToPage(ROUTES.conversations);
+    } catch {
       errorToast("Failed to delete group. Please try again.");
-      return;
+    } finally {
+      setDeleting(false);
     }
-
-    if (cachedConversations) {
-      setGlobalState({
-        cachedConversations: cachedConversations.filter(
-          (conv) => conv.id !== conversationId,
-        ),
-      });
-    }
-    setGlobalState({ activeConversation: null });
-    routeToPage(ROUTES.conversations);
   }, [
     cachedConversations,
     conversationId,
@@ -419,6 +434,7 @@ export default function ConversationDetailsPage() {
 
       {isGroupAdmin && (
         <AppAlertDialog
+          closeOnConfirm
           open={!!memberToRemove}
           onOpenChange={(next) => {
             if (!next) setMemberToRemove(null);
@@ -440,6 +456,7 @@ export default function ConversationDetailsPage() {
 
       {conversation?.isGroup && !isGroupAdmin && (
         <AppAlertDialog
+          closeOnConfirm
           open={leaveConfirmOpen}
           onOpenChange={setLeaveConfirmOpen}
           heading="Leave group"
@@ -455,6 +472,7 @@ export default function ConversationDetailsPage() {
 
       {conversation?.isGroup && isGroupAdmin && (
         <AppAlertDialog
+          closeOnConfirm
           open={deleteConfirmOpen}
           onOpenChange={setDeleteConfirmOpen}
           heading="Delete group"

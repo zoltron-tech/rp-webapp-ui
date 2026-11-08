@@ -59,7 +59,29 @@ export const StoryboardMembersDialog: FC<StoryboardMembersDialogProps> = ({
   const { errorToast } = useUIContext();
 
   const [search, setSearch] = useState("");
-  const [pending, setPending] = useState<string | null>(null);
+  // Usernames with a request in flight — several rows can save at once.
+  const [pending, setPending] = useState<ReadonlySet<string>>(new Set());
+  const isPending = (username: string | undefined) =>
+    !!username && pending.has(username);
+  const markPending = (username: string, on: boolean) =>
+    setPending((prev) => {
+      const next = new Set(prev);
+      if (on) next.add(username);
+      else next.delete(username);
+      return next;
+    });
+
+  // Latest member list, so overlapping saves each build on the previous
+  // result instead of the list captured when their row was clicked.
+  const membersRef = useRef(members);
+  membersRef.current = members;
+  const commitMembers = (
+    update: (prev: StoryBoardMember[]) => StoryBoardMember[],
+  ) => {
+    const next = update(membersRef.current);
+    membersRef.current = next;
+    onMembersChange(next);
+  };
   const [memberToRemove, setMemberToRemove] = useState<StoryBoardMember | null>(
     null,
   );
@@ -155,64 +177,77 @@ export const StoryboardMembersDialog: FC<StoryboardMembersDialogProps> = ({
   };
 
   const handleAdd = async (friend: Friend) => {
-    setPending(friend.username);
+    if (isPending(friend.username)) return;
+    markPending(friend.username, true);
+    // .catch: a network throw must not leave the row stuck pending.
     const response = await addStoryBoardMember({
       image: friend.image,
       isAdmin: false,
       storyBoardId,
       username: friend.username,
-    });
-    setPending(null);
+    }).catch(() => null);
+    markPending(friend.username, false);
 
     if (response?.message === API_MESSAGE.Success) {
-      onMembersChange([
-        ...members,
-        {
-          image: friend.image,
-          isAdmin: false,
-          storyBoardId,
-          username: friend.username,
-        },
-      ]);
+      commitMembers((prev) =>
+        prev.some((m) => m.username === friend.username)
+          ? prev
+          : [
+              ...prev,
+              {
+                image: friend.image,
+                isAdmin: false,
+                storyBoardId,
+                username: friend.username,
+              },
+            ],
+      );
     } else {
       errorToast("Could not add member. Please try again.");
     }
   };
 
   const handleRemove = async (member: StoryBoardMember) => {
-    setPending(member.username);
-    const response = await removeStoryBoardMember({ ...member, storyBoardId });
-    setPending(null);
+    if (isPending(member.username)) return;
+    markPending(member.username, true);
+    const response = await removeStoryBoardMember({
+      ...member,
+      storyBoardId,
+    }).catch(() => null);
+    markPending(member.username, false);
 
     if (response?.message === API_MESSAGE.Success) {
-      onMembersChange(members.filter((m) => m.username !== member.username));
+      commitMembers((prev) =>
+        prev.filter((m) => m.username !== member.username),
+      );
     } else {
       errorToast("Could not remove member. Please try again.");
     }
   };
 
+  // Returned to AppAlertDialog (closeOnConfirm) so the button spins until the
+  // request settles; the dialog then closes either way.
   const handleConfirmRemove = () => {
     if (!memberToRemove) return;
-    const member = memberToRemove;
-    setMemberToRemove(null);
-    handleRemove(member);
+    return handleRemove(memberToRemove);
   };
 
   const handleToggleAdmin = async (
     member: StoryBoardMember,
     nextIsAdmin: boolean,
   ) => {
-    setPending(member.username);
+    if (isPending(member.username)) return;
+    markPending(member.username, true);
     const response = await setStoryBoardMemberAdmin({
       ...member,
       isAdmin: nextIsAdmin,
       storyBoardId,
-    });
-    setPending(null);
+    }).catch(() => null);
+    markPending(member.username, false);
 
     if (response?.message === API_MESSAGE.Success) {
-      onMembersChange(
-        members.map((m) =>
+      commitMembers((prev) =>
+        prev.map((m) =>
           m.username === member.username ? { ...m, isAdmin: nextIsAdmin } : m,
         ),
       );
@@ -256,7 +291,7 @@ export const StoryboardMembersDialog: FC<StoryboardMembersDialogProps> = ({
                   <S.SuggestionRow
                     key={friend.username}
                     type="button"
-                    disabled={pending === friend.username}
+                    disabled={isPending(friend.username)}
                     onClick={() => handleAdd(friend)}
                   >
                     <AvatarNew
@@ -329,7 +364,7 @@ export const StoryboardMembersDialog: FC<StoryboardMembersDialogProps> = ({
                         title={
                           member.isAdmin ? "Remove admin role" : "Make admin"
                         }
-                        disabled={pending === member.username}
+                        disabled={isPending(member.username)}
                         onClick={() =>
                           handleToggleAdmin(member, !member.isAdmin)
                         }
@@ -345,7 +380,7 @@ export const StoryboardMembersDialog: FC<StoryboardMembersDialogProps> = ({
                     <S.RemoveActionButton
                       type="button"
                       title="Remove member"
-                      disabled={pending === member.username}
+                      disabled={isPending(member.username)}
                       onClick={() => setMemberToRemove(member)}
                     >
                       <FiUserMinus />
@@ -379,9 +414,10 @@ export const StoryboardMembersDialog: FC<StoryboardMembersDialogProps> = ({
       }}
       onCancel={() => setMemberToRemove(null)}
       onConfirm={handleConfirmRemove}
+      closeOnConfirm
       actionButtonLabel="Remove"
       actionColor="negative"
-      isConfirmDisabled={pending === memberToRemove?.username}
+      isConfirmDisabled={isPending(memberToRemove?.username)}
     />
   );
 

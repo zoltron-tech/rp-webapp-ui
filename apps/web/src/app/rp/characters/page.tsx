@@ -7,8 +7,14 @@ import { useFandomSearch } from "@/components/filter-search/use-fandom-search";
 import { LoadMore } from "@/components/load-more/page";
 import { MusePreviewCard } from "@/components/muse-preview-card";
 import { useGlobalState } from "@/context/store/stores";
+import { useCustomEvents } from "@/hooks";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { usePagedSearch } from "@/hooks/use-paged-search";
+import {
+  type CustomEventType,
+  EVENTS,
+  type MuseDeletedPayload,
+} from "@/utils/constants/custom-events";
 import { getMuseDirectoryAction } from "./actions";
 import * as S from "./styles";
 
@@ -30,7 +36,9 @@ export default function CharacterDirectoryPage() {
   const user = useGlobalState("user");
   const search = useFandomSearch();
 
-  const { failed, hasMore, items, loadMore, loadingMore, retry } =
+  const { on, off } = useCustomEvents(EVENTS.MUSE.base);
+
+  const { failed, hasMore, items, loadMore, loadingMore, retry, setItems } =
     usePagedSearch<Muse>({
       fetchPage: (pageNumber) =>
         getMuseDirectoryAction({
@@ -46,6 +54,21 @@ export default function CharacterDirectoryPage() {
   useEffect(() => {
     stopPageLoading();
   }, [stopPageLoading]);
+
+  // Deleting one of your own characters from its card drops it from the
+  // grid; the card itself shows the toast.
+  useEffect(() => {
+    const handleMuseDeleted = (e: CustomEventType<MuseDeletedPayload>) => {
+      const museId = e.detail.id;
+      setItems((prev) => prev?.filter((muse) => muse.id !== museId) ?? prev);
+    };
+
+    on(EVENTS.MUSE.DELETED, handleMuseDeleted);
+
+    return () => {
+      off(EVENTS.MUSE.DELETED, handleMuseDeleted);
+    };
+  }, [on, off, setItems]);
 
   return (
     <S.Container>

@@ -197,24 +197,27 @@ export const PromptForm: FC<PromptInputFormProps> = ({
         payload[getParentIdKeyFromPromptType(type)] = parentId;
       }
 
-      if (
-        dropdownSelection === "ALL" &&
-        selectedSource.sourceType === "NOVELIST"
-      ) {
-        pendingSubmitRef.current = async () => {
-          setSending(true);
+      // Typed text stays in the store on failure; sending always resets.
+      const send = async () => {
+        setSending(true);
+        try {
           const response = await submitPrompt(payload, type);
 
           if (response.message !== API_MESSAGE.Success) {
             setError(response.message);
-            setSending(false);
             emit(PromptEvent.Error, response.message);
+            errorToast(`Could not send your ${type}. Please try again.`);
             return;
           }
 
           successToast("Sent successfully");
-          emit(PromptEvent.Sent, { muse: selectedSource, payload, type });
-          setSending(false);
+
+          emit(PromptEvent.Sent, {
+            muse: selectedSource,
+            payload,
+            type,
+          });
+
           setError(null);
           setOpen(false);
           setPromptInputState({
@@ -225,36 +228,23 @@ export const PromptForm: FC<PromptInputFormProps> = ({
           onSend?.(
             response.prompt ?? buildOptimisticPrompt(selectedSource, payload),
           );
-        };
+        } catch {
+          errorToast(`Could not send your ${type}. Please try again.`);
+        } finally {
+          setSending(false);
+        }
+      };
+
+      if (
+        dropdownSelection === "ALL" &&
+        selectedSource.sourceType === "NOVELIST"
+      ) {
+        pendingSubmitRef.current = send;
         setNovelistConfirmOpen(true);
         return;
       }
 
-      setSending(true);
-      const response = await submitPrompt(payload, type);
-
-      if (response.message !== API_MESSAGE.Success) {
-        setError(response.message);
-        setSending(false);
-        emit(PromptEvent.Error, response.message);
-        return;
-      }
-
-      successToast("Sent successfully");
-
-      emit(PromptEvent.Sent, {
-        muse: selectedSource,
-        payload,
-        type,
-      });
-
-      setSending(false);
-      setError(null);
-      setOpen(false);
-      setPromptInputState({ featuredSong: null, media: null, promptText: "" });
-      onSend?.(
-        response.prompt ?? buildOptimisticPrompt(selectedSource, payload),
-      );
+      await send();
     },
     [
       sources,
@@ -267,6 +257,8 @@ export const PromptForm: FC<PromptInputFormProps> = ({
       emit,
       onSend,
       setPromptInputState,
+      errorToast,
+      successToast,
     ],
   );
 

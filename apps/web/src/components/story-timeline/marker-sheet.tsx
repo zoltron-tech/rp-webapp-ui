@@ -11,8 +11,8 @@ type Props = {
   /** Null when creating a new marker. */
   marker: StoryTimelineMarker | null;
   onClose: () => void;
-  onSave: (marker: StoryTimelineMarker) => void;
-  onDelete?: (marker: StoryTimelineMarker) => void;
+  onSave: (marker: StoryTimelineMarker) => unknown;
+  onDelete?: (marker: StoryTimelineMarker) => unknown;
 };
 
 /**
@@ -29,6 +29,18 @@ export const MarkerSheet: FC<Props> = ({
 }) => {
   const [label, setLabel] = useState("");
   const [position, setPosition] = useState(50);
+  // Held while a delete is in flight: no second delete, no save, no closing.
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!marker || !onDelete || deleting) return;
+    setDeleting(true);
+    try {
+      await onDelete(marker);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -42,7 +54,7 @@ export const MarkerSheet: FC<Props> = ({
     <ResponsiveSheet
       open={open}
       title={marker ? "Edit marker" : "New marker"}
-      confirmDisabled={trimmed.length === 0}
+      confirmDisabled={trimmed.length === 0 || deleting}
       onConfirm={() =>
         onSave({
           id: marker?.id ?? null,
@@ -51,7 +63,9 @@ export const MarkerSheet: FC<Props> = ({
           position,
         })
       }
-      onClose={onClose}
+      onClose={() => {
+        if (!deleting) onClose();
+      }}
     >
       <S.Field>
         Label
@@ -86,7 +100,12 @@ export const MarkerSheet: FC<Props> = ({
       </S.Hint>
 
       {marker && onDelete && (
-        <S.DangerButton type="button" onClick={() => onDelete(marker)}>
+        <S.DangerButton
+          type="button"
+          disabled={deleting}
+          aria-busy={deleting}
+          onClick={handleDelete}
+        >
           <FaRegTrashCan size={13} />
           Delete marker
         </S.DangerButton>

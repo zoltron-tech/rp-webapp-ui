@@ -23,6 +23,7 @@ import { AppAlertDialog } from "@/components/dialog";
 import { GifPicker } from "@/components/gif-picker";
 import { StickerPicker } from "@/components/sticker-picker";
 import { useGlobalState } from "@/context/store/stores";
+import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { dynamic } from "@/lib/dynamic";
 import { namesToWords } from "@nw/spell/tokenizer";
@@ -198,11 +199,13 @@ type SendMessageComposerProps = {
   sending: boolean;
   conversationId?: string;
   onChange: (value: string) => void;
-  onSubmit: () => Promise<void> | void;
+  /** Resolve `false` when nothing was sent, so the composer keeps its input. */
+  onSubmit: () => Promise<boolean | void> | boolean | void;
   onSendGif?: (gifUrl: string) => Promise<void> | void;
   onSendSticker?: (stickerUrl: string) => Promise<void> | void;
   onSendClip?: (clipUrl: string) => Promise<void> | void;
-  onSendMedia?: (urls: string[]) => Promise<void> | void;
+  /** Resolve `false` when nothing was sent, so the media tray is kept. */
+  onSendMedia?: (urls: string[]) => Promise<boolean | void> | boolean | void;
   selectedSender?: ComposerSender | null;
   onSenderChange?: (sender: ComposerSender) => void;
   mentionItems?: MentionDataItem[];
@@ -368,6 +371,7 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
   }, []);
 
   const { uploadMedia } = useUploadMedia();
+  const { errorToast } = useUIContext();
 
   const addMediaFiles = useCallback(
     (files: File[]) => {
@@ -385,23 +389,35 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
         formData.append("contentType", entry.file.type);
         formData.append("prefix", conversationId ?? "chat-media");
         formData.append("mediaBucket", "CHAT_MEDIA");
-        uploadMedia(formData).then((result) => {
-          const success =
-            typeof result === "string" && result !== API_MESSAGE.MediaError;
-          if (success) console.log("[chat-media] uploaded:", result);
-          setMediaFiles((prev) =>
-            prev.map((mf) =>
-              mf.localUrl === entry.localUrl
-                ? {
-                    ...mf,
-                    uploadError: !success,
-                    uploadedUrl: success ? result : null,
-                    uploading: false,
-                  }
-                : mf,
-            ),
-          );
-        });
+        uploadMedia(formData)
+          .then((result) => {
+            const success =
+              typeof result === "string" && result !== API_MESSAGE.MediaError;
+            if (success) console.log("[chat-media] uploaded:", result);
+            setMediaFiles((prev) =>
+              prev.map((mf) =>
+                mf.localUrl === entry.localUrl
+                  ? {
+                      ...mf,
+                      uploadError: !success,
+                      uploadedUrl: success ? result : null,
+                      uploading: false,
+                    }
+                  : mf,
+              ),
+            );
+          })
+          .catch(() => {
+            // The S3 upload threw (network): show the tile as failed rather
+            // than spinning forever with Send disabled.
+            setMediaFiles((prev) =>
+              prev.map((mf) =>
+                mf.localUrl === entry.localUrl
+                  ? { ...mf, uploadError: true, uploading: false }
+                  : mf,
+              ),
+            );
+          });
       }
     },
     [uploadMedia],
@@ -513,14 +529,30 @@ export const SendMessageComposer: FC<SendMessageComposerProps> = ({
     if ((!hasValue && !hasMedia) || sending) return;
     if (mediaFiles.some((mf) => mf.uploading)) return;
     if (hasMedia) {
-      const uploadedUrls = mediaFiles
-        .filter((mf) => mf.uploadedUrl)
-        .map((mf) => mf.uploadedUrl!);
-      onSendMedia?.(uploadedUrls);
-      mediaFiles.forEach((mf) => URL.revokeObjectURL(mf.localUrl));
-      setMediaFiles([]);
+      // Never drop a failed upload silently: the user removes the failed
+      // tile first, so what is sent is what they see.
+      if (mediaFiles.some((mf) => mf.uploadError || !mf.uploadedUrl)) {
+        errorToast("Remove the images that failed to upload.");
+        return;
+      }
+      const sentFiles = mediaFiles;
+      let sent = true;
+      try {
+        // `false` means it was not sent: keep the tray (and caption) as is.
+        sent =
+          (await onSendMedia?.(sentFiles.map((mf) => mf.uploadedUrl!))) !==
+          false;
+      } catch {
+        errorToast("Your message could not be sent.");
+        return;
+      }
+      if (!sent) return;
+      for (const mf of sentFiles) URL.revokeObjectURL(mf.localUrl);
+      const sentUrls = new Set(sentFiles.map((mf) => mf.localUrl));
+      setMediaFiles((prev) => prev.filter((mf) => !sentUrls.has(mf.localUrl)));
     } else if (hasValue) {
-      await onSubmit();
+      const sent = await onSubmit();
+      if (sent === false) return;
     }
     setMediaToolbarOpen(false);
   };

@@ -36,6 +36,7 @@ import {
 } from "@/app/actions";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { InlineMessage } from "@/components/common/inline-message";
+import { AppAlertDialog } from "@/components/dialog";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useUIContext } from "@/hooks/use-ui-context";
@@ -79,6 +80,16 @@ export function AccountSection({ onBack }: Props) {
   const [spotify, setSpotify] = useState<SpotifyConnection | null>(null);
   const [spotifyLoading, setSpotifyLoading] = useState(true);
   const [spotifyUnlinking, setSpotifyUnlinking] = useState(false);
+  // Unlink confirm: the target is kept after close so the copy doesn't flip
+  // mid-animation.
+  const [unlinkOpen, setUnlinkOpen] = useState(false);
+  const [unlinkConfirm, setUnlinkConfirm] = useState<"discord" | "spotify">(
+    "discord",
+  );
+  const openUnlinkConfirm = (target: "discord" | "spotify") => {
+    setUnlinkConfirm(target);
+    setUnlinkOpen(true);
+  };
   const [verifyState, setVerifyState] = useState<AsyncState>("idle");
   const [resetState, setResetState] = useState<AsyncState>("idle");
   const [blocked, setBlocked] = useState<Friend[]>([]);
@@ -177,9 +188,9 @@ export function AccountSection({ onBack }: Props) {
 
   const handleUnlinkDiscord = async () => {
     setDiscordUnlinking(true);
-    const response = await unlinkDiscordAction();
+    const response = await unlinkDiscordAction().catch(() => null);
     setDiscordUnlinking(false);
-    if (response.message === API_MESSAGE.Success) {
+    if (response?.message === API_MESSAGE.Success) {
       setDiscord(null);
       // The Guild Member badge is no longer true the moment the link is gone.
       syncMyBadgesAction();
@@ -191,9 +202,9 @@ export function AccountSection({ onBack }: Props) {
 
   const handleUnlinkSpotify = async () => {
     setSpotifyUnlinking(true);
-    const response = await unlinkSpotifyAction();
+    const response = await unlinkSpotifyAction().catch(() => null);
     setSpotifyUnlinking(false);
-    if (response.message === API_MESSAGE.Success) {
+    if (response?.message === API_MESSAGE.Success) {
       setSpotify(null);
       // Now Playing is no longer true the moment the link is gone.
       syncMyBadgesAction();
@@ -492,7 +503,7 @@ export function AccountSection({ onBack }: Props) {
               <ShouldRender if={Boolean(discord)}>
                 <S.AccountActionButton
                   type="button"
-                  onClick={handleUnlinkDiscord}
+                  onClick={() => openUnlinkConfirm("discord")}
                   disabled={discordUnlinking}
                 >
                   <TbUnlink />
@@ -560,7 +571,7 @@ export function AccountSection({ onBack }: Props) {
               <ShouldRender if={Boolean(spotify)}>
                 <S.AccountActionButton
                   type="button"
-                  onClick={handleUnlinkSpotify}
+                  onClick={() => openUnlinkConfirm("spotify")}
                   disabled={spotifyUnlinking}
                 >
                   <TbUnlink />
@@ -724,6 +735,26 @@ export function AccountSection({ onBack }: Props) {
       <ChangeUsernameDialog
         open={usernameDialogOpen}
         onOpenChange={setUsernameDialogOpen}
+      />
+
+      <AppAlertDialog
+        closeOnConfirm
+        open={unlinkOpen}
+        onOpenChange={setUnlinkOpen}
+        heading={
+          unlinkConfirm === "spotify" ? "Unlink Spotify?" : "Unlink Discord?"
+        }
+        text={
+          unlinkConfirm === "spotify"
+            ? "Your Spotify account will be disconnected and the Now Playing badge will be removed from your profile. You can link it again anytime."
+            : "Your Discord account will be disconnected and the Guild Member badge will be removed from your profile. You can link it again anytime."
+        }
+        actionButtonLabel="Unlink"
+        closeButtonText="Cancel"
+        actionColor="negative"
+        onConfirm={
+          unlinkConfirm === "spotify" ? handleUnlinkSpotify : handleUnlinkDiscord
+        }
       />
     </>
   );

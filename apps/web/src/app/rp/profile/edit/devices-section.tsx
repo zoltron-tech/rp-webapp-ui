@@ -253,6 +253,7 @@ export function DevicesSection() {
       </ShouldRender>
 
       <AppAlertDialog
+        closeOnConfirm
         heading="Sign out your other devices?"
         text={`This ends ${otherDeviceCount === 1 ? "1 other session" : `${otherDeviceCount} other sessions`}. You will stay signed in here.`}
         open={confirmOthers}
@@ -262,6 +263,7 @@ export function DevicesSection() {
       />
 
       <AppAlertDialog
+        closeOnConfirm
         heading="Sign out everywhere?"
         text="This ends every session on your account, including this one. You will need to sign in again."
         open={confirmEverywhere}

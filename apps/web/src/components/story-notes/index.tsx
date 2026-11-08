@@ -17,7 +17,14 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import type { StoryNote, StoryNoteType } from "@nw/types";
-import { type FC, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  type FC,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { IoMdAdd } from "react-icons/io";
 import {
   LuArchive,
@@ -86,6 +93,12 @@ export const StoryNotesView: FC<Props> = ({ storyboardId, canEdit }) => {
   });
   /** Held while a vote is in flight, so a double tap can't race itself. */
   const [voting, setVoting] = useState(false);
+  /** Notes with a pin/archive/close toggle in flight — their toggles hold
+   *  until the server answers, so a double tap can't send it twice. */
+  const [flagsPending, setFlagsPending] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
+  const flagsPendingRef = useRef(new Set<string>());
 
   const closeSheet = useCallback(
     () => setSheet({ note: null, open: false, type: "NOTE" }),
@@ -175,7 +188,7 @@ export const StoryNotesView: FC<Props> = ({ storyboardId, canEdit }) => {
       const result = await reorderStoryNotesAction(
         storyboardId,
         reordered.map((note) => note.id),
-      );
+      ).catch(() => null);
       if (!result || "message" in result) {
         setNotes(previous);
         errorToast("Could not save that order. Please try again.");
@@ -227,7 +240,9 @@ export const StoryNotesView: FC<Props> = ({ storyboardId, canEdit }) => {
 
   const handleSave = async (note: StoryNote) => {
     const isPoll = note.noteType === "POLL";
-    const saved = await saveStoryNoteAction(storyboardId, note);
+    const saved = await saveStoryNoteAction(storyboardId, note).catch(
+      () => null,
+    );
     if (!saved || "message" in saved) {
       errorToast(
         isPoll
@@ -243,8 +258,8 @@ export const StoryNotesView: FC<Props> = ({ storyboardId, canEdit }) => {
   const handleDelete = async (note: StoryNote) => {
     if (!note.id) return;
     const isPoll = note.noteType === "POLL";
-    const result = await deleteStoryNoteAction(note.id);
-    if (result.message !== API_MESSAGE.Success) {
+    const result = await deleteStoryNoteAction(note.id).catch(() => null);
+    if (result?.message !== API_MESSAGE.Success) {
       errorToast(
         isPoll
           ? "Could not delete that poll. Please try again."
@@ -265,13 +280,28 @@ export const StoryNotesView: FC<Props> = ({ storyboardId, canEdit }) => {
     note: StoryNote,
     flags: { isArchived?: boolean; isPinned?: boolean; isPollClosed?: boolean },
   ) => {
-    if (!note.id) return;
-    const saved = await setStoryNoteFlagsAction(note.id, flags);
-    if (!saved || "message" in saved) {
-      errorToast("Could not update that note. Please try again.");
-      return;
+    const noteId = note.id;
+    // The ref catches a double tap that lands before the re-render does.
+    if (!noteId || flagsPendingRef.current.has(noteId)) return;
+    flagsPendingRef.current.add(noteId);
+    setFlagsPending((current) => new Set(current).add(noteId));
+    try {
+      const saved = await setStoryNoteFlagsAction(noteId, flags).catch(
+        () => null,
+      );
+      if (!saved || "message" in saved) {
+        errorToast("Could not update that note. Please try again.");
+        return;
+      }
+      mergeSaved(saved);
+    } finally {
+      flagsPendingRef.current.delete(noteId);
+      setFlagsPending((current) => {
+        const next = new Set(current);
+        next.delete(noteId);
+        return next;
+      });
     }
-    mergeSaved(saved);
   };
 
   const handleTogglePin = (note: StoryNote) =>
@@ -291,7 +321,9 @@ export const StoryNotesView: FC<Props> = ({ storyboardId, canEdit }) => {
   const handleVote = async (note: StoryNote, optionId: string) => {
     if (!note.id || voting) return;
     setVoting(true);
-    const saved = await voteOnStoryNotePollAction(note.id, optionId);
+    const saved = await voteOnStoryNotePollAction(note.id, optionId).catch(
+      () => null,
+    );
     setVoting(false);
     if (!saved || "message" in saved) {
       errorToast("Could not record that vote. Please try again.");
@@ -303,7 +335,9 @@ export const StoryNotesView: FC<Props> = ({ storyboardId, canEdit }) => {
   const handleRetractVote = async (note: StoryNote) => {
     if (!note.id || voting) return;
     setVoting(true);
-    const saved = await retractStoryNotePollVoteAction(note.id);
+    const saved = await retractStoryNotePollVoteAction(note.id).catch(
+      () => null,
+    );
     setVoting(false);
     if (!saved || "message" in saved) {
       errorToast("Could not take that vote back. Please try again.");
@@ -333,6 +367,7 @@ export const StoryNotesView: FC<Props> = ({ storyboardId, canEdit }) => {
               onOpen={(opened) =>
                 setSheet({ note: opened, open: true, type: "NOTE" })
               }
+              pending={flagsPending.has(note.id)}
               onTogglePin={handleTogglePin}
               onToggleArchive={handleToggleArchive}
             />
@@ -463,6 +498,7 @@ export const StoryNotesView: FC<Props> = ({ storyboardId, canEdit }) => {
         note={sheet.note}
         initialType={sheet.type}
         voting={voting}
+        flagsPending={Boolean(sheet.note?.id && flagsPending.has(sheet.note.id))}
         onClose={closeSheet}
         onSave={handleSave}
         onDelete={handleDelete}

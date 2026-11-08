@@ -5,6 +5,7 @@ import { type FC, useEffect, useRef, useState } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { ResponsiveSheet } from "@/components/common/responsive-sheet";
 import * as F from "@/components/common/responsive-sheet/styles";
+import { AppAlertDialog } from "@/components/dialog";
 import { CODEX_COLORS } from "../icons";
 import * as S from "./styles";
 
@@ -19,8 +20,8 @@ type Props = {
   takenColors: string[];
   canEdit: boolean;
   onClose: () => void;
-  onSave: (group: CodexGroup) => void;
-  onDelete?: (group: CodexGroup) => void;
+  onSave: (group: CodexGroup) => unknown;
+  onDelete?: (group: CodexGroup) => unknown;
 };
 
 /** Fewest characters a group can hold — mirrors the server's own floor. */
@@ -56,6 +57,19 @@ export const GroupSheet: FC<Props> = ({
   const [color, setColor] = useState<string>(CODEX_COLORS[0]);
   /** Keyed `REFTYPE:id`, so the two id spaces cannot collide. */
   const [members, setMembers] = useState<Set<string>>(new Set());
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  // Held while disbanding: no save and no closing until it lands.
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!group || !onDelete) return;
+    setDeleting(true);
+    try {
+      await onDelete(group);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   /** Read when the sheet opens, never depended on: the parent builds this list
    *  inline, so a fresh array arrives on every render and depending on it would
@@ -74,6 +88,7 @@ export const GroupSheet: FC<Props> = ({
         CODEX_COLORS[0],
     );
     setMembers(new Set((group?.members ?? []).map(memberKey)));
+    setConfirmDelete(false);
   }, [open, group]);
 
   const toggleMember = (person: StoryPerson) =>
@@ -95,7 +110,7 @@ export const GroupSheet: FC<Props> = ({
     <ResponsiveSheet
       open={open}
       title={group ? "Group" : "New group"}
-      confirmDisabled={!valid}
+      confirmDisabled={!valid || deleting}
       onConfirm={
         canEdit && valid
           ? () =>
@@ -111,7 +126,9 @@ export const GroupSheet: FC<Props> = ({
               })
           : undefined
       }
-      onClose={onClose}
+      onClose={() => {
+        if (!deleting) onClose();
+      }}
     >
       {!canEdit ? (
         <F.Hint>Only members of this story can change its groups.</F.Hint>
@@ -247,13 +264,28 @@ export const GroupSheet: FC<Props> = ({
           </S.GroupPreview>
 
           {group && onDelete && (
-            <F.DangerButton type="button" onClick={() => onDelete(group)}>
+            <F.DangerButton
+              type="button"
+              disabled={deleting}
+              onClick={() => setConfirmDelete(true)}
+            >
               <FaRegTrashCan size={13} />
               Disband group
             </F.DangerButton>
           )}
         </>
       )}
+
+      <AppAlertDialog
+        heading="Disband this group?"
+        text="Its field comes off the mesh for every co-author. The characters in it and their relationships stay as they are."
+        open={confirmDelete}
+        onOpenChange={setConfirmDelete}
+        actionButtonLabel="Disband"
+        actionColor="negative"
+        closeOnConfirm
+        onConfirm={handleDelete}
+      />
     </ResponsiveSheet>
   );
 };

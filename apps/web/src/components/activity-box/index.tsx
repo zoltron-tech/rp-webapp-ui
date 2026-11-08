@@ -220,6 +220,9 @@ export const ActivityBox: FC<Props> = ({
     liked: reacted,
     type: reactionType,
   });
+  // Ignore heart clicks while a like request is in flight, so overlapping
+  // requests can't finish out of order.
+  const reactPendingRef = useRef(false);
 
   const {
     on: onPromptEvent,
@@ -268,13 +271,17 @@ export const ActivityBox: FC<Props> = ({
   }, [isStoryBoard, activity?.target.id, onStoryBoardEvent, offStoryBoardEvent]);
 
   const handleReact = async () => {
-    // Optimistic flip
+    if (reactPendingRef.current) return;
+    reactPendingRef.current = true;
+    // Optimistic flip; a failure restores exactly this pre-click state.
+    const previous = { reactionCount, reacted };
     const nextReacted = !reacted;
     setReacted(nextReacted);
     setReactionCount((c) => Math.max(0, c + (nextReacted ? 1 : -1)));
 
-    const result = await toggleLike();
-    if ("reactions" in result) {
+    const result = await toggleLike().catch(() => null);
+    reactPendingRef.current = false;
+    if (result && "reactions" in result) {
       setReactionCount(result.reactions);
       setReacted(result.reacted);
       // Feed lists (e.g. the home page's mixedFeed) hold this exact `activity`
@@ -302,8 +309,9 @@ export const ActivityBox: FC<Props> = ({
       }
     } else {
       // Revert on error
-      setReacted(!nextReacted);
-      setReactionCount((c) => Math.max(0, c + (nextReacted ? -1 : 1)));
+      setReacted(previous.reacted);
+      setReactionCount(previous.reactionCount);
+      errorToast(nextReacted ? "Couldn't like this." : "Couldn't unlike this.");
     }
   };
 
@@ -322,7 +330,7 @@ export const ActivityBox: FC<Props> = ({
       errorToast("Couldn't delete that activity. Try again.");
       return;
     }
-    successToast("Activity deleted");
+    successToast("Activity removed from your profile.");
     onDeleted?.(activity.id);
   };
 
@@ -332,29 +340,36 @@ export const ActivityBox: FC<Props> = ({
     if (!targetId || shareLoading) return;
 
     setShareLoading(true);
+    let opened = false;
     try {
       if (isPromptFamily) {
         const prompt = await baseDataLoader(() => getPromptAction(targetId));
         if (prompt) {
           setSharePrompt(prompt);
           setShareOpen(true);
+          opened = true;
         }
       } else if (isMuse) {
         const muse = await baseDataLoader(() => getMuseAction(targetId));
         if (muse) {
           setShareMuse(muse);
           setShareOpen(true);
+          opened = true;
         }
       } else if (isStoryBoardFamily) {
         const story = await baseDataLoader(() => getStoryboardAction(targetId));
         if (story) {
           setShareStory(story);
           setShareOpen(true);
+          opened = true;
         }
       }
+    } catch {
+      // Network failure: fall through to the error toast below.
     } finally {
       setShareLoading(false);
     }
+    if (!opened) errorToast("Couldn't load share preview.");
   };
 
   const handleCardClick = (
@@ -748,11 +763,12 @@ export const ActivityBox: FC<Props> = ({
       </S.ActionRow>
       <ShouldRender if={canDelete}>
         <AppAlertDialog
+          closeOnConfirm
           heading="Delete this activity?"
           text="It leaves your profile and your friends' feeds. What it was about — the post, character, story or upload — stays."
           open={deleteOpen}
           onOpenChange={setDeleteOpen}
-          onConfirm={() => void handleDelete()}
+          onConfirm={handleDelete}
           actionButtonLabel="Delete"
         />
       </ShouldRender>

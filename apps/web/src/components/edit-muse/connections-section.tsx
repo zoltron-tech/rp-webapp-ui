@@ -320,6 +320,7 @@ export function ConnectionsSection({ onBack }: Props) {
 
       {/* Delete confirmation */}
       <AppAlertDialog
+        closeOnConfirm
         heading="Delete connection?"
         text={`"${deleting?.title ?? ""}" will be permanently removed for every character and novelist involved. This cannot be undone.`}
         open={deleting !== null}

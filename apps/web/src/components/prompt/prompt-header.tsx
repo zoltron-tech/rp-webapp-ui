@@ -81,10 +81,20 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
     const response = await deletePromptAction(promptId);
     if (response?.message === API_MESSAGE.Success) {
       setPromptState({ promptAlert: null });
-      successToast(`Deleted successfully`);
-      routeToPage(ROUTES.Muse.View(source.sourceId));
+      successToast("Prompt deleted.");
+      // OOC posts belong to the novelist, so land on their profile rather
+      // than a (non-existent) muse page.
+      if (source.sourceType === "NOVELIST") {
+        routeToPage(
+          source.urlProp
+            ? ROUTES.Profile.View(source.urlProp).Index
+            : ROUTES.Home,
+        );
+      } else {
+        routeToPage(ROUTES.Muse.View(source.sourceId));
+      }
     } else {
-      errorToast("There was an issue while deleting this reply.");
+      errorToast("There was an issue while deleting this prompt.");
     }
   }, [promptId, source, routeToPage, successToast, errorToast, setPromptState]);
 
@@ -248,6 +258,7 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
         </ShouldRender>
       </S.HeaderDropdownMenuContainer>
       <AppAlertDialog
+        closeOnConfirm
         heading={`Report this prompt?`}
         text={`We strive to maintain a safe and welcoming community. If you notice any misconduct from anyone, please report it. Our team will review the issue and take appropriate action as quickly as possible.`}
         open={promptAlert === "report"}
@@ -256,8 +267,9 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
         actionButtonLabel="Report"
       />
       <AppAlertDialog
+        closeOnConfirm
         heading={`Delete this prompt?`}
-        text={`Deleting the prompt will remove all of it's threads and replies too. Are you sure you want to delete this reply?`}
+        text={`Deleting the prompt will remove all of its threads and replies too. Are you sure you want to delete this prompt?`}
         open={promptAlert === "delete"}
         onOpenChange={handleOpenChange("delete")}
         onConfirm={handleDeletePrompt}

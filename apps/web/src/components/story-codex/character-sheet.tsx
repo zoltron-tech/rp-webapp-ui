@@ -73,8 +73,8 @@ type Props = {
   /** Null when creating a new character. */
   character: StoryCharacter | null;
   onClose: () => void;
-  onSave: (character: StoryCharacter) => void;
-  onDelete?: (character: StoryCharacter) => void;
+  onSave: (character: StoryCharacter) => unknown;
+  onDelete?: (character: StoryCharacter) => unknown;
 };
 
 /**
@@ -119,6 +119,18 @@ export const CharacterSheet: FC<Props> = ({
   const [uploading, setUploading] = useState(false);
   const [mediaError, setMediaError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  // Held while a delete is in flight: no save and no closing until it lands.
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!character || !onDelete) return;
+    setDeleting(true);
+    try {
+      await onDelete(character);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   // ── Framing the portrait ─────────────────────────────────────────────────
   // The same adjustable avatar a muse has: drag to reposition, scroll or slide
@@ -276,7 +288,7 @@ export const CharacterSheet: FC<Props> = ({
       wide
       title={character ? "Edit character" : "New character"}
       // Saving mid-upload would store nothing where the face should be.
-      confirmDisabled={isBlank || uploading}
+      confirmDisabled={isBlank || uploading || deleting}
       onConfirm={() =>
         onSave({
           about: about.trim() ? about : null,
@@ -303,7 +315,9 @@ export const CharacterSheet: FC<Props> = ({
           useAccent,
         })
       }
-      onClose={onClose}
+      onClose={() => {
+        if (!deleting) onClose();
+      }}
     >
       <S.CharacterPortraitRow>
         {/* Drawn from the stored framing rather than the raw file, so what the
@@ -514,7 +528,11 @@ export const CharacterSheet: FC<Props> = ({
       )}
 
       {character && onDelete && (
-        <F.DangerButton type="button" onClick={() => setConfirmDelete(true)}>
+        <F.DangerButton
+          type="button"
+          disabled={deleting}
+          onClick={() => setConfirmDelete(true)}
+        >
           <FaRegTrashCan size={13} />
           Delete character
         </F.DangerButton>
@@ -568,10 +586,8 @@ export const CharacterSheet: FC<Props> = ({
         onOpenChange={setConfirmDelete}
         actionButtonLabel="Delete"
         actionColor="negative"
-        onConfirm={() => {
-          setConfirmDelete(false);
-          if (character) onDelete?.(character);
-        }}
+        closeOnConfirm
+        onConfirm={handleDelete}
       />
     </ResponsiveSheet>
   );

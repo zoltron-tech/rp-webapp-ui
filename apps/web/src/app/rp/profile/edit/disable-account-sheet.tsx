@@ -56,8 +56,9 @@ export const DisableAccountSheet: FC<Props> = ({ open, onClose }) => {
     const result = await disableAccountAction({
       reason,
       reasonText: reason === "OTHER" ? otherText.trim() || null : null,
-    });
-    if (result.message !== API_MESSAGE.Success) {
+    }).catch(() => null);
+    // A thrown request must not leave the sheet busy: busy blocks closing.
+    if (result?.message !== API_MESSAGE.Success) {
       setBusy(false);
       setError("We couldn't disable your account just now. Please try again.");
       return;

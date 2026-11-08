@@ -30,7 +30,7 @@ type BlocksProps = {
   enabled: string[];
   busy?: boolean;
   onClose: () => void;
-  onSave: (enabled: string[]) => void;
+  onSave: (enabled: string[]) => unknown;
 };
 
 export const FactBlocksSheet: FC<BlocksProps> = ({
@@ -120,7 +120,7 @@ type ListProps = {
   maxLength: number;
   busy?: boolean;
   onClose: () => void;
-  onSave: (items: string[]) => void;
+  onSave: (items: string[]) => unknown;
   onRemoveBlock: () => void;
 };
 
@@ -255,7 +255,7 @@ type PairsProps = {
   picks: ThisOrThatPick[];
   busy?: boolean;
   onClose: () => void;
-  onSave: (picks: ThisOrThatPick[]) => void;
+  onSave: (picks: ThisOrThatPick[]) => unknown;
 };
 
 export const ThisOrThatSheet: FC<PairsProps> = ({

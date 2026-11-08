@@ -17,6 +17,7 @@ import { BsPencil } from "react-icons/bs";
 import { FaCircleCheck, FaCircleXmark } from "react-icons/fa6";
 import { checkUsernameAvailability, updateUsernameAction } from "@/app/actions";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
+import { useUIContext } from "@/hooks/use-ui-context";
 import { API_MESSAGE } from "@/utils/constants";
 import { checkUsernameInvalidity } from "@/utils/helpers";
 import * as S from "./styled";
@@ -41,6 +42,7 @@ export const ChangeUsernameDialog: FC<ChangeUsernameDialogProps> = ({
   const accent = useGlobalState("accent");
   const theme = useGlobalState("theme");
   const setGlobalState = useGlobalStoreSet();
+  const { errorToast } = useUIContext();
 
   const [loading, setLoading] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
@@ -129,15 +131,24 @@ export const ChangeUsernameDialog: FC<ChangeUsernameDialogProps> = ({
         return;
       }
 
+      if (loading) return;
       setLoading(true);
-      const response = await updateUsernameAction(trimmed);
-      setLoading(false);
+      let response: Awaited<ReturnType<typeof updateUsernameAction>> | null;
+      try {
+        response = await updateUsernameAction(trimmed);
+      } catch {
+        response = null;
+      } finally {
+        setLoading(false);
+      }
 
-      if (response.message !== API_MESSAGE.Success) {
-        if (response.message === API_MESSAGE.Conflict) {
+      // Failure keeps the dialog open with the typed username intact.
+      if (response?.message !== API_MESSAGE.Success) {
+        if (response?.message === API_MESSAGE.Conflict) {
           setUsernameError("This username is already taken.");
         } else {
           setUsernameError("Something went wrong. Please try again.");
+          errorToast("Couldn't change your username. Please try again.");
         }
         return;
       }
@@ -154,7 +165,15 @@ export const ChangeUsernameDialog: FC<ChangeUsernameDialogProps> = ({
       setGlobalState({ user: updatedUser });
       onOpenChange(false);
     },
-    [user, usernameValue, availability, setGlobalState, onOpenChange],
+    [
+      user,
+      usernameValue,
+      availability,
+      loading,
+      setGlobalState,
+      onOpenChange,
+      errorToast,
+    ],
   );
 
   const availabilityLabel: Record<AvailabilityStatus, string> = {

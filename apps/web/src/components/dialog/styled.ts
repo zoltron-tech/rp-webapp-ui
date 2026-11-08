@@ -1,7 +1,7 @@
 import { AlertDialog } from "radix-ui";
 import { keyframes, styled } from "styled-components";
 import { DIALOG_SCRIM, GLASS_DIALOG } from "@/theme";
-import { fadeIn as overlayShow } from "@/theme/animations";
+import { fadeIn as overlayShow, spin } from "@/theme/animations";
 
 const contentShow = keyframes`
 from {
@@ -169,11 +169,29 @@ export const CancelButton = styled.button`
   }
 `;
 
+export const ButtonSpinner = styled.span`
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  margin-right: 8px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  opacity: 0.85;
+  animation: ${spin} 0.7s linear infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation-duration: 1.6s;
+  }
+`;
+
 export const ActionButton = styled.button<{
   colorVariant?: "negative" | "neutral";
+  $busy?: boolean;
 }>`
   ${buttonBase}
   border: 1px solid transparent;
+  ${({ $busy }) => ($busy ? "cursor: progress;" : "")}
 
   background-color: ${({ colorVariant }) =>
     colorVariant === "neutral" ? "var(--accent)" : "var(--tomato-9)"};

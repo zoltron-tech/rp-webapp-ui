@@ -306,7 +306,9 @@ export const StoryCodexView: FC<Props> = ({
   // ── Entries ──────────────────────────────────────────────────────────────
 
   const handleSaveEntry = async (entry: CodexEntry) => {
-    const saved = await saveCodexEntryAction(storyboardId, entry);
+    const saved = await saveCodexEntryAction(storyboardId, entry).catch(
+      () => null,
+    );
     if (!saved || "message" in saved) {
       errorToast("Could not save that entry. Please try again.");
       return;
@@ -326,8 +328,8 @@ export const StoryCodexView: FC<Props> = ({
 
   const handleDeleteEntry = async (entry: CodexEntry) => {
     if (!entry.id) return;
-    const result = await deleteCodexEntryAction(entry.id);
-    if (result.message !== API_MESSAGE.Success) {
+    const result = await deleteCodexEntryAction(entry.id).catch(() => null);
+    if (result?.message !== API_MESSAGE.Success) {
       errorToast("Could not delete that entry. Please try again.");
       return;
     }
@@ -335,6 +337,7 @@ export const StoryCodexView: FC<Props> = ({
       current.filter((candidate) => candidate.id !== entry.id),
     );
     setEntrySheet({ entry: null, open: false });
+    successToast("Entry deleted.");
   };
 
   // ── In-story characters ──────────────────────────────────────────────────
@@ -349,7 +352,9 @@ export const StoryCodexView: FC<Props> = ({
       );
       return;
     }
-    const saved = await saveStoryCharacterAction(storyboardId, character);
+    const saved = await saveStoryCharacterAction(storyboardId, character).catch(
+      () => null,
+    );
     if (!saved || "message" in saved) {
       errorToast("Could not save that character. Please try again.");
       return;
@@ -368,8 +373,10 @@ export const StoryCodexView: FC<Props> = ({
 
   const handleDeleteCharacter = async (character: StoryCharacter) => {
     if (!character.id) return;
-    const result = await deleteStoryCharacterAction(character.id);
-    if (result.message !== API_MESSAGE.Success) {
+    const result = await deleteStoryCharacterAction(character.id).catch(
+      () => null,
+    );
+    if (result?.message !== API_MESSAGE.Success) {
       errorToast("Could not delete that character. Please try again.");
       return;
     }
@@ -402,11 +409,15 @@ export const StoryCodexView: FC<Props> = ({
 
   // ── Relationships ────────────────────────────────────────────────────────
 
+  /** Resolves true once saved, so the sheet closes only on success. */
   const handleSaveRelationship = async (relationship: CodexRelationship) => {
-    const saved = await saveCodexRelationshipAction(storyboardId, relationship);
+    const saved = await saveCodexRelationshipAction(
+      storyboardId,
+      relationship,
+    ).catch(() => null);
     if (!saved || "message" in saved) {
       errorToast("Could not save that relationship. Please try again.");
-      return;
+      return false;
     }
     setRelationships((current) => {
       const exists = current.some((candidate) => candidate.id === saved.id);
@@ -416,6 +427,7 @@ export const StoryCodexView: FC<Props> = ({
           )
         : [...current, saved];
     });
+    return true;
   };
 
   /**
@@ -423,7 +435,9 @@ export const StoryCodexView: FC<Props> = ({
    * it exists — the author made it for the relationship they are writing.
    */
   const handleSaveTone = async (tone: CodexTone): Promise<CodexTone | null> => {
-    const saved = await saveCodexToneAction(storyboardId, tone);
+    const saved = await saveCodexToneAction(storyboardId, tone).catch(
+      () => null,
+    );
     if (!saved || "message" in saved) {
       errorToast("Could not save that tone. Please try again.");
       return null;
@@ -445,11 +459,11 @@ export const StoryCodexView: FC<Props> = ({
    * link here too rather than re-reading the whole codex.
    */
   const handleDeleteTone = async (tone: CodexTone) => {
-    if (!tone.id) return;
-    const result = await deleteCodexToneAction(tone.id);
-    if (result.message !== API_MESSAGE.Success) {
+    if (!tone.id) return false;
+    const result = await deleteCodexToneAction(tone.id).catch(() => null);
+    if (result?.message !== API_MESSAGE.Success) {
       errorToast("Could not remove that tone. Please try again.");
-      return;
+      return false;
     }
     setTones((current) =>
       current.filter((candidate) => candidate.id !== tone.id),
@@ -459,6 +473,7 @@ export const StoryCodexView: FC<Props> = ({
         edge.toneId === tone.id ? { ...edge, toneId: null } : edge,
       ),
     );
+    return true;
   };
 
   // ── Groups ───────────────────────────────────────────────────────────────
@@ -468,10 +483,12 @@ export const StoryCodexView: FC<Props> = ({
    * the sheet holds the set the author is editing, so it sends that set.
    */
   const handleSaveGroup = async (group: CodexGroup) => {
-    const saved = await saveCodexGroupAction(storyboardId, group);
+    const saved = await saveCodexGroupAction(storyboardId, group).catch(
+      () => null,
+    );
     if (!saved || "message" in saved) {
       errorToast("Could not save that group. Please try again.");
-      return;
+      return false;
     }
     setGroups((current) => {
       const exists = current.some((candidate) => candidate.id === saved.id);
@@ -481,37 +498,46 @@ export const StoryCodexView: FC<Props> = ({
           )
         : [...current, saved];
     });
+    return true;
   };
 
   /** Disbands a group. Its characters and their relationships are untouched. */
   const handleDeleteGroup = async (group: CodexGroup) => {
-    if (!group.id) return;
-    const result = await deleteCodexGroupAction(group.id);
-    if (result.message !== API_MESSAGE.Success) {
+    if (!group.id) return false;
+    const result = await deleteCodexGroupAction(group.id).catch(() => null);
+    if (result?.message !== API_MESSAGE.Success) {
       errorToast("Could not disband that group. Please try again.");
-      return;
+      return false;
     }
     setGroups((current) =>
       current.filter((candidate) => candidate.id !== group.id),
     );
+    successToast("Group disbanded.");
+    return true;
   };
 
   const handleDeleteRelationship = async (relationship: CodexRelationship) => {
-    if (!relationship.id) return;
-    const result = await deleteCodexRelationshipAction(relationship.id);
-    if (result.message !== API_MESSAGE.Success) {
+    if (!relationship.id) return false;
+    const result = await deleteCodexRelationshipAction(relationship.id).catch(
+      () => null,
+    );
+    if (result?.message !== API_MESSAGE.Success) {
       errorToast("Could not delete that relationship. Please try again.");
-      return;
+      return false;
     }
     setRelationships((current) =>
       current.filter((candidate) => candidate.id !== relationship.id),
     );
+    successToast("Relationship deleted.");
+    return true;
   };
 
   // ── Categories ───────────────────────────────────────────────────────────
 
   const handleSaveCategory = async (category: CodexCategory) => {
-    const saved = await saveCodexCategoryAction(storyboardId, category);
+    const saved = await saveCodexCategoryAction(storyboardId, category).catch(
+      () => null,
+    );
     if (!saved || "message" in saved) {
       errorToast("Could not save that category. Please try again.");
       return;
@@ -530,8 +556,10 @@ export const StoryCodexView: FC<Props> = ({
 
   const handleDeleteCategory = async (category: CodexCategory) => {
     if (!category.id) return;
-    const result = await deleteCodexCategoryAction(category.id);
-    if (result.message !== API_MESSAGE.Success) {
+    const result = await deleteCodexCategoryAction(category.id).catch(
+      () => null,
+    );
+    if (result?.message !== API_MESSAGE.Success) {
       errorToast(
         "Could not delete that category. Move its entries out of it first.",
       );
@@ -559,7 +587,7 @@ export const StoryCodexView: FC<Props> = ({
     const result = await reorderCodexCategoriesAction(
       storyboardId,
       orderedCategoryIds,
-    );
+    ).catch(() => null);
     if (!result || "message" in result) {
       setCategories(previous);
       errorToast("Could not reorder the categories. Please try again.");

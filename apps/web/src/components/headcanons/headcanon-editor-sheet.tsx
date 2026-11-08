@@ -39,7 +39,7 @@ type Props = {
   busy?: boolean;
   error?: string | null;
   onClose: () => void;
-  onSave: (request: HeadcanonRequest) => void;
+  onSave: (request: HeadcanonRequest) => unknown;
 };
 
 const VISIBILITY_ICON: Record<HeadcanonVisibility, FC<{ size?: number }>> = {

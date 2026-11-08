@@ -24,6 +24,7 @@ import { AppAlertDialog } from "@/components/dialog";
 import AvatarCropDialog from "@/components/dialog/avatar-crop-dialog";
 import { useGlobalState } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
+import { useUIContext } from "@/hooks/use-ui-context";
 import { useUploadMedia } from "@/hooks/use-upload-media";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
@@ -58,6 +59,7 @@ export function LandingSection({ onSelect }: Props) {
   const noteObj = useProfileState("note");
   const setProfileState = useProfileStoreSet();
   const { saveNovelist, loading } = useProfileSave();
+  const { successToast } = useUIContext();
   const { uploadMedia } = useUploadMedia();
   const { routeToPage } = usePageRouter();
 
@@ -230,6 +232,7 @@ export function LandingSection({ onSelect }: Props) {
     }
     setAvatarChanged(false);
     setTempUploadedImage(null);
+    successToast("Profile updated.");
   };
 
   const handleReset = () => {
@@ -419,6 +422,7 @@ export function LandingSection({ onSelect }: Props) {
       </S.LandingGrid>
 
       <AppAlertDialog
+        closeOnConfirm
         open={discardDialogOpen}
         onOpenChange={setDiscardDialogOpen}
         heading="Discard unsaved changes?"

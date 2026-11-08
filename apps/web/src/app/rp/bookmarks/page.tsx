@@ -93,6 +93,7 @@ export default function BookmarksPage() {
       )}
 
       <AppAlertDialog
+        closeOnConfirm
         open={!!pendingRemove}
         onOpenChange={(open) => !open && !removing && setPendingRemove(null)}
         heading="Remove this bookmark?"

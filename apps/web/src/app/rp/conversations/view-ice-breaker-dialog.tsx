@@ -16,6 +16,7 @@ import { HiPaperAirplane } from "react-icons/hi2";
 import { IoBookOutline } from "react-icons/io5";
 import { ChatRichInput } from "@/components/chat-rich-input";
 import { AvatarNew } from "@/components/common/avatar-new";
+import { SheetSpinner } from "@/components/common/responsive-sheet/styles";
 import { AppAlertDialog } from "@/components/dialog";
 import * as SheetS from "@/components/profile-more-dropdown/styled";
 import {
@@ -79,7 +80,10 @@ export function ViewIceBreakerDialog({
   const [replyMessage, setReplyMessage] = useState("");
   const [replyHtml, setReplyHtml] = useState("");
   const [sendingReply, setSendingReply] = useState(false);
+  // Guards a second tap that lands before the `sendingReply` re-render.
+  const sendingReplyRef = useRef(false);
   const replySenderRowRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
 
   const replyNovelistSource = useMemo<PromptSource | null>(
     () => (novelist ? novelistToSource(novelist) : null),
@@ -117,7 +121,9 @@ export function ViewIceBreakerDialog({
   // ── Mobile sheet open/close animation ──────────────────────────────────────
   const [sheetOpen, setSheetOpen] = useState(false);
   const [visible, setVisible] = useState(false);
-  const [startY, setStartY] = useState(0);
+  // Where a swipe-to-close began; null when it began in the body (the reply
+  // field, the pickers), which must never dismiss the draft.
+  const dragStartYRef = useRef<number | null>(null);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const openSheet = () => {
@@ -184,11 +190,15 @@ export function ViewIceBreakerDialog({
 
   const handleDeleteConfirm = async () => {
     setDeleting(true);
-    const result = await deleteIceBreakerAction(iceBreaker.sourceId);
+    const result = await deleteIceBreakerAction(iceBreaker.sourceId).catch(
+      () => null,
+    );
     setDeleting(false);
 
-    if (result.message !== API_MESSAGE.Success) {
+    if (result?.message !== API_MESSAGE.Success) {
       errorToast("Failed to delete ice breaker. Please try again.");
+      // Back to the ice breaker; the confirm never lingers after a try.
+      setConfirmDeleteOpen(false);
       return;
     }
 
@@ -199,53 +209,62 @@ export function ViewIceBreakerDialog({
 
   const handleSendReply = async () => {
     const trimmed = replyMessage.trim();
-    if (!trimmed || !replySource || sendingReply) return;
+    if (!trimmed || !replySource || sendingReplyRef.current) return;
 
     if (!socket || !isConnected) {
       errorToast("Not connected. Please wait and try again.");
       return;
     }
 
+    // Busy until the reply is fully sent (conversation, encryption, socket),
+    // so a second tap can't send it twice.
+    sendingReplyRef.current = true;
     setSendingReply(true);
-    const conversation = await createConversationIfNotExistAction(
-      iceBreaker.ownerNovelistId,
-    );
-    setSendingReply(false);
+    try {
+      const conversation = await createConversationIfNotExistAction(
+        iceBreaker.ownerNovelistId,
+      ).catch(() => null);
 
-    if (!conversation || "message" in conversation) {
-      errorToast("Failed to start the conversation. Please try again.");
-      return;
-    }
+      if (!conversation || "message" in conversation) {
+        errorToast("Failed to start the conversation. Please try again.");
+        return;
+      }
 
-    const wireText = await encryptMessageText(
-      conversation.id,
-      replyHtml || trimmed,
-    );
+      const wireText = await encryptMessageText(
+        conversation.id,
+        replyHtml || trimmed,
+      );
 
-    socket.send(
-      JSON.stringify({
-        payload: {
-          attachments: null,
-          conversationId: conversation.id,
-          message: wireText,
-          repliedTo: { id: iceBreaker.sourceId, type: "ICE_BREAKER" },
-          sender: {
-            id: replySource.sourceId,
-            image: replySource.image,
-            messageSourceType: replySource.sourceType,
-            name: replySource.name,
-            username: user?.username ?? "",
+      socket.send(
+        JSON.stringify({
+          payload: {
+            attachments: null,
+            conversationId: conversation.id,
+            message: wireText,
+            repliedTo: { id: iceBreaker.sourceId, type: "ICE_BREAKER" },
+            sender: {
+              id: replySource.sourceId,
+              image: replySource.image,
+              messageSourceType: replySource.sourceType,
+              name: replySource.name,
+              username: user?.username ?? "",
+            },
+            type: "TEXT",
           },
-          type: "TEXT",
-        },
-        type: "message",
-      }),
-    );
+          type: "message",
+        }),
+      );
 
-    setReplyMessage("");
-    setReplyHtml("");
-    onOpenChange(false);
-    routeToPage(ROUTES.Conversation.View(conversation.id));
+      setReplyMessage("");
+      setReplyHtml("");
+      onOpenChange(false);
+      routeToPage(ROUTES.Conversation.View(conversation.id));
+    } catch {
+      errorToast("Failed to send your reply. Please try again.");
+    } finally {
+      sendingReplyRef.current = false;
+      setSendingReply(false);
+    }
   };
 
   const renderReplySourceButton = (source: PromptSource) => {
@@ -291,7 +310,11 @@ export function ViewIceBreakerDialog({
           </S.ViewIceBreakerConfirmBody>
         }
         open={open}
-        onOpenChange={onOpenChange}
+        // Escape / overlay / Cancel step back to the ice breaker; they never
+        // close it from here, and wait while the delete is in flight.
+        onOpenChange={(next) => {
+          if (!next && !deleting) setConfirmDeleteOpen(false);
+        }}
         onCancel={() => setConfirmDeleteOpen(false)}
         onConfirm={handleDeleteConfirm}
         actionButtonLabel={deleting ? "Deleting..." : "Delete"}
@@ -304,7 +327,7 @@ export function ViewIceBreakerDialog({
 
   // Shared body — identical markup for the centered dialog and the bottom sheet.
   const body = (
-    <div>
+    <div ref={bodyRef}>
       <S.ViewIceBreakerHeroWrap>
         <S.ViewIceBreakerHero>
           <S.ViewIceBreakerHeroAvatarRing
@@ -432,10 +455,15 @@ export function ViewIceBreakerDialog({
                     type="button"
                     $visible={replyMessage.trim().length > 0}
                     disabled={sendingReply}
+                    aria-busy={sendingReply}
                     title="Send"
                     onClick={handleSendReply}
                   >
-                    <HiPaperAirplane size={14} />
+                    {sendingReply ? (
+                      <SheetSpinner aria-hidden />
+                    ) : (
+                      <HiPaperAirplane size={14} />
+                    )}
                   </S.IceBreakerInlineSendButton>
                 }
               />
@@ -487,9 +515,18 @@ export function ViewIceBreakerDialog({
       />
       <SheetS.MobileSheet
         $open={sheetOpen}
-        onTouchStart={(e) => setStartY(e.touches[0].clientY)}
+        // Swipe-to-close only from the handle / header, never from the body.
+        onTouchStart={(e) => {
+          dragStartYRef.current = bodyRef.current?.contains(e.target as Node)
+            ? null
+            : e.touches[0].clientY;
+        }}
         onTouchEnd={(e) => {
-          if (e.changedTouches[0].clientY - startY > 50) handleClose();
+          const start = dragStartYRef.current;
+          dragStartYRef.current = null;
+          if (start !== null && e.changedTouches[0].clientY - start > 50) {
+            handleClose();
+          }
         }}
       >
         <SheetS.DragHandle />

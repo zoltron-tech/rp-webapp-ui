@@ -588,6 +588,7 @@ export function ConnectionsSection({ muse, isOwnMuse, seed = null }: Props) {
 
       {/* Delete confirmation */}
       <AppAlertDialog
+        closeOnConfirm
         heading="Delete connection?"
         text={`"${deletingConnection?.title ?? ""}" will be permanently removed for every character and novelist involved. This cannot be undone.`}
         open={deletingConnection !== null}

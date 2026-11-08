@@ -26,7 +26,7 @@ export function EditGroupDialog({
   conversation,
   onUpdated,
 }: EditGroupDialogProps) {
-  const { errorToast } = useUIContext();
+  const { errorToast, successToast } = useUIContext();
   const [name, setName] = useState(conversation.name ?? "");
   const [avatarFile, setAvatarFile] = useState<FormData | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -52,7 +52,7 @@ export function EditGroupDialog({
     const file = event.currentTarget.files?.[0];
     if (!file) return;
     if (!file.type.includes("image")) {
-      errorToast("File type is not a valid image!");
+      errorToast("Please choose an image file.");
       return;
     }
     const formData = new FormData();
@@ -86,38 +86,41 @@ export function EditGroupDialog({
     }
 
     setLoading(true);
+    try {
+      let imageUrl: string | undefined;
+      if (avatarFile) {
+        const uploaded = await uploadMedia(avatarFile);
+        if (uploaded === API_MESSAGE.MediaError) {
+          errorToast("Failed to upload image. Please try again.");
+          return;
+        }
+        imageUrl = uploaded;
+      }
 
-    let imageUrl: string | undefined;
-    if (avatarFile) {
-      const uploaded = await uploadMedia(avatarFile);
-      if (uploaded === API_MESSAGE.MediaError) {
-        setLoading(false);
-        errorToast("Failed to upload image. Please try again.");
+      const payload: { name?: string; image?: string } = {};
+      if (trimmedName !== (conversation.name ?? "")) payload.name = trimmedName;
+      if (imageUrl) payload.image = imageUrl;
+
+      if (!payload.name && !payload.image) {
+        onOpenChange(false);
         return;
       }
-      imageUrl = uploaded;
-    }
 
-    const payload: { name?: string; image?: string } = {};
-    if (trimmedName !== (conversation.name ?? "")) payload.name = trimmedName;
-    if (imageUrl) payload.image = imageUrl;
+      const result = await updateGroupAction(conversation.id, payload);
 
-    if (!payload.name && !payload.image) {
-      setLoading(false);
+      if (!result || "message" in result) {
+        errorToast("Failed to update group. Please try again.");
+        return;
+      }
+
       onOpenChange(false);
-      return;
-    }
-
-    const result = await updateGroupAction(conversation.id, payload);
-    setLoading(false);
-
-    if (!result || "message" in result) {
+      onUpdated(result);
+      successToast("Group updated.");
+    } catch {
       errorToast("Failed to update group. Please try again.");
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    onOpenChange(false);
-    onUpdated(result);
   };
 
   return (

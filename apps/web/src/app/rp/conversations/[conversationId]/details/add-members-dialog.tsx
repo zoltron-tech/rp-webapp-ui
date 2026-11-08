@@ -26,7 +26,7 @@ export function AddMembersDialog({
   onAdded,
 }: AddMembersDialogProps) {
   const novelist = useGlobalState("novelist");
-  const { errorToast } = useUIContext();
+  const { errorToast, successToast } = useUIContext();
   const [selectedFriends, setSelectedFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -56,20 +56,27 @@ export function AddMembersDialog({
     }
 
     setLoading(true);
-    const result = await addGroupMembersAction(
-      groupId,
-      selectedFriends.map((friend) => friend.id),
-    );
-    setLoading(false);
+    try {
+      const result = await addGroupMembersAction(
+        groupId,
+        selectedFriends.map((friend) => friend.id),
+      );
 
-    if (!result || (typeof result === "object" && "message" in result)) {
+      if (!result || (typeof result === "object" && "message" in result)) {
+        errorToast("Failed to add members. Please try again.");
+        return;
+      }
+
+      const addedCount = selectedFriends.length;
+      reset();
+      onOpenChange(false);
+      onAdded();
+      successToast(addedCount === 1 ? "Member added." : "Members added.");
+    } catch {
       errorToast("Failed to add members. Please try again.");
-      return;
+    } finally {
+      setLoading(false);
     }
-
-    reset();
-    onOpenChange(false);
-    onAdded();
   };
 
   return (

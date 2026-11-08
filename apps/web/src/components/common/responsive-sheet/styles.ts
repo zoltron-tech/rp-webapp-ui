@@ -1,6 +1,6 @@
 import styled, { keyframes } from "styled-components";
 import { DIALOG_SCRIM, GLASS_DIALOG } from "@/theme";
-import { fadeIn as overlayFadeIn, slideInUp } from "@/theme/animations";
+import { fadeIn as overlayFadeIn, slideInUp, spin } from "@/theme/animations";
 
 /**
  * Chrome and form primitives for [ResponsiveSheet] — a centred dialog on
@@ -109,6 +109,19 @@ export const SheetActionButton = styled.button<{
   &:disabled {
     opacity: 0.5;
     cursor: default;
+  }
+`;
+
+export const SheetSpinner = styled.span`
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  animation: ${spin} 0.7s linear infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation-duration: 1.6s;
   }
 `;
 

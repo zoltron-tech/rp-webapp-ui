@@ -14,8 +14,8 @@ type Props = {
   /** How many entries the category holds — it can only be deleted at zero. */
   entryCount: number;
   onClose: () => void;
-  onSave: (category: CodexCategory) => void;
-  onDelete?: (category: CodexCategory) => void;
+  onSave: (category: CodexCategory) => unknown;
+  onDelete?: (category: CodexCategory) => unknown;
 };
 
 /** Create/rename/re-icon one codex category, and delete it once it's empty. */
@@ -29,6 +29,18 @@ export const CategorySheet: FC<Props> = ({
 }) => {
   const [name, setName] = useState("");
   const [icon, setIcon] = useState<string>(DEFAULT_CODEX_ICON);
+  // Held while a delete is in flight: no second delete, no save, no closing.
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!category || !onDelete || deleting) return;
+    setDeleting(true);
+    try {
+      await onDelete(category);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -42,7 +54,7 @@ export const CategorySheet: FC<Props> = ({
     <ResponsiveSheet
       open={open}
       title={category ? "Edit category" : "New category"}
-      confirmDisabled={trimmed.length === 0}
+      confirmDisabled={trimmed.length === 0 || deleting}
       onConfirm={() =>
         onSave({
           icon,
@@ -52,7 +64,9 @@ export const CategorySheet: FC<Props> = ({
           ordinal: category?.ordinal ?? 0,
         })
       }
-      onClose={onClose}
+      onClose={() => {
+        if (!deleting) onClose();
+      }}
     >
       <F.Field>
         Name
@@ -94,7 +108,12 @@ export const CategorySheet: FC<Props> = ({
         </F.Hint>
       )}
       {category && onDelete && entryCount === 0 && (
-        <F.DangerButton type="button" onClick={() => onDelete(category)}>
+        <F.DangerButton
+          type="button"
+          disabled={deleting}
+          aria-busy={deleting}
+          onClick={handleDelete}
+        >
           <FaRegTrashCan size={13} />
           Delete category
         </F.DangerButton>

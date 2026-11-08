@@ -144,23 +144,32 @@ export const EventThreadForm: FC<Props> = ({
       };
 
       setSending(true);
-      const response = await saveStoryBoardEventThreadAction(payload);
+      try {
+        const response = await saveStoryBoardEventThreadAction(payload);
 
-      if (response.message !== API_MESSAGE.Success) {
-        setError(response.message);
+        if (response.message !== API_MESSAGE.Success) {
+          setError(response.message);
+          emit(EventThreadEvent.Error, response.message);
+          return;
+        }
+
+        successToast(threadId ? "Updated successfully" : "Sent successfully");
+
+        emit(EventThreadEvent.Sent, { payload });
+
+        editorRef.current?.clear();
+        setError(null);
+        onSend?.();
+      } catch {
+        // The editor keeps its text so the passage isn't lost.
+        errorToast(
+          threadId
+            ? "Could not update the passage. Please try again."
+            : "Could not save the passage. Please try again.",
+        );
+      } finally {
         setSending(false);
-        emit(EventThreadEvent.Error, response.message);
-        return;
       }
-
-      successToast(threadId ? "Updated successfully" : "Sent successfully");
-
-      emit(EventThreadEvent.Sent, { payload });
-
-      editorRef.current?.clear();
-      setSending(false);
-      setError(null);
-      onSend?.();
     },
     [
       promptText,

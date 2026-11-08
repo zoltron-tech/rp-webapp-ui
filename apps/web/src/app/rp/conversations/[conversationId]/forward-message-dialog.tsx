@@ -9,12 +9,14 @@ import { getConversationsAction } from "@/app/rp/conversations/actions";
 import { AvatarNew } from "@/components/common/avatar-new";
 import { AppAlertDialog } from "@/components/dialog";
 import { LoadMore } from "@/components/load-more/page";
+import { sendAndAwaitAnswer } from "@/components/send-to-chat/await-send";
 import { useSocket } from "@/context/socket";
 import { useGlobalState } from "@/context/store/stores";
 import { useUIContext } from "@/hooks/use-ui-context";
 import {
   decryptConversations,
   encryptMessageText,
+  isEncryptedText,
 } from "@/utils/e2e-crypto";
 
 // --- styled components ---
@@ -102,22 +104,40 @@ const StatusText = styled.p`
   margin: 0;
 `;
 
+const RetryButton = styled.button`
+  align-self: center;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  font-size: var(--font-size-xsmall);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+`;
+
 // --- helpers ---
 
 const HTML_TAG_RE = /<[^>]+>/g;
 
-const getForwardText = (message: Message): string => {
-  if (message.message?.trim()) {
-    return message.message
-      .replace(HTML_TAG_RE, "")
-      .replace(/&nbsp;/g, " ")
-      .replace(/&amp;/g, "&")
-      .trim();
-  }
-  if (message.attachments?.length) {
-    return message.attachments[0]!.url;
-  }
-  return "";
+/** The original text with its formatting (HTML) kept; empty when there is none. */
+const getForwardText = (message: Message): string =>
+  message.message?.replace(HTML_TAG_RE, "").trim() ? message.message : "";
+
+/** The original attachments, in the shape the socket send takes. */
+const getForwardAttachments = (message: Message): { url: string }[] | null => {
+  const urls = (message.attachments ?? []).map((a) => a.url).filter(Boolean);
+  return urls.length ? urls.map((url) => ({ url })) : null;
 };
 
 /** The conversations a message can go to: not one whose other side disabled their account. */
@@ -163,46 +183,76 @@ export function ForwardMessageDialog({ message, onClose }: Props) {
   const { successToast, errorToast } = useUIContext();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
   const [sendingId, setSendingId] = useState<string | null>(null);
   const [sentIds, setSentIds] = useState<Set<string>>(new Set());
 
-  const fetchPage = useCallback(async (pageNumber: number, append: boolean) => {
-    const result = await getConversationsAction(pageNumber, PAGE_SIZE);
-    if (!Array.isArray(result)) return;
-    if (result.length < PAGE_SIZE) setHasMore(false);
-    const decrypted = await decryptConversations(result);
-    setConversations((prev) => (append ? [...prev, ...decrypted] : decrypted));
-  }, []);
+  /** Resolves false when the page could not be loaded. */
+  const fetchPage = useCallback(
+    async (pageNumber: number, append: boolean): Promise<boolean> => {
+      const result = await getConversationsAction(pageNumber, PAGE_SIZE).catch(
+        () => null,
+      );
+      if (!Array.isArray(result)) return false;
+      if (result.length < PAGE_SIZE) setHasMore(false);
+      const decrypted = await decryptConversations(result);
+      setConversations((prev) =>
+        append ? [...prev, ...decrypted] : decrypted,
+      );
+      return true;
+    },
+    [],
+  );
+
+  const loadFirstPage = useCallback(() => {
+    setConversations([]);
+    setPage(1);
+    setHasMore(true);
+    setLoadFailed(false);
+    setLoading(true);
+    fetchPage(1, false)
+      .catch(() => false)
+      .then((ok) => {
+        if (!ok) setLoadFailed(true);
+      })
+      .finally(() => setLoading(false));
+  }, [fetchPage]);
 
   // Reset and load first page whenever a new message is opened
   useEffect(() => {
     if (!message) return;
     setSentIds(new Set());
-    setConversations([]);
-    setPage(1);
-    setHasMore(true);
-    setLoading(true);
-    fetchPage(1, false).finally(() => setLoading(false));
-  }, [message, fetchPage]);
+    loadFirstPage();
+  }, [message, loadFirstPage]);
 
   const loadMore = () => {
     if (loadingMore || !hasMore) return;
     setLoadingMore(true);
     const nextPage = page + 1;
-    fetchPage(nextPage, true).finally(() => {
-      setPage(nextPage);
-      setLoadingMore(false);
-    });
+    fetchPage(nextPage, true)
+      .catch(() => false)
+      .then((ok) => {
+        if (ok) setPage(nextPage);
+        else errorToast("Couldn't load more chats.");
+      })
+      .finally(() => setLoadingMore(false));
   };
 
   const handleSend = async (conversationId: string) => {
     if (!message) return;
     const text = getForwardText(message);
-    if (!text) {
+    const attachments = getForwardAttachments(message);
+    if (!text && !attachments) {
       errorToast("Nothing to forward.");
+      return;
+    }
+    // Text still sealed with the source conversation's key can't be read in
+    // the target one, so it is never passed along.
+    if (text && isEncryptedText(text)) {
+      errorToast("This message can't be forwarded.");
       return;
     }
     if (!socket || !isConnected) {
@@ -210,30 +260,36 @@ export function ForwardMessageDialog({ message, onClose }: Props) {
       return;
     }
     setSendingId(conversationId);
-    // Re-encrypt for the target conversation — its key differs from the
-    // source conversation's.
-    const payload = {
-      attachments: null,
-      conversationId,
-      message: await encryptMessageText(conversationId, text),
-      repliedTo: null,
-      sender: {
-        id: novelist?.id ?? "",
-        image: novelist?.image ?? null,
-        messageSourceType: "NOVELIST",
-        name:
-          `${novelist?.firstName ?? ""} ${novelist?.lastName ?? ""}`.trim() ||
-          novelist?.username ||
-          user?.username ||
-          "",
-        username: user?.username ?? "",
-      },
-      type: "TEXT",
-    };
     try {
-      socket.send(JSON.stringify({ payload, type: "message" }));
-      setSentIds((prev) => new Set(prev).add(conversationId));
-      successToast("Message forwarded.");
+      // Re-encrypt for the target conversation — its key differs from the
+      // source conversation's. Same payload shape as the panel's sendMessage.
+      const payload = {
+        attachments,
+        conversationId,
+        message: await encryptMessageText(conversationId, text),
+        repliedTo: null,
+        sender: {
+          id: novelist?.id ?? "",
+          image: novelist?.image ?? null,
+          messageSourceType: "NOVELIST",
+          name:
+            `${novelist?.firstName ?? ""} ${novelist?.lastName ?? ""}`.trim() ||
+            novelist?.username ||
+            user?.username ||
+            "",
+          username: user?.username ?? "",
+        },
+        type: "TEXT",
+      };
+      // Wait for chat-server's answer, so a refusal (blocked, unavailable)
+      // is reported instead of a "Sent" that never arrived.
+      const outcome = await sendAndAwaitAnswer(socket, payload, user?.username);
+      if (outcome.ok) {
+        setSentIds((prev) => new Set(prev).add(conversationId));
+        successToast("Message forwarded.");
+      } else {
+        errorToast(outcome.message);
+      }
     } catch {
       errorToast("Failed to forward message. Please try again.");
     } finally {
@@ -255,6 +311,13 @@ export function ForwardMessageDialog({ message, onClose }: Props) {
         <ConvList>
           {loading ? (
             <StatusText>Loading conversations…</StatusText>
+          ) : loadFailed ? (
+            <>
+              <StatusText>Couldn't load chats.</StatusText>
+              <RetryButton type="button" onClick={loadFirstPage}>
+                Retry
+              </RetryButton>
+            </>
           ) : conversations.length === 0 ? (
             <StatusText>No conversations found.</StatusText>
           ) : (

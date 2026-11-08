@@ -2,6 +2,7 @@
 
 import type { MentionDataItem, Muse, Novelist } from "@nw/types";
 import type { Message } from "@nw/types/conversation";
+import { personName } from "@nw/utils";
 import type { EmojiClickData } from "emoji-picker-react";
 import { Theme as EmojiTheme } from "emoji-picker-react";
 import type { FC, FormEvent } from "react";
@@ -214,14 +215,14 @@ type SendMessageComposerProps = {
 const novelistToSender = (n: Novelist): ComposerSender => ({
   id: n.id,
   image: n.image ?? null,
-  name: `${n.firstName} ${n.lastName}`.trim() || n.username,
+  name: personName(n.firstName, n.lastName) || n.username,
   type: "NOVELIST",
 });
 
 const museToSender = (m: Muse): ComposerSender => ({
   id: m.id ?? "",
   image: m.image ?? null,
-  name: `${m.firstName} ${m.lastName}`.trim(),
+  name: personName(m.firstName, m.lastName),
   type: "MUSE",
 });
 

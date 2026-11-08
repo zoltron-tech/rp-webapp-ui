@@ -1,6 +1,7 @@
 export * from "./account-disable";
 export * from "./api-message";
 export * from "./badge";
+export * from "./block-blacklist";
 export * from "./books";
 export * from "./connection";
 export * from "./conversation";

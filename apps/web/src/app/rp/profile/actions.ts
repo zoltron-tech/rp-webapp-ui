@@ -14,8 +14,10 @@ import {
   submitPrompt as apiSubmitPrompt,
   unfriendNovelist as apiUnfriendNovelist,
   uploadMedia as apiUploadMedia,
+  getBlacklistedNovelists,
   getBlockedNovelists,
   getReferredNovelists,
+  unblacklistNovelist,
   unblockNovelist,
 } from "@nw/api/endpoints/profile";
 import { disableAccount } from "@nw/api/endpoints/novelists";
@@ -87,6 +89,16 @@ export const getReferredNovelistsAction = (
 
 export const unblockNovelistAction = (novelistId: string) =>
   unblockNovelist(authedApi, novelistId);
+
+/** The caller's Blacklisted novelists list (BLOCK_BLACKLIST_PLAN.md B15). */
+export const getBlacklistedNovelistsAction = (
+  pageNumber: number,
+  pageSize: number,
+) => getBlacklistedNovelists(authedApi, pageNumber, pageSize);
+
+/** Remove from blacklist: their chat comes back to the inbox, unmuted. */
+export const unblacklistNovelistAction = (novelistId: string) =>
+  unblacklistNovelist(authedApi, novelistId);
 
 /** Disables the caller's account (ACCOUNT_DISABLE_PLAN.md). Signing in again brings it back. */
 export const disableAccountAction = (payload: DisableAccountPayload) =>

@@ -21,6 +21,7 @@ import {
 } from "@nw/features";
 import {
   DISABLE_ACCOUNT_COPY,
+  INBOX_ARCHIVE_COPY,
   type MentionDataItem,
   type MentionTab,
   type Message,
@@ -252,6 +253,7 @@ export const ConversationScreen = ({
     discard,
     pending,
     reconcile,
+    refusal,
     retry,
     selectSender,
     send,
@@ -287,7 +289,22 @@ export const ConversationScreen = ({
     () => resolveConversationTarget(conversation, novelist?.username),
     [conversation, novelist?.username],
   );
-  const unavailable = Boolean(conversation?.isUnavailable);
+  // Disabled on the other side, as the conversation says or as a refused
+  // send just learned.
+  const unavailable =
+    Boolean(conversation?.isUnavailable) || refusal === "unavailable";
+  // A block either way stands on this DM (BLOCK_BLACKLIST_PLAN.md K3): it is
+  // hidden from the inbox, and a send into a stale copy came back refused.
+  const sendBlocked = refusal === "blocked";
+  // Why a DM is in the archive, and quiet: the reader blacklisted the other
+  // side (B6). Said once, above a composer that still works.
+  const archivedNotice =
+    conversation?.bucket === "ARCHIVED" &&
+    conversation.isBlacklisted &&
+    !conversation.isGroup &&
+    target.username
+      ? INBOX_ARCHIVE_COPY.blacklistedNotice(target.username)
+      : null;
 
   // Register everyone in the thread for presence, or the header and every
   // avatar in it report offline regardless of who is actually connected.
@@ -1145,8 +1162,9 @@ export const ConversationScreen = ({
           <Composer
             conversationId={conversationId}
             // The other side disabled their account: the history stays, the
-            // composer does not send (ACCOUNT_DISABLE_PLAN.md D9).
-            disabled={unavailable}
+            // composer does not send (ACCOUNT_DISABLE_PLAN.md D9). Nor into a
+            // DM a block stands on.
+            disabled={unavailable || sendBlocked}
             mentionTabs={mentionTabs}
             onCancelReply={cancelReply}
             onInsetChange={setBottomInset}
@@ -1156,14 +1174,23 @@ export const ConversationScreen = ({
             selectedSender={sender}
             senders={senders}
             sending={sending}
+            statusIcon={
+              sendBlocked
+                ? "remove-circle-outline"
+                : !unavailable && !offline && isConnected && archivedNotice
+                  ? "archive-outline"
+                  : undefined
+            }
             statusNote={
               unavailable
                 ? DISABLE_ACCOUNT_COPY.chatUnavailable
-                : offline
-                  ? "Offline — messages will send when you're back online."
-                  : isConnected
-                    ? null
-                    : "Reconnecting — messages will still send."
+                : sendBlocked
+                  ? INBOX_ARCHIVE_COPY.blocked
+                  : offline
+                    ? "Offline — messages will send when you're back online."
+                    : isConnected
+                      ? archivedNotice
+                      : "Reconnecting — messages will still send."
             }
           />
 

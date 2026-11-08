@@ -1,6 +1,7 @@
 "use client";
 
 import type { Friend } from "@nw/types";
+import { personName } from "@nw/utils";
 import type { FC } from "react";
 import { Button } from "@/components/common";
 import { usePageRouter } from "@/hooks/use-page-router";
@@ -30,7 +31,7 @@ export const FriendListItem: FC<Props> = ({ friend }) => {
         <AvatarNew
           src={friend.image ?? null}
           alt={friend.firstName}
-          name={`${friend.firstName} ${friend.lastName}`}
+          name={personName(friend.firstName, friend.lastName)}
           username={friend.username}
           nwImage={friend.avatar}
         />

@@ -24,11 +24,45 @@ export interface Conversation {
    * but nothing can be sent: show the unavailable note instead of a composer.
    */
   isUnavailable?: boolean;
+  /**
+   * Where it sits for the caller: their inbox or their archive
+   * (BLOCK_BLACKLIST_PLAN.md B6). Each member's own. Absent from a service
+   * that predates it, which is read as the inbox.
+   */
+  bucket?: InboxBucket;
+  /**
+   * A direct conversation with someone the caller blacklisted: why it is
+   * archived and muted, for the notice above the composer. Never on a group.
+   */
+  isBlacklisted?: boolean;
 }
 
 /**
+ * The two lists a conversation can be in, per member: the inbox, and the
+ * archive — where blacklisting someone puts the DM with them, muted, and
+ * where anyone can move a conversation by hand.
+ */
+export type InboxBucket = "INBOX" | "ARCHIVED";
+
+/** The archive's words, the same on web and phone. */
+export const INBOX_ARCHIVE_COPY = {
+  archive: "Archive",
+  /** The send refusal for a DM hidden by a block, either way (409 `blocked`). */
+  blocked: "Messages can't be sent in this conversation.",
+  blacklistedNotice: (username: string) =>
+    `Archived — you've blacklisted @${username}`,
+  emptyArchive: "Nothing archived. Quiet shelves.",
+  filter: "Archived",
+  moveToInbox: "Move to inbox",
+  rowMeta: "Archived",
+  rowMetaMuted: "Archived · muted",
+} as const;
+
+/**
  * What moved in the inbox since a moment — `GET /chat/conversations/changes`.
- * `left` is every conversation the caller was in and is not any more.
+ * `left` is every conversation the caller was in and is not any more, and
+ * every DM hidden from them by a block (K3): drop it either way. Each entry
+ * of `conversations` carries its `bucket`, inbox or archive.
  */
 export interface ConversationChanges {
   conversations: Conversation[];

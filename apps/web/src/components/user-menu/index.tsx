@@ -1,5 +1,6 @@
 "use client";
 
+import { personName } from "@nw/utils";
 import { isCompactViewport } from "@nw/utils/platform";
 import classNames from "classnames";
 import {
@@ -325,7 +326,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                 <S.MenuUserInfo>
                   <S.MenuUserName>
                     {novelist
-                      ? `${novelist.firstName} ${novelist.lastName}`.trim() ||
+                      ? personName(novelist.firstName, novelist.lastName) ||
                         novelist.username
                       : user.username}
                   </S.MenuUserName>
@@ -531,7 +532,7 @@ export const UserMenu: FC<UserMenuProps> = ({}) => {
                     <S.MobilePanelUserInfo>
                       <S.MobilePanelUserName>
                         {novelist
-                          ? `${novelist.firstName} ${novelist.lastName}`.trim() ||
+                          ? personName(novelist.firstName, novelist.lastName) ||
                             novelist.username
                           : user.username}
                       </S.MobilePanelUserName>

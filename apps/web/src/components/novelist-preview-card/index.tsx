@@ -4,6 +4,7 @@ import { isSupportNovelist } from "@nw/chat";
 import type { Badge } from "@nw/types/badge";
 import type { NWImage } from "@nw/types/novelist";
 import { ACCENT_MAP } from "@nw/types/theme";
+import { personName } from "@nw/utils";
 import { type FC, useState } from "react";
 import {
   FiCheck,
@@ -356,7 +357,7 @@ export const NovelistPreviewCard: FC<Props> = ({ novelist }) => {
                     key={muse.id ?? muse.firstName}
                     src={muse.image ?? null}
                     alt={muse.firstName}
-                    name={`${muse.firstName} ${muse.lastName}`}
+                    name={personName(muse.firstName, muse.lastName)}
                     onClick={() => muse.id && onVisitMuse(muse.id)}
                   />
                 ))}

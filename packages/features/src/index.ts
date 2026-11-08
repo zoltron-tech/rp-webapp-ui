@@ -21,7 +21,9 @@ export {
   inboxSections,
   inboxSpeaker,
   inboxSummary,
+  inboxArchiveMeta,
   inboxThumbnail,
+  isArchived,
   isLastMessageMine,
   matchesInboxFilter,
 } from "./chat/inbox-kinds";
@@ -39,8 +41,10 @@ export {
   useConversationMembers,
 } from "./chat/use-conversation-members";
 export {
+  archivedConversationsKey,
   CONVERSATIONS_PAGE_SIZE,
   useConversations,
+  useSetConversationBucket,
   useUnreadConversations,
 } from "./chat/use-conversations";
 export { queryKeys } from "./keys";

@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { PromptThreadComment } from "@nw/types";
+import { stubHandle } from "@nw/types";
 import { pluralize, toFormattedDateFromUnix } from "@nw/utils";
 import { Image } from "@/components/image";
 import { LinearGradient } from "expo-linear-gradient";
@@ -8,6 +9,7 @@ import { Pressable, StyleSheet, View } from "react-native";
 import { Text } from "@/components/text";
 import { Avatar } from "@/components/avatar";
 import { RichText } from "@/components/rich-text";
+import { HiddenItem } from "@/components/thread/hidden-item";
 import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
@@ -247,7 +249,22 @@ const OutgoingThreadCardView = ({
  * between renders and this compares in one pointer check per row — provided
  * `onOpen` is stable too, which is why the list memoises it.
  */
-export const OutgoingThreadCard = memo(OutgoingThreadCardView);
+export const OutgoingThreadCard = memo(
+  (props: {
+    onOpen: (threadId: string) => void;
+    thread: PromptThreadComment;
+  }) => (
+    // The other side is someone the viewer blacklisted: the whole card waits
+    // behind one stub (BLOCK_BLACKLIST_PLAN.md B11). Blocked threads never arrive.
+    <HiddenItem
+      handle={stubHandle(props.thread.target)}
+      kind="thread"
+      reason={props.thread.hiddenReason}
+    >
+      <OutgoingThreadCardView {...props} />
+    </HiddenItem>
+  ),
+);
 
 /** How much of a post a list of threads shows. */
 const EXCERPT_HEIGHT = 168;

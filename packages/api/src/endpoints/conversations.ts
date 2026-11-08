@@ -1,4 +1,9 @@
-import type { Conversation, ConversationChanges, IceBreaker } from "@nw/types";
+import type {
+  Conversation,
+  ConversationChanges,
+  IceBreaker,
+  InboxBucket,
+} from "@nw/types";
 import { API_MESSAGE } from "@nw/types";
 import type { DataType, WithMessage } from "@nw/types/common";
 import type { ApiClient } from "../client";
@@ -13,16 +18,39 @@ const ICE_BREAKERS = "/rp/portfolio/ice-breakers";
  * copies disagreed: one returned `null` on 404 with optional auth, the other
  * `[]` with mandatory auth. `[]` is the honest answer for a list endpoint, so
  * that is what both callers now get.
+ *
+ * `bucket` picks the list: the inbox (the default, and all a service from
+ * before the archive knows) or the archive (BLOCK_BLACKLIST_PLAN.md B6).
  */
 export const getConversations = (
   api: ApiClient,
   pageNumber: number,
   pageSize: number,
+  bucket: InboxBucket = "INBOX",
 ): Promise<DataType<Conversation[]>> =>
   api.requestNullable<Conversation[]>(
-    `${CHAT}/conversations?pageNumber=${pageNumber}&pageSize=${pageSize}`,
+    `${CHAT}/conversations?pageNumber=${pageNumber}&pageSize=${pageSize}${
+      bucket === "ARCHIVED" ? "&bucket=ARCHIVED" : ""
+    }`,
     { label: "getConversationsAction", notFound: "empty-array" },
   );
+
+/**
+ * Moves one of the caller's conversations between their inbox and their
+ * archive. Theirs alone: nobody else's list changes, and a mute is its own
+ * switch. `true` on success.
+ */
+export const setConversationBucket = async (
+  api: ApiClient,
+  conversationId: string,
+  bucket: InboxBucket,
+): Promise<DataType<boolean>> => {
+  const response = await api.raw(
+    `${CHAT}/conversation/${encodeURIComponent(conversationId)}/bucket`,
+    { body: { bucket }, label: "setConversationBucketAction", method: "PUT" },
+  );
+  return response.ok ? true : { message: API_MESSAGE.Error };
+};
 
 /**
  * The inbox since `since` (an ISO date-time): conversations modified after

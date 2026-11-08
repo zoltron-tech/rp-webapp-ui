@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { handleOf } from "@nw/types";
 import { hasUsableCrop, wsrvImage } from "@nw/utils/image";
 import { useRouter } from "expo-router";
 import { StyleSheet, View } from "react-native";
@@ -73,8 +74,9 @@ export const StoryLinkCard = ({ id, url }: { id: string; url: string }) => {
       : null;
   const blurb = plainText(story.description).replace(/\s+/g, " ").trim();
   const creator = story.createdBy ?? null;
+  // A disabled member has no username; never let two of them match each other.
   const others = (story.members ?? []).filter(
-    (m) => m.username !== creator?.username,
+    (m) => m.isPlaceholder || m.username !== creator?.username,
   );
   const coAuthors = others.slice(0, MAX_CO_AUTHORS);
   const chapters = story.events ?? [];
@@ -185,7 +187,7 @@ export const StoryLinkCard = ({ id, url }: { id: string; url: string }) => {
                 >
                   by{" "}
                   <Text style={{ color: tone, fontWeight: weight.semibold }}>
-                    @{creator.username}
+                    {handleOf(creator)}
                   </Text>
                 </Text>
                 {coAuthors.length > 0 ? (
@@ -193,7 +195,7 @@ export const StoryLinkCard = ({ id, url }: { id: string; url: string }) => {
                     <View style={styles.authors}>
                       {coAuthors.map((member, index) => (
                         <View
-                          key={member.username}
+                          key={member.username || `placeholder-${index}`}
                           style={[
                             styles.authorFace,
                             { borderColor: theme.surfaces.card },
@@ -201,7 +203,8 @@ export const StoryLinkCard = ({ id, url }: { id: string; url: string }) => {
                           ]}
                         >
                           <Avatar
-                            name={member.username}
+                            name={handleOf(member)}
+                            placeholder={member.isPlaceholder === true}
                             size={18}
                             uri={member.image}
                           />

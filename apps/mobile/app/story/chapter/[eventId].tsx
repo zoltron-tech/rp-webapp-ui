@@ -5,6 +5,7 @@ import {
   API_MESSAGE,
   type StoryBoardEvent,
   type StoryBoardEventThread,
+  stubHandle,
 } from "@nw/types";
 import { toFormattedDate, wsrvImage } from "@nw/utils";
 import { useQueryClient } from "@tanstack/react-query";
@@ -39,6 +40,7 @@ import { ShareChapterSheet } from "@/components/share/share-story-sheet";
 import { Asterism } from "@/components/story/asterism";
 import { PassageComposer } from "@/components/story/passage-composer";
 import { StoryProse } from "@/components/story/story-prose";
+import { HiddenItem } from "@/components/thread/hidden-item";
 import {
   useChapterSoundscape,
   useStory,
@@ -719,11 +721,19 @@ const Passage = ({
   return (
     <View>
       <Asterism tight value={divider} />
-      <StoryProse
-        design={thread.dialogDesign}
-        html={thread.message}
-        speakers={thread.museDialogAttrs}
-      />
+      {/* A co-author the reader blacklisted, or is blocked with: the words wait
+          behind a stub, for both reasons in a shared story (B5, K4). */}
+      <HiddenItem
+        handle={stubHandle(thread.author)}
+        kind="passage"
+        reason={thread.hiddenReason}
+      >
+        <StoryProse
+          design={thread.dialogDesign}
+          html={thread.message}
+          speakers={thread.museDialogAttrs}
+        />
+      </HiddenItem>
       <View style={styles.bylineRow}>
         <Text style={[styles.byline, { color: theme.textGray }]}>
           <Text style={{ color: theme.text, fontWeight: "600" }}>

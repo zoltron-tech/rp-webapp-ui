@@ -1,9 +1,11 @@
 "use client";
 
 import type { StoryBoardEventThread } from "@nw/types";
+import { stubHandle } from "@nw/types";
 import type { FC } from "react";
 import { FaRegTrashCan } from "react-icons/fa6";
 import { GrEdit } from "react-icons/gr";
+import { HiddenItem } from "@/components/common/hidden-item";
 import {
   DEFAULT_DIALOG_DESIGN,
   isDialogDesign,
@@ -30,7 +32,20 @@ type Props = {
  * thread's embedded dialogs are always shown in the style its author fixed
  * when writing it (`thread.dialogDesign`) — readers can't override it.
  */
-export const EventThread: FC<Props> = ({
+export const EventThread: FC<Props> = (props) => (
+  // A passage by a co-author the reader blacklisted, or is blocked with, waits
+  // behind a stub with "Show" — for both reasons in a shared story
+  // (BLOCK_BLACKLIST_PLAN.md B5, K4). The server sent it whole.
+  <HiddenItem
+    reason={props.thread.hiddenReason}
+    kind="passage"
+    handle={stubHandle(props.thread.author)}
+  >
+    <Passage {...props} />
+  </HiddenItem>
+);
+
+const Passage: FC<Props> = ({
   thread,
   canManage,
   onEdit,

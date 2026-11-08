@@ -2,15 +2,17 @@ import { Ionicons } from "@expo/vector-icons";
 import { type ConversationTarget, conversationPreview } from "@nw/chat";
 import {
   type InboxKind,
+  inboxArchiveMeta,
   inboxGroupFaces,
   inboxHue,
   inboxKind,
   inboxSpeaker,
   inboxThumbnail,
+  isArchived,
   isMuted,
 } from "@nw/features";
 import { mixColors } from "@nw/theme";
-import type { Conversation } from "@nw/types";
+import { type Conversation, INBOX_ARCHIVE_COPY } from "@nw/types";
 import { toInboxTime, wsrvImage } from "@nw/utils";
 import { Image } from "@/components/image";
 import { memo } from "react";
@@ -80,6 +82,7 @@ const ConversationRowComponent = ({
   conversation,
   myUsername,
   onMarkRead,
+  onMove,
   onOpen,
   onOpenDetails,
   onPrefetch,
@@ -90,6 +93,11 @@ const ConversationRowComponent = ({
   conversation: Conversation;
   myUsername: string | undefined;
   onMarkRead: (conversationId: string) => void;
+  /**
+   * Between the inbox and the archive (BLOCK_BLACKLIST_PLAN.md B6): the
+   * swipe right on a read row. Omitted, the row has no such swipe.
+   */
+  onMove?: (conversationId: string, to: "INBOX" | "ARCHIVED") => void;
   onOpen: (conversationId: string) => void;
   onOpenDetails: (conversationId: string) => void;
   /** Warm the thread as the finger lands, before the tap opens it. */
@@ -110,6 +118,9 @@ const ConversationRowComponent = ({
   const kind = inboxKind(conversation, myUsername);
   // No push and no sound for this one; the row says so, because nothing else does.
   const muted = isMuted(conversation.mutedUntil);
+  // "Archived" or "Archived · muted": the words say it, so the bell stays away.
+  const archived = isArchived(conversation);
+  const archiveMeta = inboxArchiveMeta(conversation);
   const hue = inboxHue(kind);
   const thumb = inboxThumbnail(conversation);
   const name = target?.name || conversation.name;
@@ -146,7 +157,20 @@ const ConversationRowComponent = ({
                 onTrigger: () => onMarkRead(conversation.id),
                 tint: theme.accent.text,
               }
-            : undefined
+            : onMove
+              ? {
+                  // Read first, then out of the way: an unread row's swipe
+                  // stays "Read", so nothing unanswered is archived by habit.
+                  background: theme.material.fillPressed,
+                  icon: archived ? "mail-unread-outline" : "archive-outline",
+                  label: archived
+                    ? INBOX_ARCHIVE_COPY.moveToInbox
+                    : INBOX_ARCHIVE_COPY.archive,
+                  onTrigger: () =>
+                    onMove(conversation.id, archived ? "INBOX" : "ARCHIVED"),
+                  tint: theme.text,
+                }
+              : undefined
         }
         rightAction={{
           background: theme.material.fillPressed,
@@ -246,6 +270,14 @@ const ConversationRowComponent = ({
               {!conversation.isGroup && target?.participant?.isVerified ? (
                 <VerifiedMark size={12} username={target.username} />
               ) : null}
+              {archiveMeta ? (
+                <Text
+                  numberOfLines={1}
+                  style={[styles.archiveMeta, { color: theme.textGray }]}
+                >
+                  {archiveMeta}
+                </Text>
+              ) : null}
             </View>
 
             <Text
@@ -296,7 +328,7 @@ const ConversationRowComponent = ({
             </Text>
             <View style={styles.dotSlot}>
               {/* Muted and unread: both, the bell before the dot. */}
-              {muted ? (
+              {muted && !archived ? (
                 <Ionicons
                   accessibilityLabel="Muted"
                   color={theme.textGray}
@@ -318,6 +350,8 @@ const ConversationRowComponent = ({
 export const ConversationRow = memo(ConversationRowComponent);
 
 const styles = StyleSheet.create({
+  // After the name, and the name gives way first.
+  archiveMeta: { flexShrink: 0, fontSize: fontSize.meta, maxWidth: "50%" },
   nameRow: { alignItems: "center", flexDirection: "row", gap: space.xs },
   body: { flex: 1, gap: space.xxs, minWidth: 0 },
   dot: { borderRadius: radius.xs, height: 8, width: 8 },

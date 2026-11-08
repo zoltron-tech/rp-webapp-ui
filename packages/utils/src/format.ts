@@ -21,6 +21,17 @@ export const pluralize = (text: string, count: number): string => {
 };
 
 /** Cuts `text` to `max` characters, appending an ellipsis when it had to cut. */
+/**
+ * A person's or a muse's display name from its parts. Empty parts are left out
+ * rather than printed: the API sends `null` for a missing last name (whatever
+ * the types say), and a template string turns that into the word "null" —
+ * "Aria null", or "A Quiet Novelist null" for a disabled member.
+ */
+export const personName = (
+  firstName: string | null | undefined,
+  lastName?: string | null,
+): string => [firstName, lastName].filter((part) => part?.trim()).join(" ").trim();
+
 export const truncate = (text: string, max: number): string =>
   text.length > max ? `${text.slice(0, max)}...` : text;
 

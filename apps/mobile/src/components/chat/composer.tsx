@@ -140,6 +140,7 @@ export const Composer = memo(function Composer({
   selectedSender,
   senders = NO_SENDERS,
   sending,
+  statusIcon,
   statusNote,
 }: {
   conversationId: string | undefined;
@@ -164,6 +165,8 @@ export const Composer = memo(function Composer({
   sending?: boolean;
   /** A line above the input — "Reconnecting", say. Hidden when absent. */
   statusNote?: string | null;
+  /** The note's glyph; the offline cloud unless said otherwise. */
+  statusIcon?: keyof typeof Ionicons.glyphMap;
 }) {
   const theme = useAppTheme();
   const insets = useSafeAreaInsets();
@@ -642,7 +645,7 @@ export const Composer = memo(function Composer({
             >
               <Ionicons
                 color={theme.textGray}
-                name="cloud-offline-outline"
+                name={statusIcon ?? "cloud-offline-outline"}
                 size={12}
               />
               <Text style={[styles.statusLabel, { color: theme.textGray }]}>

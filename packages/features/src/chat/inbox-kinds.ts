@@ -4,6 +4,7 @@ import {
   isDirectImageUrl,
 } from "@nw/chat";
 import type { Conversation, ConversationParticipant } from "@nw/types";
+import { INBOX_ARCHIVE_COPY } from "@nw/types";
 import { toLocalDate } from "@nw/utils";
 
 /**
@@ -31,8 +32,12 @@ export type InboxKind =
   | "seen"
   | "blank";
 
-/** The filter chips above the list. */
-export type InboxFilter = "all" | "unread" | "groups";
+/**
+ * The filter chips above the list. "archived" is a list of its own, the
+ * caller's archive (BLOCK_BLACKLIST_PLAN.md B6): the other three never show
+ * an archived row.
+ */
+export type InboxFilter = "all" | "unread" | "groups" | "archived";
 
 /** Fixed, as a notification's is: see `notifications/kinds`. */
 const HUES: Record<InboxKind, string> = {
@@ -148,16 +153,42 @@ export const INBOX_FILTERS: readonly { id: InboxFilter; label: string }[] = [
   { id: "all", label: "All" },
   { id: "unread", label: "Unread" },
   { id: "groups", label: "Groups" },
+  { id: "archived", label: INBOX_ARCHIVE_COPY.filter },
 ];
+
+/** In the caller's archive. A row from a service that predates it is in the inbox. */
+export const isArchived = (conversation: Conversation): boolean =>
+  conversation.bucket === "ARCHIVED";
 
 export const matchesInboxFilter = (
   conversation: Conversation,
   filter: InboxFilter,
   unread: boolean,
 ): boolean => {
+  if (filter === "archived") return isArchived(conversation);
+  // An archived row never shows under the other three, even one a stale
+  // cache still holds in the inbox list.
+  if (isArchived(conversation)) return false;
   if (filter === "unread") return unread;
   if (filter === "groups") return conversation.isGroup;
   return true;
+};
+
+/**
+ * The small line an archived row carries: "Archived", or "Archived · muted"
+ * while the caller's mute on it holds. Null for an inbox row.
+ */
+export const inboxArchiveMeta = (
+  conversation: Conversation,
+  now = Date.now(),
+): string | null => {
+  if (!isArchived(conversation)) return null;
+  const until = conversation.mutedUntil
+    ? Date.parse(conversation.mutedUntil)
+    : Number.NaN;
+  return Number.isFinite(until) && until > now
+    ? INBOX_ARCHIVE_COPY.rowMetaMuted
+    : INBOX_ARCHIVE_COPY.rowMeta;
 };
 
 export type InboxSection = {

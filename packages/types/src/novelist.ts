@@ -1,4 +1,5 @@
 import type { Badge } from "./badge";
+import type { HiddenReason } from "./block-blacklist";
 import type { Tag } from "./common";
 import type { ProfileSong } from "./music";
 import type { PrivacyLevel } from "./prompt";
@@ -74,6 +75,11 @@ export interface Muse {
    * verse number. Only present when alternative verses exist.
    */
   verses?: MuseNavItem[] | null;
+  /**
+   * The viewer blacklisted this muse's novelist: the page is served whole and
+   * the client shows a "character hidden" screen with a reveal (B4).
+   */
+  hiddenReason?: HiddenReason | null;
 }
 
 /**
@@ -183,6 +189,8 @@ export interface MuseConnectionMuse {
   novelistName: string | null;
   /** The muse's novelist disabled their account: draw the placeholder, no link. */
   isPlaceholder?: boolean;
+  /** The viewer blacklisted this muse's novelist: a stub with "Show" (B10). */
+  hiddenReason?: HiddenReason | null;
 }
 
 export interface MuseConnectionApproval {

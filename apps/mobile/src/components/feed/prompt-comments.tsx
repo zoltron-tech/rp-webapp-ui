@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { getPromptComments } from "@nw/api/endpoints/prompt";
 import { queryKeys, useApi } from "@nw/features";
 import type { Comment } from "@nw/types";
+import { stubHandle } from "@nw/types";
 import { pluralize, toFormattedDate } from "@nw/utils";
 import { transformComment } from "@nw/utils/image";
 import { useQuery } from "@tanstack/react-query";
@@ -15,6 +16,7 @@ import { HeartButton } from "@/components/heart-button";
 import { ListStatus } from "@/components/list-status";
 import { OfflineNotice } from "@/components/offline";
 import { QueuedPostRow } from "@/components/queued-post-row";
+import { HiddenItem } from "@/components/thread/hidden-item";
 import { Bone, SkeletonPulse } from "@/components/skeleton";
 import { sourceLinkLabel, useOpenSource } from "@/hooks/use-open-source";
 import { useToggleReaction } from "@/hooks/use-toggle-reaction";
@@ -406,13 +408,21 @@ export const PromptComments = ({
   return (
     <View style={styles.list}>
       {visible.map((comment) => (
-        <CommentRow
-          comment={comment}
+        // Someone the viewer blacklisted: a stub with "Show" until asked
+        // (BLOCK_BLACKLIST_PLAN.md B11, B12). Blocked authors never arrive.
+        <HiddenItem
+          handle={stubHandle(comment.source)}
           key={comment.id}
-          onMore={onMore}
-          onOpenThread={onOpenThread}
-          onShowLikers={onShowLikers}
-        />
+          kind="comment"
+          reason={comment.hiddenReason}
+        >
+          <CommentRow
+            comment={comment}
+            onMore={onMore}
+            onOpenThread={onOpenThread}
+            onShowLikers={onShowLikers}
+          />
+        </HiddenItem>
       ))}
       {queued.map((entry) => (
         <QueuedPostRow entry={entry} key={entry.id} onDiscard={discardQueued} />

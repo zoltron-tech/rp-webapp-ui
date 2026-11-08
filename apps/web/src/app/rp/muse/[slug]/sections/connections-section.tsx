@@ -15,6 +15,7 @@ import {
   reactToMuseConnectionAction,
 } from "@/app/rp/muse/connection-actions";
 import { MuseBondArt } from "@/components/book-art";
+import { HiddenItem } from "@/components/common/hidden-item";
 import { AppAlertDialog } from "@/components/dialog";
 import { MuseConnectionDetail } from "@/components/muse-connection/muse-connection-detail";
 import {
@@ -331,122 +332,134 @@ export function ConnectionsSection({ muse, isOwnMuse, seed = null }: Props) {
                         connection.status === "PENDING" &&
                         connection.viewerApproved === false;
                       const busyReacting = reactingId === connection.id;
+                      // A muse of a novelist the viewer blacklisted: the whole
+                      // row waits behind one stub (BLOCK_BLACKLIST_PLAN.md B10).
+                      const hiddenMuse = connection.muses.find(
+                        (it) => it.hiddenReason,
+                      );
 
                       return (
-                        <S.ConnectionCard
+                        <HiddenItem
                           key={connection.id}
-                          $accent={accent ?? null}
-                          ref={(el) => {
-                            connectionCardRefs.current[connection.id] = el;
-                          }}
+                          reason={hiddenMuse?.hiddenReason}
+                          kind="connection"
+                          handle={hiddenMuse?.firstName ?? "someone"}
                         >
-                          <S.ConnectionCardHeader
-                            type="button"
-                            onClick={() =>
-                              setExpandedConnectionId((prev) =>
-                                prev === connection.id ? null : connection.id,
-                              )
-                            }
+                          <S.ConnectionCard
+                            key={connection.id}
+                            $accent={accent ?? null}
+                            ref={(el) => {
+                              connectionCardRefs.current[connection.id] = el;
+                            }}
                           >
-                            <S.ConnectionAvatarStack>
-                              {previewMuses.map((m) => (
-                                <S.ConnectionAvatar
-                                  key={m.museId}
-                                  $src={m.image}
-                                  title={[m.firstName, m.lastName]
-                                    .filter(Boolean)
-                                    .join(" ")}
-                                />
-                              ))}
-                              {overflowCount > 0 && (
-                                <S.ConnectionOverflowBadge>
-                                  +{overflowCount}
-                                </S.ConnectionOverflowBadge>
-                              )}
-                            </S.ConnectionAvatarStack>
+                            <S.ConnectionCardHeader
+                              type="button"
+                              onClick={() =>
+                                setExpandedConnectionId((prev) =>
+                                  prev === connection.id ? null : connection.id,
+                                )
+                              }
+                            >
+                              <S.ConnectionAvatarStack>
+                                {previewMuses.map((m) => (
+                                  <S.ConnectionAvatar
+                                    key={m.museId}
+                                    $src={m.image}
+                                    title={[m.firstName, m.lastName]
+                                      .filter(Boolean)
+                                      .join(" ")}
+                                  />
+                                ))}
+                                {overflowCount > 0 && (
+                                  <S.ConnectionOverflowBadge>
+                                    +{overflowCount}
+                                  </S.ConnectionOverflowBadge>
+                                )}
+                              </S.ConnectionAvatarStack>
 
-                            <S.ConnectionCardTitle>
-                              {connection.title}
-                            </S.ConnectionCardTitle>
+                              <S.ConnectionCardTitle>
+                                {connection.title}
+                              </S.ConnectionCardTitle>
 
-                            <S.ConnectionCardActions>
-                              {awaitingViewer ? (
-                                <>
-                                  <S.ConnectionReactButton
-                                    type="button"
-                                    $variant="decline"
-                                    aria-label="Decline"
-                                    title="Decline"
-                                    disabled={busyReacting}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleReact(connection.id, false);
-                                    }}
-                                  >
-                                    <FiX size={15} />
-                                  </S.ConnectionReactButton>
-                                  <S.ConnectionReactButton
-                                    type="button"
-                                    $variant="accept"
-                                    aria-label="Accept"
-                                    title="Accept"
-                                    disabled={busyReacting}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleReact(connection.id, true);
-                                    }}
-                                  >
-                                    <FiCheck size={15} />
-                                  </S.ConnectionReactButton>
-                                </>
-                              ) : (
-                                connection.canEdit && (
+                              <S.ConnectionCardActions>
+                                {awaitingViewer ? (
+                                  <>
+                                    <S.ConnectionReactButton
+                                      type="button"
+                                      $variant="decline"
+                                      aria-label="Decline"
+                                      title="Decline"
+                                      disabled={busyReacting}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleReact(connection.id, false);
+                                      }}
+                                    >
+                                      <FiX size={15} />
+                                    </S.ConnectionReactButton>
+                                    <S.ConnectionReactButton
+                                      type="button"
+                                      $variant="accept"
+                                      aria-label="Accept"
+                                      title="Accept"
+                                      disabled={busyReacting}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleReact(connection.id, true);
+                                      }}
+                                    >
+                                      <FiCheck size={15} />
+                                    </S.ConnectionReactButton>
+                                  </>
+                                ) : (
+                                  connection.canEdit && (
+                                    <S.ConnectionIconButton
+                                      type="button"
+                                      aria-label="Edit connection"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setEditingConnection(connection);
+                                        setFormOpen(true);
+                                      }}
+                                    >
+                                      <FiEdit2 size={13} />
+                                    </S.ConnectionIconButton>
+                                  )
+                                )}
+                                {connection.canEdit && (
                                   <S.ConnectionIconButton
                                     type="button"
-                                    aria-label="Edit connection"
+                                    $variant="danger"
+                                    aria-label="Delete connection"
+                                    title="Delete connection"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      setEditingConnection(connection);
-                                      setFormOpen(true);
+                                      setDeletingConnection(connection);
                                     }}
                                   >
-                                    <FiEdit2 size={13} />
+                                    <FaRegTrashCan size={12} />
                                   </S.ConnectionIconButton>
-                                )
-                              )}
-                              {connection.canEdit && (
-                                <S.ConnectionIconButton
-                                  type="button"
-                                  $variant="danger"
-                                  aria-label="Delete connection"
-                                  title="Delete connection"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setDeletingConnection(connection);
-                                  }}
-                                >
-                                  <FaRegTrashCan size={12} />
-                                </S.ConnectionIconButton>
-                              )}
-                              <S.ConnectionChevron $expanded={isExpanded}>
-                                <FiChevronDown size={16} />
-                              </S.ConnectionChevron>
-                            </S.ConnectionCardActions>
-                          </S.ConnectionCardHeader>
+                                )}
+                                <S.ConnectionChevron $expanded={isExpanded}>
+                                  <FiChevronDown size={16} />
+                                </S.ConnectionChevron>
+                              </S.ConnectionCardActions>
+                            </S.ConnectionCardHeader>
 
-                          {isExpanded && (
-                            <S.ConnectionCardBody>
-                              <MuseConnectionDetail
-                                connection={connection}
-                                accent={accent ?? null}
-                                onReacted={handleReacted}
-                                onRerequested={handleRerequested}
-                                hideReactButtons
-                                variant="glass"
-                              />
-                            </S.ConnectionCardBody>
-                          )}
-                        </S.ConnectionCard>
+                            {isExpanded && (
+                              <S.ConnectionCardBody>
+                                <MuseConnectionDetail
+                                  connection={connection}
+                                  accent={accent ?? null}
+                                  onReacted={handleReacted}
+                                  onRerequested={handleRerequested}
+                                  hideReactButtons
+                                  variant="glass"
+                                />
+                              </S.ConnectionCardBody>
+                            )}
+                          </S.ConnectionCard>
+                        </HiddenItem>
                       );
                     })}
 

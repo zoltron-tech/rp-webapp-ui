@@ -1,4 +1,5 @@
 "use client";
+import { handleOf } from "@nw/types";
 import type { StoryBoard, StoryBoardEvent } from "@nw/types/story-board";
 import classNames from "classnames";
 import {
@@ -244,15 +245,27 @@ export const StoryCard: FC<Props> = ({
       ));
 
   // Author + co-authors, de-duplicating the creator out of the member list.
+  // Someone who disabled their account has no username and no picture: they
+  // stay in the stack under the placeholder label, never matched to each other.
   const members = useMemo(() => {
     const creator = storyBoard?.createdBy;
     return [
       ...(creator
-        ? [{ image: creator.image, username: creator.username }]
+        ? [
+            {
+              image: creator.isPlaceholder ? null : creator.image,
+              isPlaceholder: creator.isPlaceholder === true,
+              username: creator.username,
+            },
+          ]
         : []),
       ...(storyBoard?.members ?? [])
-        .filter((m) => m.username !== creator?.username)
-        .map((m) => ({ image: m.image, username: m.username })),
+        .filter((m) => m.isPlaceholder || m.username !== creator?.username)
+        .map((m) => ({
+          image: m.isPlaceholder ? null : m.image,
+          isPlaceholder: m.isPlaceholder === true,
+          username: m.username,
+        })),
     ];
   }, [storyBoard]);
 
@@ -410,12 +423,12 @@ export const StoryCard: FC<Props> = ({
         <ShouldRender if={members.length > 0}>
           <S.CreatorsRow>
             <S.MemberStack>
-              {stackMembers.map((member) => (
+              {stackMembers.map((member, index) => (
                 <S.MemberStackAvatar
-                  key={member.username}
+                  key={member.username || `placeholder-${index}`}
                   src={member.image ?? undefined}
-                  alt={member.username}
-                  title={`@${member.username}`}
+                  alt={handleOf(member)}
+                  title={handleOf(member)}
                 />
               ))}
               {memberOverflow > 0 && (
@@ -556,12 +569,12 @@ export const StoryCard: FC<Props> = ({
 
               <ShouldRender if={stackMembers.length > 0}>
                 <S.CoverAuthorsRail>
-                  {stackMembers.map((member) => (
+                  {stackMembers.map((member, index) => (
                     <S.CoverAuthorAvatar
-                      key={member.username}
+                      key={member.username || `placeholder-${index}`}
                       src={member.image ?? undefined}
-                      alt={member.username}
-                      title={`@${member.username}`}
+                      alt={handleOf(member)}
+                      title={handleOf(member)}
                     />
                   ))}
                   {memberOverflow > 0 && (

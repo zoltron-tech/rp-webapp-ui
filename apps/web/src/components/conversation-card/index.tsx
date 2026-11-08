@@ -2,16 +2,28 @@
 
 import { conversationPreview, participantName } from "@nw/chat";
 import {
+  inboxArchiveMeta,
   inboxGroupFaces,
   inboxHue,
   inboxKind,
   inboxSpeaker,
   inboxThumbnail,
+  isArchived,
   isLastMessageMine,
   isMuted,
 } from "@nw/features";
-import { type Conversation, PLACEHOLDER_LABELS } from "@nw/types";
-import type { CSSProperties, FC, KeyboardEvent } from "react";
+import {
+  type Conversation,
+  INBOX_ARCHIVE_COPY,
+  PLACEHOLDER_LABELS,
+} from "@nw/types";
+import type {
+  CSSProperties,
+  FC,
+  KeyboardEvent,
+  MouseEvent as ReactMouseEvent,
+} from "react";
+import { MdOutlineArchive, MdOutlineUnarchive } from "react-icons/md";
 import { TbBellOff } from "react-icons/tb";
 import { useGlobalState, useGlobalStoreSet } from "@/context/store/stores";
 import { usePageRouter } from "@/hooks/use-page-router";
@@ -30,6 +42,14 @@ type ConversationCardProps = {
   compact?: boolean;
   /** When provided (mobile panel mode), called instead of routing to the conversation page. */
   onOpen?: (conversationId: string, targetUserName: string) => void;
+  /**
+   * The row's archive button: moves it to the archive, or back to the inbox
+   * (BLOCK_BLACKLIST_PLAN.md B6). Left out where rows only preview, as in
+   * the right sidebar.
+   */
+  onMove?: (conversation: Conversation) => void;
+  /** A move of this row is in flight. */
+  moving?: boolean;
 };
 
 /** The preview picture, at three device pixels per point. */
@@ -58,6 +78,8 @@ export const isConversationUnread = (
 export const ConversationCard: FC<ConversationCardProps> = ({
   compact,
   conversation,
+  moving,
+  onMove,
   onOpen,
 }) => {
   const user = useGlobalState("user");
@@ -75,6 +97,12 @@ export const ConversationCard: FC<ConversationCardProps> = ({
   const unread = isConversationUnread(conversation, myUsername);
   // No push and no sound for this one; the row says so, because nothing else does.
   const muted = isMuted(conversation.mutedUntil);
+  // "Archived", or "Archived · muted": then the words say it and the bell stays away.
+  const archiveMeta = inboxArchiveMeta(conversation);
+  const archived = isArchived(conversation);
+  const moveLabel = archived
+    ? INBOX_ARCHIVE_COPY.moveToInbox
+    : INBOX_ARCHIVE_COPY.archive;
 
   const kind = inboxKind(conversation, myUsername);
   const Glyph = INBOX_ICONS[kind];
@@ -130,9 +158,17 @@ export const ConversationCard: FC<ConversationCardProps> = ({
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    // The archive button's own keys are its own.
+    if (event.target !== event.currentTarget) return;
     if (event.key !== "Enter" && event.key !== " ") return;
     event.preventDefault();
     openConversation();
+  };
+
+  const onMoveClick = (event: ReactMouseEvent<HTMLButtonElement>) => {
+    // Not an open: the row underneath is a button too.
+    event.stopPropagation();
+    if (!moving) onMove?.(conversation);
   };
 
   return (
@@ -185,6 +221,7 @@ export const ConversationCard: FC<ConversationCardProps> = ({
             ) : (
               <EmailVerifiedBadge size={12} />
             ))}
+          {archiveMeta && <S.ArchiveTag>{archiveMeta}</S.ArchiveTag>}
         </S.NameRow>
         <S.MessagePreview>
           {speaker && <S.Sender>{speaker}</S.Sender>}
@@ -207,8 +244,23 @@ export const ConversationCard: FC<ConversationCardProps> = ({
           )}
         </S.Timestamp>
         <S.DotSlot>
+          {onMove && (
+            <S.MoveButton
+              type="button"
+              onClick={onMoveClick}
+              disabled={moving}
+              aria-label={moveLabel}
+              title={moveLabel}
+            >
+              {archived ? (
+                <MdOutlineUnarchive size={15} />
+              ) : (
+                <MdOutlineArchive size={15} />
+              )}
+            </S.MoveButton>
+          )}
           {/* Muted and unread: both, the bell before the dot. */}
-          {muted && (
+          {muted && !archived && (
             <S.MutedMark role="img" aria-label="Muted" title="Muted">
               <TbBellOff size={13} />
             </S.MutedMark>

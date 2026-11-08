@@ -2,10 +2,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { isSupportNovelist } from "@nw/chat";
 import { useSession } from "@nw/features";
 import type { Novelist } from "@nw/types";
+import { BLOCK_BLACKLIST_COPY } from "@nw/types";
 import * as Clipboard from "expo-clipboard";
 import { useRouter } from "expo-router";
 import { memo, useState } from "react";
 import { Alert, Pressable, StyleSheet, View } from "react-native";
+import { Text } from "@/components/text";
 import { type ActionItem, ActionMenu } from "@/components/action-menu";
 import { ShareProfileSheet } from "@/components/share/share-profile-sheet";
 import {
@@ -14,7 +16,7 @@ import {
   useOpenConversation,
 } from "@/hooks/use-connection";
 import { alertReportSent } from "@/lib/report";
-import { border, radius, space, useAppTheme } from "@/theme";
+import { border, fontSize, radius, space, useAppTheme } from "@/theme";
 
 /**
  * The two buttons on a profile's identity row.
@@ -39,6 +41,7 @@ import { border, radius, space, useAppTheme } from "@/theme";
  * | `FRIEND_REQUEST_SENT` | arrow up | Cancel request |
  * | `FRIEND_REQUEST_RECEIVED` | person-add + dot | Accept, Reject |
  * | `FRIEND` | person-check | Message, Unfriend |
+ * | `BLACKLISTED` | eye-off | Remove from blacklist |
  *
  * The received state carries an unread dot, as web does — it is the only one
  * where the other person is waiting on you, and a profile you opened for
@@ -137,65 +140,76 @@ export const ProfileActions = memo(function ProfileActions({
   // gone before the tray is presented (iOS shows one modal at a time).
   const shareProfile = () => setSharing(true);
 
+  const unblacklistItem: ActionItem = {
+    busy: actions.unblacklist.isPending,
+    icon: "eye-outline",
+    label: BLOCK_BLACKLIST_COPY.removeFromBlacklist,
+    onPress: () => run(actions.unblacklist, "Removing from your blacklist"),
+  };
+
   const connectionMenu: ActionItem[] =
-    connection === "FRIEND"
-      ? [
-          {
-            icon: "chatbubbles-outline",
-            label: `Message ${novelist.firstName}`,
-            onPress: message,
-          },
-          { separator: true },
-          {
-            busy: actions.unfriend.isPending,
-            icon: "person-remove-outline",
-            label: `Unfriend ${novelist.firstName}`,
-            onPress: () =>
-              confirm(
-                `Unfriend ${novelist.firstName}?`,
-                "You can send another request later.",
-                "Unfriend",
-                () => run(actions.unfriend, "Unfriending"),
-              ),
-            variant: "danger",
-          },
-        ]
-      : connection === "FRIEND_REQUEST_SENT"
+    // A friend you blacklisted reads BLACKLISTED (the friendship is kept,
+    // B2); the one thing to do from here is undo it.
+    connection === "BLACKLISTED"
+      ? [unblacklistItem]
+      : connection === "FRIEND"
         ? [
             {
-              busy: actions.cancel.isPending,
-              icon: "close-circle-outline",
-              label: "Cancel friend request",
-              onPress: () => run(actions.cancel, "Cancelling the request"),
+              icon: "chatbubbles-outline",
+              label: `Message ${novelist.firstName}`,
+              onPress: message,
+            },
+            { separator: true },
+            {
+              busy: actions.unfriend.isPending,
+              icon: "person-remove-outline",
+              label: `Unfriend ${novelist.firstName}`,
+              onPress: () =>
+                confirm(
+                  `Unfriend ${novelist.firstName}?`,
+                  "You can send another request later.",
+                  "Unfriend",
+                  () => run(actions.unfriend, "Unfriending"),
+                ),
               variant: "danger",
             },
           ]
-        : connection === "FRIEND_REQUEST_RECEIVED"
+        : connection === "FRIEND_REQUEST_SENT"
           ? [
               {
-                busy: actions.accept.isPending,
-                icon: "checkmark-circle-outline",
-                label: `Accept request from ${novelist.firstName}`,
-                onPress: () => run(actions.accept, "Accepting the request"),
-                variant: "positive",
-              },
-              {
-                busy: actions.reject.isPending,
+                busy: actions.cancel.isPending,
                 icon: "close-circle-outline",
-                label: `Reject request from ${novelist.firstName}`,
-                onPress: () => run(actions.reject, "Rejecting the request"),
+                label: "Cancel friend request",
+                onPress: () => run(actions.cancel, "Cancelling the request"),
                 variant: "danger",
               },
             ]
-          : [
-              {
-                busy: actions.send.isPending,
-                icon: "person-add-outline",
-                label: `Add ${novelist.firstName}`,
-                onPress: () => run(actions.send, "The friend request"),
-                variant: "positive",
-              },
-            ];
+          : connection === "FRIEND_REQUEST_RECEIVED"
+            ? [
+                {
+                  busy: actions.accept.isPending,
+                  icon: "checkmark-circle-outline",
+                  label: `Accept request from ${novelist.firstName}`,
+                  onPress: () => run(actions.accept, "Accepting the request"),
+                  variant: "positive",
+                },
+                {
+                  busy: actions.reject.isPending,
+                  icon: "close-circle-outline",
+                  label: `Reject request from ${novelist.firstName}`,
+                  onPress: () => run(actions.reject, "Rejecting the request"),
+                  variant: "danger",
+                },
+              ]
+            : [
+                {
+                  busy: actions.send.isPending,
+                  icon: "person-add-outline",
+                  label: `Add ${novelist.firstName}`,
+                  onPress: () => run(actions.send, "The friend request"),
+                  variant: "positive",
+                },
+              ];
 
   const moreMenu: ActionItem[] = [
     { icon: "at-outline", label: "Copy username", onPress: copyUsername },
@@ -244,19 +258,26 @@ export const ProfileActions = memo(function ProfileActions({
                 ),
               variant: "danger",
             },
-            {
-              busy: actions.blacklist.isPending,
-              icon: "eye-off-outline",
-              label: `Blacklist ${novelist.username}`,
-              onPress: () =>
-                confirm(
-                  `Blacklist ${novelist.username}?`,
-                  "You will stop seeing them across the app.",
-                  "Blacklist",
-                  () => run(actions.blacklist, "Blacklisting"),
-                ),
-              variant: "danger",
-            },
+            connection === "BLACKLISTED"
+              ? unblacklistItem
+              : {
+                  busy: actions.blacklist.isPending,
+                  icon: "eye-off-outline",
+                  label: `Blacklist ${novelist.username}`,
+                  onPress: () =>
+                    confirm(
+                      BLOCK_BLACKLIST_COPY.blacklistConfirm.heading(
+                        `@${novelist.username}`,
+                      ),
+                      BLOCK_BLACKLIST_COPY.blacklistConfirm.text(
+                        `@${novelist.username}`,
+                      ),
+                      BLOCK_BLACKLIST_COPY.blacklistConfirm.action,
+                      // Stays on the profile: the banner and its undo show (B3).
+                      () => run(actions.blacklist, "Blacklisting"),
+                    ),
+                  variant: "danger",
+                },
             {
               busy: actions.block.isPending,
               icon: "ban-outline",
@@ -274,11 +295,13 @@ export const ProfileActions = memo(function ProfileActions({
   ];
 
   const connectionIcon: keyof typeof Ionicons.glyphMap =
-    connection === "FRIEND"
-      ? "person"
-      : connection === "FRIEND_REQUEST_SENT"
-        ? "person-add"
-        : "person-add-outline";
+    connection === "BLACKLISTED"
+      ? "eye-off-outline"
+      : connection === "FRIEND"
+        ? "person"
+        : connection === "FRIEND_REQUEST_SENT"
+          ? "person-add"
+          : "person-add-outline";
 
   // Their own profile has no connection to itself, and support is not a
   // friendship — web hides the button on both.
@@ -290,13 +313,15 @@ export const ProfileActions = memo(function ProfileActions({
         {showConnection ? (
           <Pressable
             accessibilityLabel={
-              connection === "FRIEND"
-                ? `Friends with ${novelist.firstName}`
-                : connection === "FRIEND_REQUEST_RECEIVED"
-                  ? `${novelist.firstName} sent you a friend request`
-                  : connection === "FRIEND_REQUEST_SENT"
-                    ? "Friend request sent"
-                    : `Add ${novelist.firstName}`
+              connection === "BLACKLISTED"
+                ? BLOCK_BLACKLIST_COPY.profileBanner(`@${novelist.username}`)
+                : connection === "FRIEND"
+                  ? `Friends with ${novelist.firstName}`
+                  : connection === "FRIEND_REQUEST_RECEIVED"
+                    ? `${novelist.firstName} sent you a friend request`
+                    : connection === "FRIEND_REQUEST_SENT"
+                      ? "Friend request sent"
+                      : `Add ${novelist.firstName}`
             }
             accessibilityRole="button"
             hitSlop={space.xs}
@@ -418,4 +443,90 @@ const styles = StyleSheet.create({
     gap: space.sm,
     marginLeft: "auto",
   },
+});
+
+/**
+ * "You've blacklisted @ada · Remove from blacklist", under a blacklisted
+ * profile's identity (BLOCK_BLACKLIST_PLAN.md B3). Only the viewer sees it.
+ */
+export const BlacklistBanner = memo(function BlacklistBanner({
+  novelist,
+}: {
+  novelist: Novelist;
+}) {
+  const theme = useAppTheme();
+  const actions = useConnectionActions(novelist);
+  const handle = `@${novelist.username}`;
+
+  return (
+    <View
+      accessibilityRole="summary"
+      style={[
+        bannerStyles.root,
+        {
+          backgroundColor: theme.material.fill,
+          borderColor: theme.material.edge,
+        },
+      ]}
+    >
+      <Ionicons color={theme.textGray} name="eye-off-outline" size={18} />
+      <Text
+        numberOfLines={2}
+        style={[bannerStyles.text, { color: theme.text }]}
+      >
+        {BLOCK_BLACKLIST_COPY.profileBanner(handle)}
+      </Text>
+      <Pressable
+        accessibilityRole="button"
+        disabled={actions.unblacklist.isPending}
+        hitSlop={space.xs}
+        onPress={() =>
+          actions.unblacklist
+            .mutateAsync()
+            .catch(() =>
+              Alert.alert(
+                "Not saved",
+                "Removing from your blacklist could not be completed. Try again.",
+              ),
+            )
+        }
+        style={({ pressed }) => [
+          bannerStyles.button,
+          {
+            backgroundColor: pressed
+              ? theme.material.fillPressed
+              : "transparent",
+            borderColor: theme.material.edge,
+            opacity: actions.unblacklist.isPending ? 0.6 : 1,
+          },
+        ]}
+      >
+        <Text style={[bannerStyles.buttonLabel, { color: theme.text }]}>
+          {BLOCK_BLACKLIST_COPY.removeFromBlacklist}
+        </Text>
+      </Pressable>
+    </View>
+  );
+});
+
+const bannerStyles = StyleSheet.create({
+  button: {
+    borderRadius: radius.full,
+    borderWidth: border.edge,
+    paddingHorizontal: space.m,
+    paddingVertical: space.s,
+  },
+  buttonLabel: { fontSize: fontSize.label, fontWeight: "600" },
+  root: {
+    alignItems: "center",
+    borderRadius: radius.field,
+    borderWidth: border.edge,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: space.sm,
+    marginTop: space.sm,
+    paddingHorizontal: space.m,
+    paddingVertical: space.sm,
+  },
+  text: { flex: 1, fontSize: fontSize.label, fontWeight: "600", minWidth: 160 },
 });

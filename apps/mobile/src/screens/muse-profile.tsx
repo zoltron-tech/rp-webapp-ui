@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { queryKeys, useSession } from "@nw/features";
 import type { Muse, MuseNavItem } from "@nw/types";
+import { BLOCK_BLACKLIST_COPY } from "@nw/types";
 import { type QueryClient, useQueryClient } from "@tanstack/react-query";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -14,6 +15,7 @@ import {
 } from "react-native";
 import { AmbientBackground } from "@/components/ambient-background";
 import { SongSheet } from "@/components/compose/song-sheet";
+import { Button } from "@/components/button";
 import { EmptyScene } from "@/components/empty-feed";
 import { Image } from "@/components/image";
 import { ListStatus } from "@/components/list-status";
@@ -229,6 +231,10 @@ const MuseProfileBody = ({
   const theme = useAppTheme();
   const router = useRouter();
   const session = useSession();
+  // A character whose novelist the viewer blacklisted waits behind a "hidden"
+  // screen until asked (BLOCK_BLACKLIST_PLAN.md B4); the reveal holds for this
+  // muse while the screen is open.
+  const [revealedMuseId, setRevealedMuseId] = useState<string | null>(null);
 
   // The bar under this screen would be six destinations under a portrait; the
   // section menu stands where it was. Restored when the screen unmounts.
@@ -446,6 +452,28 @@ const MuseProfileBody = ({
           scene="vanished-muse"
           subtitle="No farewell scene, no dramatic last words. Just an empty card and one very suspicious novelist holding an eraser."
           title="Plot twist: this character got written out"
+        />
+      </View>
+    );
+  }
+
+  if (muse?.hiddenReason && muse.id && revealedMuseId !== muse.id) {
+    const shown = muse.id;
+    const owner = muse.pennedBy?.username
+      ? `@${muse.pennedBy.username}`
+      : "their novelist";
+    return (
+      <View style={styles.root}>
+        <EmptyScene
+          action={
+            <Button
+              label={BLOCK_BLACKLIST_COPY.museHidden.show}
+              onPress={() => setRevealedMuseId(shown)}
+            />
+          }
+          scene="vanished-muse"
+          subtitle={BLOCK_BLACKLIST_COPY.museHidden.text(owner)}
+          title={BLOCK_BLACKLIST_COPY.museHidden.heading}
         />
       </View>
     );

@@ -3,6 +3,7 @@ import { isSupportNovelist } from "@nw/chat";
 import { useSession } from "@nw/features";
 import { mixColors } from "@nw/theme";
 import type { Fandom, Friend, Muse, Novelist } from "@nw/types";
+import { isBlacklistedConnection } from "@nw/types";
 import { mainVerseMuses, toFormattedDate } from "@nw/utils";
 import { IMAGE_SIZES, wsrvImage } from "@nw/utils/image";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -42,7 +43,8 @@ import { BookshelfRow } from "@/components/bookshelf-row";
 import { CollapsibleRichText } from "@/components/collapsible-rich-text";
 import { CroppedImage } from "@/components/cropped-image";
 import { getNoteEmojiRotate, NoteEmojiIcon } from "@/components/note-emoji";
-import { ProfileActions } from "@/components/profile-actions";
+import { BlacklistBanner, ProfileActions } from "@/components/profile-actions";
+import { HiddenSectionStub } from "@/components/thread/hidden-item";
 import { ProfileSongPill } from "@/components/profile-song";
 import { Text } from "@/components/text";
 import { useTabBarContentStyle, useTabBarScroll } from "@/context/tab-bar";
@@ -261,6 +263,9 @@ export const NovelistProfile = ({
   const session = useSession();
   const song = useProfileSong(novelist.id);
   const [showAllFandoms, setShowAllFandoms] = useState(false);
+  // A blacklisted profile's characters and work wait behind one reveal
+  // (BLOCK_BLACKLIST_PLAN.md B3), while this screen is open.
+  const [blacklistRevealed, setBlacklistRevealed] = useState(false);
 
   /*
    * The crests move only while there is nothing better to spend the frame on.
@@ -374,6 +379,9 @@ export const NovelistProfile = ({
     [novelist.friends],
   );
   const isOwnProfile = session.novelist?.username === novelist.username;
+  const sectionsBlacklisted =
+    !isOwnProfile && isBlacklistedConnection(novelist);
+  const sectionsHidden = sectionsBlacklisted && !blacklistRevealed;
   // Web's `atMuseLimit`: the button goes rather than promising what it can't.
   const canAddMuse =
     isOwnProfile &&
@@ -670,6 +678,8 @@ export const NovelistProfile = ({
             <ProfileActions novelist={novelist} />
           </View>
 
+          {sectionsBlacklisted ? <BlacklistBanner novelist={novelist} /> : null}
+
           <View style={styles.statsRow}>
             {stats.map((stat) => (
               <View key={stat.text} style={styles.stat}>
@@ -810,7 +820,7 @@ export const NovelistProfile = ({
           </View>
         ) : null}
 
-        {muses.length > 0 ? (
+        {muses.length > 0 && !sectionsHidden ? (
           <View style={styles.section}>
             <SectionHeader
               action={
@@ -898,55 +908,62 @@ export const NovelistProfile = ({
         <View style={styles.feedSection}>
           <SectionHeader label={isOwnProfile ? "Your work" : "Their work"} />
 
-          <View
-            style={[
-              styles.list,
-              {
-                backgroundColor: theme.material.fill,
-                borderColor: theme.material.edge,
-              },
-            ]}
-          >
-            <FeedRow
-              hint="Everything they have done lately"
-              icon="pulse-outline"
-              label={isOwnProfile ? "Your updates" : "Recent updates"}
-              onPress={openActivity}
+          {sectionsHidden ? (
+            <HiddenSectionStub
+              handle={`@${novelist.username}`}
+              onShow={() => setBlacklistRevealed(true)}
             />
+          ) : (
+            <View
+              style={[
+                styles.list,
+                {
+                  backgroundColor: theme.material.fill,
+                  borderColor: theme.material.edge,
+                },
+              ]}
+            >
+              <FeedRow
+                hint="Everything they have done lately"
+                icon="pulse-outline"
+                label={isOwnProfile ? "Your updates" : "Recent updates"}
+                onPress={openActivity}
+              />
 
-            {/*
+              {/*
             Prompts before posts. A prompt is written *in character* and is the
             thing this product is for; an out-of-character post is the novelist
             speaking as themselves, which is the aside. Web's tabs read the
             other way round, and its two labels — "Posts" then "Prompts" — sit
             over the opposite endpoints to the ones their names suggest.
           */}
-            <FeedRow
-              hint="Written by their characters"
-              icon="chatbubbles-outline"
-              label="Prompts"
-              onPress={openPrompts}
-            />
+              <FeedRow
+                hint="Written by their characters"
+                icon="chatbubbles-outline"
+                label="Prompts"
+                onPress={openPrompts}
+              />
 
-            <FeedRow
-              hint="Written as themselves"
-              icon="document-text-outline"
-              label="OOC posts"
-              onPress={openPosts}
-            />
+              <FeedRow
+                hint="Written as themselves"
+                icon="document-text-outline"
+                label="OOC posts"
+                onPress={openPosts}
+              />
 
-            <FeedRow
-              hint={
-                isOwnProfile
-                  ? "Stories you write, alone or together"
-                  : "Stories they write, alone or together"
-              }
-              icon="book-outline"
-              label="Stories"
-              last
-              onPress={openStories}
-            />
-          </View>
+              <FeedRow
+                hint={
+                  isOwnProfile
+                    ? "Stories you write, alone or together"
+                    : "Stories they write, alone or together"
+                }
+                icon="book-outline"
+                label="Stories"
+                last
+                onPress={openStories}
+              />
+            </View>
+          )}
         </View>
       </Animated.ScrollView>
 

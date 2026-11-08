@@ -11,6 +11,7 @@ import {
   type StoryBoardEventThread,
   type StoryCharacter,
 } from "@nw/types";
+import { personName } from "@nw/utils";
 import { useCallback, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -144,7 +145,7 @@ export const PassageComposer = ({
           ? [
               {
                 id: muse.id,
-                name: `${muse.firstName} ${muse.lastName}`.trim(),
+                name: personName(muse.firstName, muse.lastName),
                 source: "MUSE" as const,
               },
             ]
@@ -179,7 +180,7 @@ export const PassageComposer = ({
       if (!muse.id) continue;
       out[muse.id] = {
         accent: muse.useAccent ? muse.accent : null,
-        name: `${muse.firstName} ${muse.lastName}`.trim(),
+        name: personName(muse.firstName, muse.lastName),
         sourceType: "MUSE",
       };
     }

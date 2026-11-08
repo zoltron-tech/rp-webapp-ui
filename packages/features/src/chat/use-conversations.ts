@@ -1,9 +1,16 @@
 import {
   getConversations,
   getUnreadConversationIds,
+  setConversationBucket,
 } from "@nw/api/endpoints/conversations";
-import type { Conversation } from "@nw/types";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import type { Conversation, InboxBucket } from "@nw/types";
+import {
+  type InfiniteData,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useMemo } from "react";
 import { useApi } from "../api-context";
 import { queryKeys } from "../keys";
@@ -11,6 +18,20 @@ import { useChatCrypto } from "./crypto-context";
 
 /** Fifteen, which is what the web inbox has always asked for. */
 export const CONVERSATIONS_PAGE_SIZE = 15;
+
+/**
+ * The archive's list (BLOCK_BLACKLIST_PLAN.md B6), beside the inbox's under
+ * "conversations" the way the unread ids are: invalidating the inbox
+ * refreshes it too. Fetched when the Archived tab is open, never stored on
+ * the phone.
+ */
+export const archivedConversationsKey = () =>
+  ["conversations", "archived"] as const;
+
+const listKey = (bucket: InboxBucket) =>
+  bucket === "ARCHIVED"
+    ? archivedConversationsKey()
+    : queryKeys.conversations();
 
 /**
  * The inbox.
@@ -23,12 +44,19 @@ export const CONVERSATIONS_PAGE_SIZE = 15;
  * The endpoint returns a bare array with no total, so the end of the list can
  * only be inferred from a short page — the same rule as friends, and the reason
  * it is decided once here.
+ *
+ * `bucket` picks the list: the inbox, or the archive (fetched only while
+ * `enabled`, which a screen ties to its Archived tab).
  */
-export const useConversations = () => {
+export const useConversations = (
+  bucket: InboxBucket = "INBOX",
+  { enabled = true }: { enabled?: boolean } = {},
+) => {
   const api = useApi();
   const crypto = useChatCrypto();
 
   const query = useInfiniteQuery({
+    enabled,
     getNextPageParam: (lastPage: Conversation[], allPages) =>
       lastPage.length >= CONVERSATIONS_PAGE_SIZE
         ? allPages.length + 1
@@ -39,11 +67,12 @@ export const useConversations = () => {
         api,
         pageParam,
         CONVERSATIONS_PAGE_SIZE,
+        bucket,
       );
       if (!result || "message" in result) return [];
       return crypto.decryptConversations(result);
     },
-    queryKey: queryKeys.conversations(),
+    queryKey: listKey(bucket),
   });
 
   // Memoised: a fresh array identity on every render feeds a list's `data` and
@@ -73,6 +102,62 @@ export const useConversations = () => {
       void query.refetch();
     },
   };
+};
+
+type Pages = InfiniteData<Conversation[], unknown>;
+
+/**
+ * Moves a conversation between the caller's inbox and archive.
+ *
+ * The row leaves the list it was in at once and the one it goes to is
+ * refetched — its place there is the server's to decide. The conversation's
+ * own cache entry learns its new bucket, so an open panel and the phone's
+ * stored copy agree. The unread ids are refetched: the archive does not count.
+ */
+export const useSetConversationBucket = () => {
+  const api = useApi();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      bucket,
+      conversationId,
+    }: {
+      conversationId: string;
+      bucket: InboxBucket;
+    }) => {
+      const result = await setConversationBucket(api, conversationId, bucket);
+      if (result !== true) throw new Error("bucket");
+      return { bucket, conversationId };
+    },
+    onSuccess: ({ bucket, conversationId }) => {
+      const from = listKey(bucket === "ARCHIVED" ? "INBOX" : "ARCHIVED");
+      queryClient.setQueryData<Pages>(from, (previous) =>
+        previous
+          ? {
+              ...previous,
+              pages: previous.pages.map((page) =>
+                page.filter(
+                  (conversation) => conversation.id !== conversationId,
+                ),
+              ),
+            }
+          : previous,
+      );
+      queryClient.setQueryData<Conversation | null>(
+        queryKeys.conversation(conversationId),
+        (previous) => (previous ? { ...previous, bucket } : previous),
+      );
+      void queryClient.invalidateQueries({
+        exact: true,
+        queryKey: listKey(bucket),
+      });
+      void queryClient.invalidateQueries({
+        exact: true,
+        queryKey: queryKeys.unreadConversations(),
+      });
+    },
+  });
 };
 
 /**

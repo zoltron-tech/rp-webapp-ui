@@ -3,6 +3,7 @@
 import type { Fandom, Muse } from "@nw/types";
 import { useParams } from "@/lib/navigation";
 import { usernameFromHandle } from "@/utils/constants/profile-handle";
+import { personName } from "@nw/utils";
 import { useEffect, useMemo, useState } from "react";
 import { FiGrid, FiList } from "react-icons/fi";
 import { HiUserAdd } from "react-icons/hi";
@@ -64,7 +65,7 @@ export default function MusesListPage({}) {
   const filteredMuses = muses?.filter((m) => {
     if (
       search &&
-      !`${m.firstName} ${m.lastName}`
+      !personName(m.firstName, m.lastName)
         .toLowerCase()
         .includes(search.toLowerCase())
     )

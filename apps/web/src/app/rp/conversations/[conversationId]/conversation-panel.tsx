@@ -1,16 +1,24 @@
 "use client";
 
 import { REPORT_SENT_TOAST } from "@/utils/report";
-import { helloNoticeFor, participantName, retentionNoticeFor } from "@nw/chat";
 import {
+  helloNoticeFor,
+  isServerSendError,
+  participantName,
+  retentionNoticeFor,
+} from "@nw/chat";
+import {
+  API_MESSAGE,
   type Conversation,
   DISABLE_ACCOUNT_COPY,
+  INBOX_ARCHIVE_COPY,
   type MentionDataItem,
   type Message,
   PLACEHOLDER_LABELS,
 } from "@nw/types";
 import type { MessageSender, Reaction } from "@nw/types/conversation";
 import { suggestPushPrimer } from "@/lib/push";
+import { personName } from "@nw/utils";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { FaChevronDown } from "react-icons/fa";
@@ -157,8 +165,7 @@ export function ConversationPanel({
       id: novelist.id,
       image: novelist.image ?? null,
       name:
-        `${novelist.firstName} ${novelist.lastName}`.trim() ||
-        novelist.username,
+        personName(novelist.firstName, novelist.lastName) || novelist.username,
       type: "NOVELIST",
     };
   }, [novelist]);
@@ -225,6 +232,10 @@ export function ConversationPanel({
   const [optimisticMessages, setOptimisticMessages] = useState<
     OptimisticMessage[]
   >([]);
+  // The backend refused a send because a block stands either way
+  // (BLOCK_BLACKLIST_PLAN.md K3): the composer gives way to a note, as it
+  // does for an unavailable conversation.
+  const [sendBlocked, setSendBlocked] = useState(false);
 
   const PAGE_SIZE = 10;
 
@@ -247,6 +258,7 @@ export function ConversationPanel({
     setPage(1);
     setHasMore(true);
     setIsScrolledUp(false);
+    setSendBlocked(false);
   }, [conversationId]);
 
   // ── Scroll helpers ─────────────────────────────────────────────────────────
@@ -1004,6 +1016,40 @@ export function ConversationPanel({
     void recoverRef.current.fetchMessages(conversationId);
   }, [lastIncomingActionError, conversationId]);
 
+  // ── Socket: the backend refused a message of ours ──────────────────────────
+  //
+  // chat-server names the conversation and the backend's reason. The bubbles
+  // still "sending" here are the refused ones: marked failed, so they can be
+  // retried or dropped. `blocked` and `unavailable` will not change on a retry,
+  // so the composer gives way to the note instead.
+  useEffect(() => {
+    if (!socket) return;
+    const onFrame = (event: MessageEvent) => {
+      let data: unknown;
+      try {
+        data = JSON.parse(event.data as string);
+      } catch {
+        return;
+      }
+      if (!isServerSendError(data)) return;
+      if (data.payload.conversationId !== conversationId) return;
+      setOptimisticMessages((prev) =>
+        prev.map((entry) => ({ ...entry, failed: true })),
+      );
+      if (data.payload.reason === API_MESSAGE.Blocked) {
+        setSendBlocked(true);
+      } else if (data.payload.reason === API_MESSAGE.Unavailable) {
+        setConversation((prev) =>
+          prev ? { ...prev, isUnavailable: true } : prev,
+        );
+      } else {
+        recoverRef.current.errorToast("Your message could not be sent.");
+      }
+    };
+    socket.addEventListener("message", onFrame);
+    return () => socket.removeEventListener("message", onFrame);
+  }, [socket, conversationId]);
+
   // ── Render helpers ─────────────────────────────────────────────────────────
 
   const fallbackMessages = [
@@ -1284,31 +1330,47 @@ export function ConversationPanel({
           />
         ) : null}
 
-        {unavailable ? (
+        {unavailable || sendBlocked ? (
           <div style={{ padding: "8px 12px 12px" }}>
             <InlineMessage variant="info">
-              <p>{DISABLE_ACCOUNT_COPY.chatUnavailable}</p>
+              <p>
+                {unavailable
+                  ? DISABLE_ACCOUNT_COPY.chatUnavailable
+                  : INBOX_ARCHIVE_COPY.blocked}
+              </p>
             </InlineMessage>
           </div>
         ) : (
-          <SendMessageComposer
-            value={messageText}
-            onChange={setMessageText}
-            onHtmlChange={setMessageHtml}
-            onSubmit={onSendMessage}
-            onSendGif={onSendGif}
-            onSendSticker={onSendSticker}
-            onSendClip={onSendClip}
-            onSendMedia={onSendMedia}
-            sending={sending}
-            conversationId={conversationId}
-            selectedSender={selectedSender}
-            onSenderChange={setSelectedSender}
-            mentionItems={mentionItems}
-            getMentionMuseItems={getMentionMuseItems}
-            editingMessage={editingMessage}
-            onCancelEdit={cancelEditing}
-          />
+          <>
+            {/* Why this DM is in the archive, and quiet: the blacklist
+                (BLOCK_BLACKLIST_PLAN.md B6). The composer still works. */}
+            {conversation?.bucket === "ARCHIVED" &&
+              conversation.isBlacklisted &&
+              !conversation.isGroup &&
+              resolvedTargetUserName && (
+                <S.ArchivedNotice role="note">
+                  {INBOX_ARCHIVE_COPY.blacklistedNotice(resolvedTargetUserName)}
+                </S.ArchivedNotice>
+              )}
+            <SendMessageComposer
+              value={messageText}
+              onChange={setMessageText}
+              onHtmlChange={setMessageHtml}
+              onSubmit={onSendMessage}
+              onSendGif={onSendGif}
+              onSendSticker={onSendSticker}
+              onSendClip={onSendClip}
+              onSendMedia={onSendMedia}
+              sending={sending}
+              conversationId={conversationId}
+              selectedSender={selectedSender}
+              onSenderChange={setSelectedSender}
+              mentionItems={mentionItems}
+              getMentionMuseItems={getMentionMuseItems}
+              editingMessage={editingMessage}
+              onCancelEdit={cancelEditing}
+            />
+          </>
         )}
       </S.ChatWrapper>
 

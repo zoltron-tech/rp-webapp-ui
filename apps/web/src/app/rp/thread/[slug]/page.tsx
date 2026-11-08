@@ -3,6 +3,7 @@
 import { REPORT_SENT_TOAST } from "@/utils/report";
 import { Flex } from "@novelist-world/ui";
 import type { Comment, PromptSource, Reply } from "@nw/types";
+import { stubHandle } from "@nw/types";
 import { useParams } from "@/lib/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BsThreeDots } from "react-icons/bs";
@@ -11,6 +12,7 @@ import { FaRegTrashCan } from "react-icons/fa6";
 import { IoArrowBackOutline } from "react-icons/io5";
 import { RiArrowGoBackLine, RiCheckboxCircleLine, RiFlagFill } from "react-icons/ri";
 import { ShouldRender } from "@/components/common";
+import { HiddenItem } from "@/components/common/hidden-item";
 import { LikeButton } from "@/components/common/like-button";
 import { MuseAvatar } from "@/components/common/muse-avatar";
 import { NovelistAvatar } from "@/components/common/novelist-avatar";
@@ -816,26 +818,34 @@ export default function ThreadPage({}) {
   }, [refreshLatestReplies, refreshOutgoingThreadsIfPending]);
 
   const loadReplies = () => {
+    // A reply by someone the reader blacklisted is a stub with "Show"
+    // (BLOCK_BLACKLIST_PLAN.md B11); one by someone blocked never arrives.
     return [...replies].reverse().map((reply) => (
-      <ReplyItem
+      <HiddenItem
         key={reply.id}
-        reply={reply}
-        highlightedReplyId={highlightedReplyId}
-        onEdit={(r) => {
-          setEditPromptPayload(r);
-          setEditPromptType("reply");
-          setSelectedReplyId(r.id);
-          setShowEditPromptAlert(true);
-        }}
-        onRequestDelete={(id) => {
-          setShowDeleteAlert(true);
-          setSelectedReplyId(id);
-        }}
-        onRequestReport={(id) => {
-          setShowReportAlert(true);
-          setSelectedReplyId(id);
-        }}
-      />
+        reason={reply.hiddenReason}
+        kind="reply"
+        handle={stubHandle(reply.source)}
+      >
+        <ReplyItem
+          reply={reply}
+          highlightedReplyId={highlightedReplyId}
+          onEdit={(r) => {
+            setEditPromptPayload(r);
+            setEditPromptType("reply");
+            setSelectedReplyId(r.id);
+            setShowEditPromptAlert(true);
+          }}
+          onRequestDelete={(id) => {
+            setShowDeleteAlert(true);
+            setSelectedReplyId(id);
+          }}
+          onRequestReport={(id) => {
+            setShowReportAlert(true);
+            setSelectedReplyId(id);
+          }}
+        />
+      </HiddenItem>
     ));
   };
 
@@ -1131,29 +1141,38 @@ export default function ThreadPage({}) {
               </ShouldRender>
             </S.SourceInfo>
           </S.ReplyHeaderContainer>
-          <S.PromptTextContainer>
-            <RichTextRenderer
-              savedText={comment?.text ?? ""}
-              collapsedHeight={100}
-              overlayHidden
-            />
-          </S.PromptTextContainer>
-          {comment?.media && (
-            <S.MediaContainer>
-              <ShouldRender
-                if={comment?.media.toLocaleLowerCase().endsWith("mp4")}
-              >
-                <S.PromptVideo src={`${comment?.media}#t=0.3`} controls />
-              </ShouldRender>
-              <ShouldRender
-                if={!comment?.media.toLocaleLowerCase().endsWith("mp4")}
-              >
-                <AppImageViewer src={comment?.media} alt="Comment media">
-                  <S.PromptImage src={comment.media || ""} alt="image" />
-                </AppImageViewer>
-              </ShouldRender>
-            </S.MediaContainer>
-          )}
+          {/* The opening comment's words and media sit behind a stub when the
+              reader blacklisted its author (B11); the header and its Report
+              stay. */}
+          <HiddenItem
+            reason={comment?.hiddenReason}
+            kind="comment"
+            handle={stubHandle(comment?.source)}
+          >
+            <S.PromptTextContainer>
+              <RichTextRenderer
+                savedText={comment?.text ?? ""}
+                collapsedHeight={100}
+                overlayHidden
+              />
+            </S.PromptTextContainer>
+            {comment?.media && (
+              <S.MediaContainer>
+                <ShouldRender
+                  if={comment?.media.toLocaleLowerCase().endsWith("mp4")}
+                >
+                  <S.PromptVideo src={`${comment?.media}#t=0.3`} controls />
+                </ShouldRender>
+                <ShouldRender
+                  if={!comment?.media.toLocaleLowerCase().endsWith("mp4")}
+                >
+                  <AppImageViewer src={comment?.media} alt="Comment media">
+                    <S.PromptImage src={comment.media || ""} alt="image" />
+                  </AppImageViewer>
+                </ShouldRender>
+              </S.MediaContainer>
+            )}
+          </HiddenItem>
           {comment !== undefined && comment?.prompt !== undefined && (
             <S.PromptContentFooter>
               <LikeButton

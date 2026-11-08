@@ -157,6 +157,64 @@ export const DotSlot = styled.span`
   height: 17px;
 `;
 
+/* Archive or bring back, from the row. Shown on hover and focus where there
+   is a pointer, always on touch; its own focus ring, and its clicks stop
+   here so they do not open the conversation. */
+export const MoveButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin: -3px 0;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  line-height: 0;
+
+  @media (hover: hover) {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+
+    ${Card}:hover &,
+    ${Card}:focus-within & {
+      opacity: 1;
+    }
+
+    &:hover {
+      background-color: var(--fill-hover);
+      color: var(--text);
+    }
+  }
+
+  &:focus-visible {
+    opacity: 1;
+    outline: 2px solid var(--accent-11, var(--accent));
+    outline-offset: 1px;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+`;
+
+/* "Archived" or "Archived · muted", after the name. Never squeezes the name
+   to nothing: the name gives way first, then this. */
+export const ArchiveTag = styled.span`
+  flex-shrink: 0;
+  max-width: 50%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--text-secondary);
+`;
+
 /** A conversation that will not push or buzz. */
 export const MutedMark = styled.span`
   display: inline-flex;

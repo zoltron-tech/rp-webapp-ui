@@ -3,6 +3,7 @@
 import { isSupportNovelist } from "@nw/chat";
 import type { Novelist } from "@nw/types";
 import { ACCENT_MAP } from "@nw/types/theme";
+import { personName } from "@nw/utils";
 import { isIOS, isPWA } from "@nw/utils/platform";
 import classNames from "classnames";
 import { toPng } from "html-to-image";
@@ -207,7 +208,10 @@ export const MiniProfileCard: FC<Props> = ({ novelist, onClose }) => {
                       <S.AvatarRing>
                         <AvatarNew
                           src={novelist.image ?? null}
-                          alt={`${novelist.firstName} ${novelist.lastName}`}
+                          alt={personName(
+                            novelist.firstName,
+                            novelist.lastName,
+                          )}
                         />
                       </S.AvatarRing>
                       <S.HeroName>
@@ -269,7 +273,10 @@ export const MiniProfileCard: FC<Props> = ({ novelist, onClose }) => {
                                   {muse.image ? (
                                     <img
                                       src={muse.image}
-                                      alt={`${muse.firstName} ${muse.lastName}`}
+                                      alt={personName(
+                                        muse.firstName,
+                                        muse.lastName,
+                                      )}
                                     />
                                   ) : (
                                     <S.CharCardFallback>

@@ -35,6 +35,7 @@ import {
 } from "@/components/muse/panel";
 import { AddButton } from "@/components/muse/sections/info";
 import { RichText } from "@/components/rich-text";
+import { HiddenItem } from "@/components/thread/hidden-item";
 import { useMuseConnections } from "@/hooks/use-muse";
 import { withAlpha } from "@/lib/color";
 import type { MuseLook } from "@/lib/muse-appearance";
@@ -215,22 +216,35 @@ export const MusePeersSection = ({
         ) : (
           <View style={styles.list}>
             {connections.map((connection) => (
-              <ConnectionCard
-                accent={accent}
-                connection={connection}
-                currentMuseId={muse?.id ?? null}
-                expanded={expanded === connection.id}
-                key={connection.id}
-                onDelete={() => remove(connection)}
-                onEdit={() => setEditor({ connection })}
-                onReact={(accepted) => void react(connection, accepted)}
-                onRerequest={() => void rerequest(connection)}
-                onToggle={() =>
-                  setExpanded((open) =>
-                    open === connection.id ? null : connection.id,
-                  )
+              // A muse of a novelist the viewer blacklisted: the whole row
+              // waits behind one stub (BLOCK_BLACKLIST_PLAN.md B10).
+              <HiddenItem
+                handle={
+                  connection.muses.find((it) => it.hiddenReason)?.firstName ??
+                  "someone"
                 }
-              />
+                key={connection.id}
+                kind="connection"
+                reason={
+                  connection.muses.find((it) => it.hiddenReason)?.hiddenReason
+                }
+              >
+                <ConnectionCard
+                  accent={accent}
+                  connection={connection}
+                  currentMuseId={muse?.id ?? null}
+                  expanded={expanded === connection.id}
+                  onDelete={() => remove(connection)}
+                  onEdit={() => setEditor({ connection })}
+                  onReact={(accepted) => void react(connection, accepted)}
+                  onRerequest={() => void rerequest(connection)}
+                  onToggle={() =>
+                    setExpanded((open) =>
+                      open === connection.id ? null : connection.id,
+                    )
+                  }
+                />
+              </HiddenItem>
             ))}
           </View>
         )}

@@ -1,6 +1,7 @@
 "use client";
 
 import type { Muse, MuseAboutSection, Prompt } from "@nw/types";
+import { BLOCK_BLACKLIST_COPY } from "@nw/types";
 import { headcanonIdInUrl } from "@nw/types/headcanon";
 import type { ProfileSong } from "@nw/types/music";
 import type { ImageFilter, MuseNavItem, NWImage } from "@nw/types/novelist";
@@ -75,6 +76,8 @@ import {
   SectionSwitcher,
   SectionSwitcherContext,
 } from "./sections/section-switcher";
+import { VanishedMuseArt } from "@/components/book-art";
+import { MissingPage } from "@/components/deleted-content/missing-page";
 import { MissingMuse } from "./missing-muse";
 import * as S from "./styles";
 
@@ -520,6 +523,10 @@ export default function MuseProfilePage({}) {
   // a stale notification — was indistinguishable from one still loading, and
   // the page shimmered for ever.
   const [museMissing, setMuseMissing] = useState(false);
+  // A character whose novelist the viewer blacklisted: the page is served, and
+  // waits behind a "character hidden" screen until asked (BLOCK_BLACKLIST_PLAN.md
+  // B4). The reveal holds for this muse on this visit only.
+  const [revealedMuseId, setRevealedMuseId] = useState<string | null>(null);
   // Kept across navigation so the prev/next nav stays visible while the next
   // muse loads in; `navLoading` swaps the cards/buttons to a shimmer/spinner.
   const [nav, setNav] = useState<{
@@ -824,6 +831,21 @@ export default function MuseProfilePage({}) {
 
   if (museMissing) {
     return <MissingMuse />;
+  }
+
+  if (muse?.hiddenReason && muse.id && revealedMuseId !== muse.id) {
+    const owner = muse.pennedBy?.username
+      ? `@${muse.pennedBy.username}`
+      : "their novelist";
+    return (
+      <MissingPage
+        art={<VanishedMuseArt />}
+        title={BLOCK_BLACKLIST_COPY.museHidden.heading}
+        message={BLOCK_BLACKLIST_COPY.museHidden.text(owner)}
+        actionLabel={BLOCK_BLACKLIST_COPY.museHidden.show}
+        onAction={() => setRevealedMuseId(muse.id)}
+      />
+    );
   }
 
   const sectionSwitcher =

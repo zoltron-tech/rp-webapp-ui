@@ -10,6 +10,7 @@ import {
   deleteFriendRequest,
   reportProfile,
   sendFriendRequest,
+  unblacklistNovelist,
   unfriendNovelist,
 } from "@nw/api/endpoints/profile";
 import { queryKeys, useApi } from "@nw/features";
@@ -76,6 +77,7 @@ export type ConnectionActionName =
   | "reject"
   | "report"
   | "send"
+  | "unblacklist"
   | "unfriend";
 
 interface ActionSpec {
@@ -105,7 +107,25 @@ const ACTIONS: Record<ConnectionActionName, ActionSpec> = {
   reject: { call: deleteFriendRequest, connection: null },
   report: { call: (api, id) => reportProfile(api, id, "") },
   send: { call: sendFriendRequest, connection: "FRIEND_REQUEST_SENT" },
+  // Whatever lay under the blacklist (a friendship, a request) is read back
+  // from the server afterwards; `null` is only what shows meanwhile.
+  unblacklist: { call: unblacklistNovelist, connection: null },
   unfriend: { call: unfriendNovelist, connection: null, friendDelta: -1 },
+};
+
+/**
+ * After a blacklist changes, the profile is read again (the connection under
+ * it comes back) and the inbox lists too: the DM moves between Inbox and
+ * Archived (BLOCK_BLACKLIST_PLAN.md B6).
+ */
+const refreshAfterBlacklist = (
+  queryClient: QueryClient,
+  target: ConnectionTarget,
+) => {
+  void queryClient.invalidateQueries({
+    queryKey: queryKeys.profile(target.username),
+  });
+  void queryClient.invalidateQueries({ queryKey: queryKeys.conversations() });
 };
 
 const succeeded = (result: { message?: string } | null | undefined) =>
@@ -237,6 +257,7 @@ const openConversation = async (
  */
 export const useConnectionActions = (novelist: ConnectionTarget) => {
   const api = useApi();
+  const queryClient = useQueryClient();
   const patchConnection = usePatchConnection();
 
   const patch = useCallback(
@@ -280,7 +301,21 @@ export const useConnectionActions = (novelist: ConnectionTarget) => {
 
   const blacklist = useMutation({
     mutationFn: () => guard(ACTIONS.blacklist.call(api, novelist.id)),
-    onSuccess: patch("blacklist"),
+    onSuccess: () => {
+      patch("blacklist")();
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.conversations(),
+      });
+    },
+  });
+
+  /** Remove from blacklist (B3, B15). */
+  const unblacklist = useMutation({
+    mutationFn: () => guard(ACTIONS.unblacklist.call(api, novelist.id)),
+    onSuccess: () => {
+      patch("unblacklist")();
+      refreshAfterBlacklist(queryClient, novelist);
+    },
   });
 
   const report = useMutation({
@@ -295,6 +330,7 @@ export const useConnectionActions = (novelist: ConnectionTarget) => {
     reject,
     report,
     send,
+    unblacklist,
     unfriend,
   };
 };
@@ -317,6 +353,7 @@ export interface ConnectionActionVariables {
  */
 export const useConnectionAction = () => {
   const api = useApi();
+  const queryClient = useQueryClient();
   const patchConnection = usePatchConnection();
 
   return useMutation({
@@ -333,6 +370,9 @@ export const useConnectionAction = () => {
       const spec = ACTIONS[action];
       if (spec.connection === undefined) return;
       patchConnection(novelist, spec.connection, spec.friendDelta);
+      if (action === "blacklist" || action === "unblacklist") {
+        refreshAfterBlacklist(queryClient, novelist);
+      }
     },
   });
 };

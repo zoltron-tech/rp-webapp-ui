@@ -1,6 +1,6 @@
 import { type MessageSenderChoice, senderOptions } from "@nw/chat";
 import { useChatCrypto, useSendMessage, useSession } from "@nw/features";
-import type { Message } from "@nw/types";
+import { API_MESSAGE, type Message } from "@nw/types";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useChatSocket } from "@/context/socket";
 import { isOffline } from "@/lib/connectivity";
@@ -102,12 +102,45 @@ const fromOutbox = (entry: OutboxMessage): SentMessage => ({
 export const useSendChatMessage = (conversationId: string | undefined) => {
   const { novelist } = useSession();
   const crypto = useChatCrypto();
-  const { isConnected, sendMessage } = useChatSocket();
+  const { isConnected, onSendError, sendMessage } = useChatSocket();
   const restSend = useSendMessage(conversationId);
 
   const [inFlight, setInFlight] = useState<SentMessage[]>([]);
   const [sending, setSending] = useState(false);
   const queued = useOutboxMessages(conversationId);
+  /**
+   * Why the backend refused this conversation's last send, when the refusal
+   * will not change on a retry: `blocked` (BLOCK_BLACKLIST_PLAN.md K3) or
+   * `unavailable`. The screen puts its note where the composer was.
+   */
+  const [refusal, setRefusal] = useState<"blocked" | "unavailable" | null>(
+    null,
+  );
+
+  useEffect(() => {
+    setRefusal(null);
+  }, [conversationId]);
+
+  /*
+   * A refused send comes back as a frame naming the conversation, not the
+   * message: it never got an id. Everything of ours still in flight here is
+   * what was refused — marked failed, so it can be retried or discarded.
+   */
+  useEffect(
+    () =>
+      onSendError((error) => {
+        if (!conversationId || error.conversationId !== conversationId) return;
+        setInFlight((previous) =>
+          previous.map((entry) =>
+            entry.failed ? entry : { ...entry, failed: true },
+          ),
+        );
+        if (error.reason === API_MESSAGE.Blocked) setRefusal("blocked");
+        else if (error.reason === API_MESSAGE.Unavailable)
+          setRefusal("unavailable");
+      }),
+    [conversationId, onSendError],
+  );
 
   /** The novelist, then every muse they have penned. */
   const senders = useMemo(() => senderOptions(novelist), [novelist]);
@@ -330,6 +363,8 @@ export const useSendChatMessage = (conversationId: string | undefined) => {
     discard,
     pending,
     reconcile,
+    /** Why sending here stopped, if the backend said; see `refusal` above. */
+    refusal,
     retry,
     /** Who the next message goes out as. */
     selectSender: setSender,

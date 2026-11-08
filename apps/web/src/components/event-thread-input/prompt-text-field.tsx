@@ -1,4 +1,5 @@
 import type { MentionDataItem, MentionTab, StoryCharacter } from "@nw/types";
+import { personName } from "@nw/utils";
 import {
   type FC,
   type RefObject,
@@ -191,7 +192,7 @@ export const EventThreadTextField: FC<Props> = ({
         accent: m.useAccent ? m.accent : null,
         avatar: m.image || null,
         id: m.id ?? "",
-        name: `${m.firstName} ${m.lastName}`.trim(),
+        name: personName(m.firstName, m.lastName),
         source: "MUSE" as const,
       })),
       ...storyCharacters

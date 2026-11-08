@@ -15,6 +15,7 @@ import {
   type Prompt,
   type PromptSource,
   type Reply,
+  stubHandle,
 } from "@nw/types";
 import { pluralize } from "@nw/utils";
 import {
@@ -42,6 +43,7 @@ import { ShareSheet } from "@/components/feed/share-sheet";
 import { EmptyScene } from "@/components/empty-feed";
 import { ListStatus } from "@/components/list-status";
 import { PromptCardSkeleton } from "@/components/skeleton";
+import { HiddenItem } from "@/components/thread/hidden-item";
 import { type PostVariant, ThreadPost } from "@/components/thread/post";
 import {
   PostActions,
@@ -635,26 +637,34 @@ export const ThreadScreen = () => {
         <Spine />
 
         <View style={[styles.sheet, theme.material.card]}>
-          <ThreadPost
-            author={comment.source}
-            concluded={comment.concluded}
-            createdOn={comment.createdOn}
-            flat
-            id={comment.id}
-            media={comment.media}
-            onMore={
-              canAct
-                ? () => openMenu(comment.id, "comment", comment.source)
-                : undefined
-            }
-            onShowLikers={() =>
-              setLikers({ count: comment.reactions, id: comment.id })
-            }
-            reacted={comment.reacted}
-            reactions={comment.reactions}
-            text={comment.text}
-            variant="comment"
-          />
+          {/* The opening comment of someone the reader blacklisted waits
+              behind a stub (BLOCK_BLACKLIST_PLAN.md B11). */}
+          <HiddenItem
+            handle={stubHandle(comment.source)}
+            kind="comment"
+            reason={comment.hiddenReason}
+          >
+            <ThreadPost
+              author={comment.source}
+              concluded={comment.concluded}
+              createdOn={comment.createdOn}
+              flat
+              id={comment.id}
+              media={comment.media}
+              onMore={
+                canAct
+                  ? () => openMenu(comment.id, "comment", comment.source)
+                  : undefined
+              }
+              onShowLikers={() =>
+                setLikers({ count: comment.reactions, id: comment.id })
+              }
+              reacted={comment.reacted}
+              reactions={comment.reactions}
+              text={comment.text}
+              variant="comment"
+            />
+          </HiddenItem>
 
           <View
             style={[
@@ -724,13 +734,19 @@ export const ThreadScreen = () => {
           ) : null}
 
           {replies.map((reply) => (
-            <ThreadReply
-              canAct={canAct}
+            <HiddenItem
+              handle={stubHandle(reply.source)}
               key={reply.id}
-              onMenu={openMenu}
-              onShowLikers={setLikers}
-              reply={reply}
-            />
+              kind="reply"
+              reason={reply.hiddenReason}
+            >
+              <ThreadReply
+                canAct={canAct}
+                onMenu={openMenu}
+                onShowLikers={setLikers}
+                reply={reply}
+              />
+            </HiddenItem>
           ))}
           {queuedReplies.map((entry) => (
             <QueuedPostRow

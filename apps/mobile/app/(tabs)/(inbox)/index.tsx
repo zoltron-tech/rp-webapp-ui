@@ -10,9 +10,14 @@ import {
   useMarkConversationRead,
   usePrefetchConversationMessages,
   useSession,
+  useSetConversationBucket,
   useUnreadConversations,
 } from "@nw/features";
-import type { Conversation, IceBreaker } from "@nw/types";
+import {
+  type Conversation,
+  type IceBreaker,
+  INBOX_ARCHIVE_COPY,
+} from "@nw/types";
 import { useRouter } from "expo-router";
 import {
   useCallback,
@@ -87,6 +92,9 @@ import { IconButton } from "@/components/icon-button";
  *    "what have I not answered" is the question people open an inbox with. The
  *    search box only appears once there are enough conversations for scrolling
  *    to be the slower option.
+ *  - **Archived**, the last pill, is a list of its own (BLOCK_BLACKLIST_PLAN.md
+ *    B6): fetched when it is opened, never kept on the phone. Swiping a read
+ *    row right archives it; in the archive the same swipe brings it back.
  *  - **Pull to refresh**, which is where every phone user's hand goes first and
  *    which previously did nothing at all.
  *  - **The sender is named in the preview.** "You: see you then" is the line
@@ -131,6 +139,11 @@ function InboxContent() {
   const { ids: unreadIds } = useUnreadConversations();
   const markRead = useMarkConversationRead();
   const prefetch = usePrefetchConversationMessages();
+  const [filter, setFilter] = useState<InboxFilter>("all");
+  const showingArchive = filter === "archived";
+  const inbox = useConversations();
+  // The archive's own list, asked for only while its pill is on.
+  const archive = useConversations("ARCHIVED", { enabled: showingArchive });
   const {
     conversations,
     error,
@@ -139,15 +152,30 @@ function InboxContent() {
     isFetchingNextPage,
     isPending,
     refetch,
-  } = useConversations();
+  } = showingArchive ? archive : inbox;
   // The pull spinner only for a pull, not for a background refetch.
   const pull = usePullToRefresh(refetch);
+  const moveBucket = useSetConversationBucket();
+  const move = useCallback(
+    (conversationId: string, to: "INBOX" | "ARCHIVED") => {
+      moveBucket.mutate(
+        { bucket: to, conversationId },
+        {
+          onError: () =>
+            Alert.alert(
+              "Could not move it",
+              "That conversation could not be moved. Please try again.",
+            ),
+        },
+      );
+    },
+    [moveBucket.mutate],
+  );
 
   const { count: groupCount } = useGroupCount();
   const support = useSupportConversation();
   const { iceBreakers, isPending: iceBreakersPending } = useIceBreakers();
 
-  const [filter, setFilter] = useState<InboxFilter>("all");
   const [groupOpen, setGroupOpen] = useState(false);
   const [iceBreakerOpen, setIceBreakerOpen] = useState(false);
   const [viewingIceBreaker, setViewingIceBreaker] = useState<IceBreaker | null>(
@@ -313,6 +341,7 @@ function InboxContent() {
           conversation={cell.item}
           myUsername={novelist?.username}
           onMarkRead={markRead.mutate}
+          onMove={move}
           onOpen={open}
           onOpenDetails={openDetails}
           onPrefetch={prefetch}
@@ -324,6 +353,7 @@ function InboxContent() {
     ),
     [
       markRead.mutate,
+      move,
       novelist?.username,
       open,
       openDetails,
@@ -548,7 +578,13 @@ function InboxContent() {
                 // The empty list means two different things and they need
                 // different sentences: nothing here at all, or nothing
                 // matching what you asked for.
-                conversations.length === 0 ? (
+                showingArchive && conversations.length === 0 ? (
+                  <EmptyScene
+                    scene="no-matches"
+                    subtitle={INBOX_ARCHIVE_COPY.emptyArchive}
+                    title="Nothing archived"
+                  />
+                ) : conversations.length === 0 ? (
                   <EmptyScene
                     scene="no-conversations"
                     subtitle="Connect with fellow novelists, or find a story to write together."
@@ -585,7 +621,10 @@ function InboxContent() {
                page (see `onEndReached`), so "you have reached the end" under a
                filtered view would be claiming something nobody checked.
              */
-            !hasNextPage && filter === "all" && !search && visible.length > 0 ? (
+            !hasNextPage &&
+              (filter === "all" || showingArchive) &&
+              !search &&
+              visible.length > 0 ? (
               <EndOfList />
             ) : unreadBelow > 0 ? (
               <Text style={[styles.unreadBelow, { color: theme.accent.text }]}>
@@ -598,7 +637,8 @@ function InboxContent() {
           // Paging while a filter is on would fetch pages the filter then
           // hides, which looks like an infinite spinner. Only the full list
           // pages; a filtered view works on what has already been loaded.
-          if (filter !== "all" || search) return;
+          // The archive is a full list of its own, so it pages too.
+          if ((filter !== "all" && !showingArchive) || search) return;
           if (hasNextPage && !isFetchingNextPage) void fetchNextPage();
         }}
         onEndReachedThreshold={0.5}

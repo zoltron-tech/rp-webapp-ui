@@ -1,4 +1,5 @@
 import type { Muse, Novelist, PromptSource } from "@nw/types";
+import { personName } from "@nw/utils";
 import { useEffect } from "react";
 import { useCustomEvents } from "@/hooks";
 import { API_MESSAGE } from "@/utils/constants";
@@ -13,7 +14,7 @@ export const museToSource = (muse: Muse): PromptSource => ({
   accent: muse.accent,
   avatar: muse.avatar,
   image: muse.image || "",
-  name: `${muse.firstName} ${muse.lastName}`.trim(),
+  name: personName(muse.firstName, muse.lastName),
   sourceId: muse.id || "",
   sourceType: "MUSE",
   urlProp: muse.id || "",
@@ -24,7 +25,7 @@ export const novelistToSource = (novelist: Novelist): PromptSource => ({
   accent: String(novelist.palette),
   avatar: novelist.avatar,
   image: novelist.image || "",
-  name: `${novelist.firstName} ${novelist.lastName}`.trim(),
+  name: personName(novelist.firstName, novelist.lastName),
   sourceId: novelist.id || "",
   sourceType: "NOVELIST",
   urlProp: novelist.username || "",

@@ -294,6 +294,22 @@ export const getBlockedNovelists = (
     "getBlockedNovelistsAction",
   );
 
+/**
+ * The caller's Blacklisted novelists list, newest first (BLOCK_BLACKLIST_PLAN.md
+ * B15). Overviews, enriched like the friends list; disabled novelists drop out
+ * until they return.
+ */
+export const getBlacklistedNovelists = (
+  api: ApiClient,
+  pageNumber: number,
+  pageSize: number,
+) =>
+  listOrEmpty(
+    api,
+    `${PORTFOLIO}/novelist/blacklisted?pageNumber=${pageNumber}&pageSize=${pageSize}`,
+    "getBlacklistedNovelistsAction",
+  );
+
 export const getReferredNovelists = (
   api: ApiClient,
   pageNumber: number,
@@ -304,6 +320,21 @@ export const getReferredNovelists = (
     `${PORTFOLIO}/novelist/referrals?pageNumber=${pageNumber}&pageSize=${pageSize}`,
     "getReferredNovelistsAction",
   );
+
+/**
+ * Remove from blacklist. The chat with them returns to the inbox, unmuted.
+ * Idempotent on the server.
+ */
+export const unblacklistNovelist = async (
+  api: ApiClient,
+  novelistId: string,
+): Promise<WithMessage> => {
+  const response = await api.raw(`${CONNECTION}/${novelistId}/blacklist`, {
+    label: "unblacklistNovelistAction",
+    method: "DELETE",
+  });
+  return { message: response.ok ? API_MESSAGE.Success : API_MESSAGE.Error };
+};
 
 export const unblockNovelist = async (
   api: ApiClient,

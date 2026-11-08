@@ -25,6 +25,19 @@ export type MaybePlaceholder =
 export const isPlaceholderSource = (source: MaybePlaceholder): boolean =>
   source?.isPlaceholder === true;
 
+/**
+ * How a person's handle reads: "@username", or the placeholder label for a
+ * novelist who disabled their account (their handle is empty, and "@" alone
+ * is what used to show).
+ */
+export const handleOf = (person: {
+  username?: string | null;
+  isPlaceholder?: boolean | null;
+}): string =>
+  person.isPlaceholder || !person.username
+    ? PLACEHOLDER_LABELS.NOVELIST
+    : `@${person.username}`;
+
 /** The label for a placeholder of this source type ("MUSE" or "NOVELIST"). */
 export const placeholderLabel = (
   sourceType: string | null | undefined,

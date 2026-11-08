@@ -2,6 +2,7 @@
 
 import type { Muse } from "@nw/types";
 import { ACCENT_MAP } from "@nw/types/theme";
+import { personName } from "@nw/utils";
 import { isIOS, isPWA } from "@nw/utils/platform";
 import { toPng } from "html-to-image";
 import { type FC, useEffect, useMemo, useRef, useState } from "react";
@@ -248,7 +249,7 @@ export const MiniMuseCard: FC<Props> = ({ muse, onClose }) => {
       } else {
         const link = document.createElement("a");
         link.download =
-          `${muse.firstName}-${muse.lastName}-muse-${activeDesign.id}.png`
+          `${personName(muse.firstName, muse.lastName).replace(/\s+/g, "-")}-muse-${activeDesign.id}.png`
             .replace(/\s+/g, "-")
             .toLowerCase();
         link.href = dataUrl;

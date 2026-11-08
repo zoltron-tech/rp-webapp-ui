@@ -276,7 +276,10 @@ const hydrateInbox = async (store: LocalStore, queryClient: QueryClient) => {
     try {
       const parsed: unknown = JSON.parse(row.json);
       if (!isConversation(parsed)) continue;
-      conversations.push(parsed);
+      // An archived row stays on disk until the inbox stops listing it, and
+      // can still be opened, but is never put back into the inbox list
+      // (BLOCK_BLACKLIST_PLAN.md B6).
+      if (parsed.bucket !== "ARCHIVED") conversations.push(parsed);
       oldestFetch = Math.min(oldestFetch, row.fetched_at);
       seedQuery(queryClient, queryKeys.conversation(row.id), parsed, row.fetched_at);
     } catch {

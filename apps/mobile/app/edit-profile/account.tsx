@@ -7,13 +7,16 @@ import {
   unlinkSpotify,
 } from "@nw/api/endpoints/account";
 import {
+  getBlacklistedNovelists,
   getBlockedNovelists,
+  unblacklistNovelist,
   unblockNovelist,
 } from "@nw/api/endpoints/profile";
 import { syncMyBadges } from "@nw/api/endpoints/badges";
 import { queryKeys, useApi, useSession } from "@nw/features";
 import {
   API_MESSAGE,
+  BLOCK_BLACKLIST_COPY,
   DISABLE_ACCOUNT_COPY,
   type Friend,
   type LinkProvider,
@@ -84,6 +87,16 @@ export default function AccountScreen() {
   const [hasMore, setHasMore] = useState(false);
   const [unblockingId, setUnblockingId] = useState<string | null>(null);
 
+  // Blacklisted novelists (BLOCK_BLACKLIST_PLAN.md B15), the same list
+  // pattern as Blocked accounts, with Remove.
+  const [blacklisted, setBlacklisted] = useState<Friend[]>([]);
+  const [blacklistedPage, setBlacklistedPage] = useState(1);
+  const [blacklistedState, setBlacklistedState] = useState<
+    "loading" | "idle" | "more"
+  >("loading");
+  const [hasMoreBlacklisted, setHasMoreBlacklisted] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+
   const discord = useQuery({
     queryFn: () => getDiscordConnection(api),
     queryKey: ["account", "discord"],
@@ -98,6 +111,11 @@ export default function AccountScreen() {
       setBlocked(page);
       setHasMore(page.length === PAGE_SIZE);
       setBlockedState("idle");
+    });
+    void getBlacklistedNovelists(api, 1, PAGE_SIZE).then((page) => {
+      setBlacklisted(page);
+      setHasMoreBlacklisted(page.length === PAGE_SIZE);
+      setBlacklistedState("idle");
     });
   }, [api]);
 
@@ -184,6 +202,33 @@ export default function AccountScreen() {
     setBlockedPage(next);
     setHasMore(page.length === PAGE_SIZE);
     setBlockedState("idle");
+  };
+
+  const loadMoreBlacklisted = async () => {
+    const next = blacklistedPage + 1;
+    setBlacklistedState("more");
+    const page = await getBlacklistedNovelists(api, next, PAGE_SIZE);
+    setBlacklisted((current) => [
+      ...current,
+      ...page.filter((it) => !current.some((c) => c.id === it.id)),
+    ]);
+    setBlacklistedPage(next);
+    setHasMoreBlacklisted(page.length === PAGE_SIZE);
+    setBlacklistedState("idle");
+  };
+
+  const removeFromBlacklist = async (person: Friend) => {
+    setRemovingId(person.id);
+    const result = await unblacklistNovelist(api, person.id).catch(() => null);
+    setRemovingId(null);
+    if (result?.message !== API_MESSAGE.Success) {
+      Alert.alert("Not removed", "Could not remove them from your blacklist. Try again.");
+      return;
+    }
+    setBlacklisted((current) => current.filter((it) => it.id !== person.id));
+    // Their profile and the inbox move with it (the DM leaves Archived).
+    void queryClient.invalidateQueries({ queryKey: queryKeys.profile(person.username) });
+    void queryClient.invalidateQueries({ queryKey: queryKeys.conversations() });
   };
 
   const unblock = async (person: Friend) => {
@@ -390,7 +435,8 @@ export default function AccountScreen() {
           />
         </SettingsGroup>
 
-        {/* Directly above the blocked list (ACCOUNT_DISABLE_PLAN.md D15). */}
+        {/* Directly above the people lists, Blacklisted then Blocked
+            (ACCOUNT_DISABLE_PLAN.md D15; BLOCK_BLACKLIST_PLAN.md B15). */}
         <SettingsGroup
           footer={DISABLE_ACCOUNT_COPY.groupBody}
           title={DISABLE_ACCOUNT_COPY.groupTitle}
@@ -402,6 +448,68 @@ export default function AccountScreen() {
             subtitle="Hide everything until you sign back in"
             tone="neutral"
           />
+        </SettingsGroup>
+
+        <SettingsGroup
+          footer={
+            blacklisted.length > 0
+              ? BLOCK_BLACKLIST_COPY.blacklistedList.hint
+              : undefined
+          }
+          title={BLOCK_BLACKLIST_COPY.blacklistedList.heading}
+        >
+          {blacklistedState === "loading" ? (
+            <View style={styles.loading}>
+              <ActivityIndicator color={theme.textGray} />
+            </View>
+          ) : blacklisted.length === 0 ? (
+            <SettingsRow
+              icon="eye-off-outline"
+              label="Nobody blacklisted"
+              subtitle={BLOCK_BLACKLIST_COPY.blacklistedList.empty}
+              tone="neutral"
+            />
+          ) : (
+            blacklisted.map((person) => (
+              <View key={person.id} style={styles.blockedRow}>
+                <Avatar
+                  image={person.avatar}
+                  name={person.firstName}
+                  size={38}
+                  uri={person.image}
+                />
+                <View style={styles.blockedText}>
+                  <Text
+                    numberOfLines={1}
+                    style={[styles.blockedName, { color: theme.text }]}
+                  >
+                    {[person.firstName, person.lastName]
+                      .filter(Boolean)
+                      .join(" ")}
+                  </Text>
+                  <Text
+                    numberOfLines={1}
+                    style={[styles.value, { color: theme.textGray }]}
+                  >
+                    @{person.username}
+                  </Text>
+                </View>
+                <PillButton
+                  busy={removingId === person.id}
+                  label="Remove"
+                  onPress={() => void removeFromBlacklist(person)}
+                />
+              </View>
+            ))
+          )}
+          {hasMoreBlacklisted ? (
+            <SettingsRow
+              busy={blacklistedState === "more"}
+              chevron={false}
+              label="Load more"
+              onPress={() => void loadMoreBlacklisted()}
+            />
+          ) : null}
         </SettingsGroup>
 
         <SettingsGroup title="Blocked accounts">

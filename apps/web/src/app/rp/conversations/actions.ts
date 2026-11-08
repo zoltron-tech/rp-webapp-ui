@@ -8,11 +8,21 @@ import {
   getGroupCount,
   getIceBreakers,
   getUnreadConversationIds,
+  setConversationBucket,
 } from "@nw/api/endpoints/conversations";
+import type { InboxBucket } from "@nw/types";
 import { api } from "@/lib/api";
 
-export const getConversationsAction = (pageNumber: number, pageSize: number) =>
-  getConversations(api, pageNumber, pageSize);
+export const getConversationsAction = (
+  pageNumber: number,
+  pageSize: number,
+  bucket: InboxBucket = "INBOX",
+) => getConversations(api, pageNumber, pageSize, bucket);
+
+export const setConversationBucketAction = (
+  conversationId: string,
+  bucket: InboxBucket,
+) => setConversationBucket(api, conversationId, bucket);
 
 export const getGroupCountAction = () => getGroupCount(api);
 

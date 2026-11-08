@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNovelistFriends, useSession } from "@nw/features";
 import type { Friend } from "@nw/types";
+import { personName } from "@nw/utils";
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -60,7 +61,7 @@ export const FriendPicker = ({
       (friend) =>
         !exclude?.has(friend.id) &&
         (!query ||
-          `${friend.firstName} ${friend.lastName} ${friend.username}`
+          `${personName(friend.firstName, friend.lastName)} ${friend.username}`
             .toLowerCase()
             .includes(query)),
     );
@@ -183,7 +184,7 @@ export const FriendPicker = ({
                   numberOfLines={1}
                   style={[styles.friendName, { color: theme.text }]}
                 >
-                  {`${item.firstName} ${item.lastName}`.trim() || item.username}
+                  {personName(item.firstName, item.lastName) || item.username}
                 </Text>
                 <Text
                   numberOfLines={1}

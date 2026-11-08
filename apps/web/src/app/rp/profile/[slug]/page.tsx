@@ -4,6 +4,7 @@ import { REPORT_SENT_TOAST } from "@/utils/report";
 import { Flex } from "@novelist-world/ui";
 import { isSupportNovelist } from "@nw/chat";
 import type { Fandom, Novelist, NWImage, Prompt, StoryBoard } from "@nw/types";
+import { BLOCK_BLACKLIST_COPY, isBlacklistedConnection } from "@nw/types";
 import type { Activity } from "@nw/types/activity";
 import type { ProfileSong } from "@nw/types/music";
 import { ACCENT_MAP, type Accent } from "@nw/types/theme";
@@ -50,6 +51,7 @@ import {
 } from "@/components/common";
 import { AdminBadge } from "@/components/common/admin-badge";
 import { useIsOnline } from "@/components/common/avatar-new";
+import { HiddenSectionStub } from "@/components/common/hidden-item";
 import { NovelistAvatar } from "@/components/common/novelist-avatar";
 import type { SegmentedTabOption } from "@/components/common/segmented-tabs";
 import { AppAlertDialog } from "@/components/dialog";
@@ -93,12 +95,14 @@ import {
   reportProfile,
   sendFeedbackMessage,
   sendFriendRequest,
+  unblacklistNovelistAction,
   unfriendNovelist,
 } from "../actions";
 import {
   getPostsByNovelistAction,
   getPromptsByNovelistAction,
 } from "./posts/actions";
+import { BlacklistBanner } from "./blacklist-banner";
 import * as S from "./styles";
 
 /** Fandom chips shown before the "See all" toggle expands the row. */
@@ -268,6 +272,10 @@ export default function UserProfilePage({}) {
   const [showUnfriendAlert, setShowUnfriendAlert] = useState(false);
   const [showBlockAlert, setShowBlockAlert] = useState(false);
   const [showBlackListAlert, setShowBlackListAlert] = useState(false);
+  // A blacklisted profile's characters and updates wait behind one reveal
+  // (BLOCK_BLACKLIST_PLAN.md B3), for this visit only.
+  const [blacklistRevealed, setBlacklistRevealed] = useState(false);
+  const [unblacklisting, setUnblacklisting] = useState(false);
   const [showReportAlert, setShowReportAlert] = useState(false);
   const [showReportNWAlert, setShowReportNWAlert] = useState(false);
   const [showContactSupportAlert, setShowContactSupportAlert] = useState(false);
@@ -323,6 +331,8 @@ export default function UserProfilePage({}) {
   const setGlobalState = useGlobalStoreSet();
   const { successToast, warningToast, errorToast } = useUIContext();
   const { routeToPage, stopPageLoading, baseDataLoader } = usePageRouter();
+  const blacklisted = !isCurrentUser && isBlacklistedConnection(novelist);
+  const sectionsHidden = blacklisted && !blacklistRevealed;
 
   useEffect(() => {
     if (!novelist?.id) {
@@ -499,9 +509,33 @@ export default function UserProfilePage({}) {
         return copied;
       });
 
-      successToast("User blacklisted");
-      routeToPage(ROUTES.Home);
+      // Stay: the profile is still theirs to see, with the banner and its
+      // undo (B3). It used to send the viewer Home.
+      setBlacklistRevealed(false);
+      successToast(
+        BLOCK_BLACKLIST_COPY.blacklistedToast(`@${novelist.username}`),
+      );
     }
+  };
+
+  const handleRemoveFromBlacklist = async () => {
+    if (!novelist?.id || unblacklisting) return;
+    setUnblacklisting(true);
+    const response = await unblacklistNovelistAction(novelist.id);
+    setUnblacklisting(false);
+    if (response?.message !== API_MESSAGE.Success) {
+      errorToast(
+        "Could not remove them from your blacklist. Please try again.",
+      );
+      return;
+    }
+    successToast(BLOCK_BLACKLIST_COPY.removedToast(`@${novelist.username}`));
+    // Whatever lay under the blacklist (a friendship, a request) comes back:
+    // read the profile again rather than guess.
+    const fresh = await baseDataLoader(() => getNovelistAction(username));
+    setNovelist((current) =>
+      fresh ? fresh : current ? { ...current, connection: null } : current,
+    );
   };
 
   const handleAcceptFriendRequest = async () => {
@@ -625,6 +659,21 @@ export default function UserProfilePage({}) {
     // Support is not somebody to add, unfriend or request.
     if (isSupportNovelist(username)) return null;
     switch (connection) {
+      case "BLACKLISTED":
+        return (
+          <AppDropdownMenuResponsive
+            variant="bordered"
+            trigger={<BiHide size={18} />}
+            items={[
+              {
+                icon: <BiHide size={18} />,
+                label: BLOCK_BLACKLIST_COPY.removeFromBlacklist,
+                onClick: handleRemoveFromBlacklist,
+              },
+            ]}
+          />
+        );
+
       case "FRIEND":
         return (
           <AppDropdownMenuResponsive
@@ -970,12 +1019,12 @@ export default function UserProfilePage({}) {
         actionButtonLabel="Block"
       />
       <AppAlertDialog
-        heading={`Blacklist ${username}?`}
-        text={`You will no longer be able to see content posted by ${username}. Are you sure you want to blacklist ${username}?`}
+        heading={BLOCK_BLACKLIST_COPY.blacklistConfirm.heading(`@${username}`)}
+        text={BLOCK_BLACKLIST_COPY.blacklistConfirm.text(`@${username}`)}
         open={showBlackListAlert}
         onOpenChange={setShowBlackListAlert}
         onConfirm={handleBlackListUser}
-        actionButtonLabel="Blacklist"
+        actionButtonLabel={BLOCK_BLACKLIST_COPY.blacklistConfirm.action}
       />
       <AppAlertDialog
         heading="Contact Support"
@@ -1088,12 +1137,18 @@ export default function UserProfilePage({}) {
                         onClick: () => setShowReportAlert(true),
                         variant: "danger",
                       },
-                      {
-                        icon: <BiHide size={22} />,
-                        label: `Blacklist ${username}`,
-                        onClick: () => setShowBlackListAlert(true),
-                        variant: "danger",
-                      },
+                      isBlacklistedConnection(novelist)
+                        ? {
+                            icon: <BiHide size={22} />,
+                            label: BLOCK_BLACKLIST_COPY.removeFromBlacklist,
+                            onClick: handleRemoveFromBlacklist,
+                          }
+                        : {
+                            icon: <BiHide size={22} />,
+                            label: `Blacklist ${username}`,
+                            onClick: () => setShowBlackListAlert(true),
+                            variant: "danger",
+                          },
                       {
                         icon: <MdOutlineAppBlocking size={22} />,
                         label: `Block ${username}`,
@@ -1219,6 +1274,13 @@ export default function UserProfilePage({}) {
                 </Flex>
               </S.StatsRow>
             </ShouldRender>
+            {blacklisted && (
+              <BlacklistBanner
+                handle={`@${username}`}
+                busy={unblacklisting}
+                onRemove={handleRemoveFromBlacklist}
+              />
+            )}
             <ShouldRender
               if={mutualFriends !== undefined && mutualFriends?.length > 0}
             >
@@ -1305,7 +1367,10 @@ export default function UserProfilePage({}) {
               />
             )}
             <ShouldRender
-              if={!!(novelist?.museCount && novelist.museCount > 0)}
+              if={
+                !!(novelist?.museCount && novelist.museCount > 0) &&
+                !sectionsHidden
+              }
             >
               <Flex
                 id="profile-tour-step-6"
@@ -1439,7 +1504,14 @@ export default function UserProfilePage({}) {
               ariaLabel="Profile updates"
             />
             <S.FeedBody>
-              {feedTab === "activities" &&
+              {sectionsHidden && (
+                <HiddenSectionStub
+                  handle={`@${username}`}
+                  onShow={() => setBlacklistRevealed(true)}
+                />
+              )}
+              {!sectionsHidden &&
+                feedTab === "activities" &&
                 (activities === undefined ? (
                   <FeedShimmer />
                 ) : activities.length > 0 ? (
@@ -1463,7 +1535,8 @@ export default function UserProfilePage({}) {
                 ) : (
                   <EmptyFeed tab="activities" username={username} />
                 ))}
-              {feedTab === "posts" &&
+              {!sectionsHidden &&
+                feedTab === "posts" &&
                 (postsLoading || posts === null ? (
                   <FeedShimmer />
                 ) : posts.length === 0 ? (
@@ -1483,7 +1556,8 @@ export default function UserProfilePage({}) {
                     />
                   </>
                 ))}
-              {feedTab === "prompts" &&
+              {!sectionsHidden &&
+                feedTab === "prompts" &&
                 (promptsLoading || prompts === null ? (
                   <FeedShimmer />
                 ) : prompts.length === 0 ? (

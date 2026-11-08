@@ -25,16 +25,32 @@ const ack = async (
 };
 
 /**
- * There is no by-id endpoint — the conversation is picked out of the first
- * page of the list, which is what the UI has always done.
+ * One conversation, by id, shaped as the inbox shapes it.
+ *
+ * Read from `/conversation/byId/{id}`, which answers 404 — `null` here — for
+ * a conversation the caller is not in, or a DM hidden from them by a block.
+ * The UI used to pick it out of the first page of the inbox instead, which
+ * cannot find an archived one (BLOCK_BLACKLIST_PLAN.md B6); that scan, over
+ * both lists, is kept only for an error from the route.
  */
 export const getConversationById = async (
   api: ApiClient,
   conversationId: string,
 ): Promise<DataType<Conversation>> => {
-  const conversations = await getConversations(api, 1, 100);
-  if (!conversations || "message" in conversations) return null;
-  return conversations.find((c) => c.id === conversationId) ?? null;
+  const direct = await api.requestNullable<Conversation>(
+    `${CHAT}/byId/${id(conversationId)}`,
+    { label: "getConversationByIdAction", notFound: "null" },
+  );
+  if (direct === null) return null;
+  if (!("message" in direct)) return direct;
+
+  for (const bucket of ["INBOX", "ARCHIVED"] as const) {
+    const conversations = await getConversations(api, 1, 100, bucket);
+    if (!conversations || "message" in conversations) return null;
+    const found = conversations.find((c) => c.id === conversationId);
+    if (found) return found;
+  }
+  return null;
 };
 
 export const getConversationMembers = (

@@ -1,7 +1,7 @@
 "use client";
 
 import { parseRichText, richTextToPlainText } from "@nw/richtext";
-import type { StoryBoard, StoryCastMember } from "@nw/types";
+import { handleOf, type StoryBoard, type StoryCastMember } from "@nw/types";
 import { hasUsableCrop } from "@nw/utils/image";
 import {
   type FC,
@@ -24,6 +24,7 @@ import { museAvatarUrl } from "@/components/rich-text-editor-input/dialog-embed"
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useNearViewport } from "../nw-link-embed/use-near-viewport";
 import { AvatarNew } from "../common/avatar-new";
+import { PlaceholderAvatar } from "../common/placeholder-avatar";
 import * as P from "../prompt-embed/styles";
 import { fetchEmbeddedStory } from "./story-cache";
 import * as S from "./styles";
@@ -162,13 +163,15 @@ export const StoryEmbed: FC<Props> = ({ storyId, href }) => {
     : "";
 
   const creator = story.createdBy ?? null;
+  // A disabled member has no username; never let two of them match each other.
+  const notCreator = (m: { username: string; isPlaceholder?: boolean }) =>
+    m.isPlaceholder || m.username !== creator?.username;
   const coAuthors = (story.members ?? [])
-    .filter((m) => m.username !== creator?.username)
+    .filter(notCreator)
     .slice(0, MAX_CO_AUTHORS);
   const extraAuthors = Math.max(
     0,
-    (story.members ?? []).filter((m) => m.username !== creator?.username)
-      .length - coAuthors.length,
+    (story.members ?? []).filter(notCreator).length - coAuthors.length,
   );
 
   const chapters = story.events ?? [];
@@ -239,20 +242,27 @@ export const StoryEmbed: FC<Props> = ({ storyId, href }) => {
 
             {creator ? (
               <S.Byline>
-                by <strong>@{creator.username}</strong>
+                by <strong>{handleOf(creator)}</strong>
                 {coAuthors.length > 0 ? (
                   <>
                     <S.Authors
-                      title={coAuthors.map((m) => `@${m.username}`).join(", ")}
+                      title={coAuthors.map((m) => handleOf(m)).join(", ")}
                     >
-                      {coAuthors.map((member) => (
-                        <AvatarNew
-                          alt={member.username}
-                          key={member.username}
-                          src={member.image}
-                          username={member.username}
-                        />
-                      ))}
+                      {coAuthors.map((member, index) =>
+                        member.isPlaceholder ? (
+                          <PlaceholderAvatar
+                            key={`placeholder-${index}`}
+                            label={handleOf(member)}
+                          />
+                        ) : (
+                          <AvatarNew
+                            alt={member.username}
+                            key={member.username}
+                            src={member.image}
+                            username={member.username}
+                          />
+                        ),
+                      )}
                     </S.Authors>
                     <span>
                       {extraAuthors > 0

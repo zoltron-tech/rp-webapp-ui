@@ -381,6 +381,21 @@ export const RetentionNoticeHighlight = styled.span`
   }
 `;
 
+/* One quiet line above the composer: why an archived DM is archived. Text,
+   not a banner — the conversation still works. */
+export const ArchivedNotice = styled.p`
+  margin: 0;
+  padding: 6px 16px 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+  text-align: center;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
 export const ScrollToBottomButton = styled.button<{ $visible: boolean }>`
   position: absolute;
   right: 16px;

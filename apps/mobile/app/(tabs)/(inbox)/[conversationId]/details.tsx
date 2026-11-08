@@ -22,8 +22,9 @@ import {
   useConversation,
   useConversationMembers,
   useSession,
+  useSetConversationBucket,
 } from "@nw/features";
-import type { ConversationParticipant } from "@nw/types";
+import { type ConversationParticipant, INBOX_ARCHIVE_COPY } from "@nw/types";
 import { pluralize, toFormattedDate } from "@nw/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
@@ -139,6 +140,26 @@ export default function ConversationDetailsScreen() {
     } else {
       setMuteSheet(true);
     }
+  };
+
+  /*
+   * Archive, or back to the inbox (BLOCK_BLACKLIST_PLAN.md B6): this reader's
+   * row only, and not a mute — the button above is that.
+   */
+  const moveBucket = useSetConversationBucket();
+  const archived = conversation?.bucket === "ARCHIVED";
+  const onMovePress = () => {
+    if (!conversationId) return;
+    moveBucket.mutate(
+      { bucket: archived ? "INBOX" : "ARCHIVED", conversationId },
+      {
+        onError: () =>
+          Alert.alert(
+            "Not saved",
+            "That conversation could not be moved. Try again.",
+          ),
+      },
+    );
   };
 
   /**
@@ -325,6 +346,39 @@ export default function ConversationDetailsScreen() {
               />
               <Text style={[styles.secondaryLabel, { color: theme.accent.text }]}>
                 {muted ? (describeMute(mutedUntil) ?? "Muted") : "Mute"}
+              </Text>
+            </Pressable>
+
+            <Pressable
+              accessibilityLabel={
+                archived
+                  ? INBOX_ARCHIVE_COPY.moveToInbox
+                  : INBOX_ARCHIVE_COPY.archive
+              }
+              accessibilityRole="button"
+              disabled={moveBucket.isPending || !conversation}
+              onPress={onMovePress}
+              style={({ pressed }) => [
+                styles.secondaryButton,
+                {
+                  backgroundColor: pressed
+                    ? theme.material.fillPressed
+                    : theme.material.fill,
+                  borderColor: theme.material.edge,
+                },
+              ]}
+            >
+              <Ionicons
+                color={theme.accent.text}
+                name={archived ? "mail-unread-outline" : "archive-outline"}
+                size={20}
+              />
+              <Text
+                style={[styles.secondaryLabel, { color: theme.accent.text }]}
+              >
+                {archived
+                  ? INBOX_ARCHIVE_COPY.moveToInbox
+                  : INBOX_ARCHIVE_COPY.archive}
               </Text>
             </Pressable>
 

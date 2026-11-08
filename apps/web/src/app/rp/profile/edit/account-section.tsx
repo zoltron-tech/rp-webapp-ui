@@ -2,12 +2,14 @@
 
 import { ShouldRender } from "@novelist-world/ui";
 import {
+  BLOCK_BLACKLIST_COPY,
   DISABLE_ACCOUNT_COPY,
   type DiscordConnection,
   type SpotifyConnection,
 } from "@nw/types";
 import type { Friend } from "@nw/types/novelist";
 import { Separator } from "radix-ui";
+import { BiHide } from "react-icons/bi";
 import { useEffect, useState } from "react";
 import {
   BsArrowLeft,
@@ -40,7 +42,12 @@ import { useUIContext } from "@/hooks/use-ui-context";
 import { useSearchParams } from "@/lib/navigation";
 import { API_MESSAGE } from "@/utils/constants";
 import { ROUTES } from "@/utils/constants/routes";
-import { getBlockedNovelistsAction, unblockNovelistAction } from "../actions";
+import {
+  getBlacklistedNovelistsAction,
+  getBlockedNovelistsAction,
+  unblacklistNovelistAction,
+  unblockNovelistAction,
+} from "../actions";
 import { syncMyBadgesAction } from "../badges/actions";
 import { ChangeUsernameDialog } from "./change-username-dialog";
 import { DevicesSection } from "./devices-section";
@@ -79,6 +86,13 @@ export function AccountSection({ onBack }: Props) {
   const [blockedPage, setBlockedPage] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  // Blacklisted novelists (BLOCK_BLACKLIST_PLAN.md B15): the same list
+  // pattern as Blocked accounts, with Remove.
+  const [blacklisted, setBlacklisted] = useState<Friend[]>([]);
+  const [blacklistedPage, setBlacklistedPage] = useState(1);
+  const [hasMoreBlacklisted, setHasMoreBlacklisted] = useState(false);
+  const [loadingMoreBlacklisted, setLoadingMoreBlacklisted] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   const isVerified = novelist?.isVerified ?? user?.emailVerified ?? false;
 
@@ -87,7 +101,38 @@ export function AccountSection({ onBack }: Props) {
       setBlocked(page);
       setHasMore(page.length === PAGE_SIZE);
     });
+    getBlacklistedNovelistsAction(1, PAGE_SIZE).then((page) => {
+      setBlacklisted(page);
+      setHasMoreBlacklisted(page.length === PAGE_SIZE);
+    });
   }, []);
+
+  const handleLoadMoreBlacklisted = async () => {
+    const nextPage = blacklistedPage + 1;
+    setLoadingMoreBlacklisted(true);
+    const page = await getBlacklistedNovelistsAction(nextPage, PAGE_SIZE);
+    setBlacklisted((prev) => [
+      ...prev,
+      ...page.filter((n) => !prev.some((p) => p.id === n.id)),
+    ]);
+    setBlacklistedPage(nextPage);
+    setHasMoreBlacklisted(page.length === PAGE_SIZE);
+    setLoadingMoreBlacklisted(false);
+  };
+
+  const handleRemoveFromBlacklist = async (person: Friend) => {
+    setRemovingId(person.id);
+    const response = await unblacklistNovelistAction(person.id);
+    if (response?.message === API_MESSAGE.Success) {
+      setBlacklisted((prev) => prev.filter((n) => n.id !== person.id));
+      successToast(BLOCK_BLACKLIST_COPY.removedToast(`@${person.username}`));
+    } else {
+      errorToast(
+        "Could not remove them from your blacklist. Please try again.",
+      );
+    }
+    setRemovingId(null);
+  };
 
   useEffect(() => {
     getDiscordConnectionAction().then((conn) => {
@@ -541,7 +586,8 @@ export function AccountSection({ onBack }: Props) {
         {/* Signed-in devices, with the two account-wide sign-outs. */}
         <DevicesSection />
 
-        {/* Disable account — directly above the blocked list (ACCOUNT_DISABLE_PLAN.md D15) */}
+        {/* Disable account — directly above the people lists, Blacklisted then
+            Blocked (ACCOUNT_DISABLE_PLAN.md D15; BLOCK_BLACKLIST_PLAN.md B15) */}
         <S.AccountGroup>
           <S.AccountGroupHeading>
             <RiPauseCircleLine />
@@ -566,6 +612,61 @@ export function AccountSection({ onBack }: Props) {
             open={disableOpen}
             onClose={() => setDisableOpen(false)}
           />
+        </S.AccountGroup>
+
+        {/* Blacklisted novelists, above Blocked accounts (BLOCK_BLACKLIST_PLAN.md B15) */}
+        <S.AccountGroup>
+          <S.AccountGroupHeading>
+            <BiHide />
+            {BLOCK_BLACKLIST_COPY.blacklistedList.heading}
+          </S.AccountGroupHeading>
+
+          <ShouldRender if={blacklisted.length === 0}>
+            <InlineMessage variant="info">
+              <p>{BLOCK_BLACKLIST_COPY.blacklistedList.empty}</p>
+            </InlineMessage>
+          </ShouldRender>
+
+          <ShouldRender if={blacklisted.length > 0}>
+            <S.AccountRowValue>
+              {BLOCK_BLACKLIST_COPY.blacklistedList.hint}
+            </S.AccountRowValue>
+            <S.BlockedList>
+              {blacklisted.map((person) => (
+                <S.BlockedItem key={person.id}>
+                  <AvatarNew src={person.image} alt={person.username} />
+                  <S.BlockedItemInfo>
+                    <S.BlockedItemName>
+                      {person.firstName}
+                      {person.lastName ? ` ${person.lastName}` : ""}
+                    </S.BlockedItemName>
+                    <S.BlockedItemUsername>
+                      @{person.username}
+                    </S.BlockedItemUsername>
+                  </S.BlockedItemInfo>
+                  <S.UnblockButton
+                    type="button"
+                    disabled={removingId === person.id}
+                    onClick={() => handleRemoveFromBlacklist(person)}
+                    aria-label={`${BLOCK_BLACKLIST_COPY.removeFromBlacklist}: @${person.username}`}
+                  >
+                    <BiHide />
+                    {removingId === person.id ? "Removing…" : "Remove"}
+                  </S.UnblockButton>
+                </S.BlockedItem>
+              ))}
+            </S.BlockedList>
+            <ShouldRender if={hasMoreBlacklisted}>
+              <S.AccountActionButton
+                type="button"
+                onClick={handleLoadMoreBlacklisted}
+                disabled={loadingMoreBlacklisted}
+                style={{ alignSelf: "center" }}
+              >
+                {loadingMoreBlacklisted ? "Loading…" : "Load more"}
+              </S.AccountActionButton>
+            </ShouldRender>
+          </ShouldRender>
         </S.AccountGroup>
 
         {/* Blocked novelists */}

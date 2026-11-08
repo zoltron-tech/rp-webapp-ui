@@ -8,7 +8,12 @@ import {
   inboxSummary,
   matchesInboxFilter,
 } from "@nw/features";
-import type { Conversation, IceBreaker } from "@nw/types";
+import {
+  type Conversation,
+  type IceBreaker,
+  INBOX_ARCHIVE_COPY,
+  type InboxBucket,
+} from "@nw/types";
 import { bookCoverUrl } from "@nw/types/books";
 import classNames from "classnames";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -41,6 +46,7 @@ import {
   getConversationsAction,
   getGroupCountAction,
   getIceBreakersAction,
+  setConversationBucketAction,
 } from "./actions";
 import { CreateGroupDialog } from "./create-group-dialog";
 import { CreateIceBreakerDialog } from "./create-ice-breaker-dialog";
@@ -165,6 +171,14 @@ export default function ConversationsPage() {
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [filter, setFilter] = useState<InboxFilter>("all");
+  // The archive (BLOCK_BLACKLIST_PLAN.md B6): its own list, fetched the
+  // first time its tab is opened and paged like the inbox.
+  const [archived, setArchived] = useState<Conversation[] | null>(null);
+  const [archivedPage, setArchivedPage] = useState(1);
+  const [archivedHasMore, setArchivedHasMore] = useState(true);
+  const [archivedLoading, setArchivedLoading] = useState(false);
+  const [movingId, setMovingId] = useState<string | null>(null);
+  const showingArchive = filter === "archived";
   const [search, setSearch] = useState("");
   const [contactSupportLoading, setContactSupportLoading] = useState(false);
   const [createGroupOpen, setCreateGroupOpen] = useState(false);
@@ -228,6 +242,65 @@ export default function ConversationsPage() {
       return true;
     },
     [setGlobalState],
+  );
+
+  const fetchArchived = useCallback(
+    async (pageNumber: number, append = false) => {
+      const result = await getConversationsAction(
+        pageNumber,
+        PAGE_SIZE,
+        "ARCHIVED",
+      );
+      const rows = result && Array.isArray(result) ? result : [];
+      const decrypted = rows.length ? await decryptConversations(rows) : [];
+      setArchivedHasMore(decrypted.length >= PAGE_SIZE);
+      setArchived((prev) =>
+        append ? [...(prev ?? []), ...decrypted] : decrypted,
+      );
+      return decrypted.length > 0;
+    },
+    [],
+  );
+
+  // The archive loads when its tab is first opened, not with the inbox.
+  useEffect(() => {
+    if (!showingArchive || archived !== null) return;
+    setArchivedLoading(true);
+    void fetchArchived(1).finally(() => setArchivedLoading(false));
+  }, [showingArchive, archived, fetchArchived]);
+
+  /**
+   * A row's archive button: moves it between the inbox and the archive. The
+   * row leaves the list on screen at once; the other list is read again the
+   * next time it is shown, since where the row sits there is the server's.
+   */
+  const handleMove = useCallback(
+    async (conversation: Conversation) => {
+      const to: InboxBucket =
+        conversation.bucket === "ARCHIVED" ? "INBOX" : "ARCHIVED";
+      setMovingId(conversation.id);
+      const result = await setConversationBucketAction(conversation.id, to);
+      setMovingId(null);
+      if (result !== true) {
+        errorToast("That conversation could not be moved. Try again.");
+        return;
+      }
+      const without = (list: Conversation[] | null) =>
+        list ? list.filter((row) => row.id !== conversation.id) : list;
+      if (to === "ARCHIVED") {
+        setConversations(without);
+        setArchived(null);
+        // The right sidebar previews the inbox from this cache.
+        setGlobalState((prev) => ({
+          ...prev,
+          cachedConversations: without(prev.cachedConversations ?? null),
+        }));
+      } else {
+        setArchived(without);
+        void fetchConversations(1);
+      }
+    },
+    [errorToast, fetchConversations, setGlobalState],
   );
 
   // Always fetch page 1 on mount. Cached data (a small preview slice seeded
@@ -307,7 +380,7 @@ export default function ConversationsPage() {
     const incomingMsg = isMine
       ? { ...lastIncomingMessage, isRead: true }
       : lastIncomingMessage;
-    setConversations((prev) => {
+    const bump = (prev: Conversation[] | null) => {
       if (!prev) return prev;
       const updated = prev.map((conv) =>
         conv.id === incomingMsg.conversationId
@@ -319,7 +392,11 @@ export default function ConversationsPage() {
         const bTime = b.lastMessage?.createdAt ?? b.modifiedAt ?? "";
         return bTime.localeCompare(aTime);
       });
-    });
+    };
+    // An archived conversation's message stays in the archive: arriving does
+    // not bring it back to the inbox.
+    setConversations(bump);
+    setArchived(bump);
   }, [lastIncomingMessage, user?.username]);
 
   // When the open conversation panel marks messages as read, patch the local
@@ -386,27 +463,39 @@ export default function ConversationsPage() {
       isConversationUnread(conversation, user?.username);
 
     return inboxSections(
-      (conversations ?? []).filter((conversation) => {
-        if (!matchesInboxFilter(conversation, filter, unread(conversation))) {
-          return false;
-        }
-        if (!query) return true;
-        if (conversation.isGroup) {
-          return (conversation.name ?? "").toLowerCase().includes(query);
-        }
-        return (conversation.members ?? []).some(
-          (member) =>
-            member.userName !== user?.username &&
-            `${participantName(member)} ${member.userName ?? ""}`
-              .toLowerCase()
-              .includes(query),
-        );
-      }),
+      ((showingArchive ? archived : conversations) ?? []).filter(
+        (conversation) => {
+          if (!matchesInboxFilter(conversation, filter, unread(conversation))) {
+            return false;
+          }
+          if (!query) return true;
+          if (conversation.isGroup) {
+            return (conversation.name ?? "").toLowerCase().includes(query);
+          }
+          return (conversation.members ?? []).some(
+            (member) =>
+              member.userName !== user?.username &&
+              `${participantName(member)} ${member.userName ?? ""}`
+                .toLowerCase()
+                .includes(query),
+          );
+        },
+      ),
       unread,
     );
-  }, [conversations, filter, search, user?.username]);
+  }, [archived, conversations, filter, search, showingArchive, user?.username]);
 
   const narrowed = filter !== "all" || search.trim() !== "";
+  const visibleList = showingArchive ? archived : conversations;
+  const listHasMore = showingArchive ? archivedHasMore : hasMore;
+
+  const loadMoreArchived = async () => {
+    if (loadingMore || !archivedHasMore) return;
+    setLoadingMore(true);
+    const nextPage = archivedPage + 1;
+    if (await fetchArchived(nextPage, true)) setArchivedPage(nextPage);
+    setLoadingMore(false);
+  };
 
   return (
     <>
@@ -524,7 +613,8 @@ export default function ConversationsPage() {
                   <ConversationCardShimmer key={i} />
                 ))}
               </N.Section>
-            ) : conversations && conversations.length > 0 ? (
+            ) : (conversations && conversations.length > 0) ||
+              showingArchive ? (
               <>
                 <S.ListControls>
                   <N.Filters role="toolbar" aria-label="Filter conversations">
@@ -539,7 +629,7 @@ export default function ConversationsPage() {
                       </N.FilterChip>
                     ))}
                   </N.Filters>
-                  {conversations.length >= SEARCH_THRESHOLD && (
+                  {(visibleList?.length ?? 0) >= SEARCH_THRESHOLD && (
                     <S.SearchInput
                       type="search"
                       value={search}
@@ -557,6 +647,8 @@ export default function ConversationsPage() {
                       <ConversationCard
                         key={conversation.id}
                         conversation={conversation}
+                        onMove={handleMove}
+                        moving={movingId === conversation.id}
                         onOpen={
                           isMobile
                             ? (convId, target) =>
@@ -572,12 +664,26 @@ export default function ConversationsPage() {
                   </N.Section>
                 ))}
 
-                {sections.length === 0 && (
-                  <N.FilterEmpty>
-                    None of those in what is loaded so far
-                    {hasMore ? ". Load more to look further back." : "."}
-                  </N.FilterEmpty>
+                {showingArchive && archivedLoading && (
+                  <N.Section aria-hidden="true">
+                    {Array.from({ length: 3 }, (_, i) => (
+                      <ConversationCardShimmer key={i} />
+                    ))}
+                  </N.Section>
                 )}
+
+                {sections.length === 0 &&
+                  !(showingArchive && archivedLoading) && (
+                    <N.FilterEmpty>
+                      {showingArchive && !search.trim()
+                        ? INBOX_ARCHIVE_COPY.emptyArchive
+                        : `None of those in what is loaded so far${
+                            listHasMore
+                              ? ". Load more to look further back."
+                              : "."
+                          }`}
+                    </N.FilterEmpty>
+                  )}
               </>
             ) : (
               <S.EmptyStateRoot>
@@ -603,17 +709,25 @@ export default function ConversationsPage() {
                     Explore
                     <FiArrowRight size={14} />
                   </S.EmptyStateCta>
+                  {/* An empty inbox can still have an archive behind it. */}
+                  <S.EmptyStateCta
+                    type="button"
+                    onClick={() => setFilter("archived")}
+                  >
+                    {INBOX_ARCHIVE_COPY.filter}
+                    <FiArrowRight size={14} />
+                  </S.EmptyStateCta>
                 </S.EmptyStateActions>
               </S.EmptyStateRoot>
             )}
           </S.ConversationListRoot>
 
           <LoadMore
-            hasMore={hasMore && !!conversations?.length}
+            hasMore={listHasMore && !!visibleList?.length}
             loadingMore={loadingMore}
-            onLoadMore={loadMore}
-            unreadCount={unreadBadgeCount}
-            endMarker={!!conversations?.length && !narrowed}
+            onLoadMore={showingArchive ? loadMoreArchived : loadMore}
+            unreadCount={showingArchive ? 0 : unreadBadgeCount}
+            endMarker={!!visibleList?.length && !narrowed}
           />
         </S.ConversationListContainer>
       </S.Container>

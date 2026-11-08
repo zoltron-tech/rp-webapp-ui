@@ -15,9 +15,11 @@ import {
   isServerNotification,
   isServerPing,
   isServerReaction,
+  isServerSendError,
   type OutgoingMessagePayload,
   parseSocketFrame,
   type ReactionPayload,
+  type SendErrorPayload,
 } from "@nw/chat";
 import { queryKeys, useApi, useChatCrypto, useSession } from "@nw/features";
 import type { Message } from "@nw/types";
@@ -246,6 +248,13 @@ interface ChatSocketValue {
    */
   onActionError: (listener: (error: ActionErrorPayload) => void) => () => void;
   /**
+   * Hears the backend refuse a message sent over the socket, with its reason
+   * when it gave one: `blocked` (a DM with someone blocked either way,
+   * BLOCK_BLACKLIST_PLAN.md K3) or `unavailable`. The sending hook marks its
+   * bubbles failed and the screen says why. Returns the unsubscribe.
+   */
+  onSendError: (listener: (error: SendErrorPayload) => void) => () => void;
+  /**
    * Registers usernames to ask the server about, and unregisters on cleanup.
    *
    * The server answers strictly about the last list it was given, so this is
@@ -260,6 +269,7 @@ const ChatSocketContext = createContext<ChatSocketValue>({
   ensureConnected: () => {},
   isConnected: false,
   onActionError: () => () => {},
+  onSendError: () => () => {},
   sendDelete: () => false,
   sendMessage: () => false,
   sendReaction: () => false,
@@ -308,6 +318,18 @@ export const ChatSocketProvider = ({ children }: { children: ReactNode }) => {
   /** Who wants to hear about a refused edit or delete. */
   const actionErrorListeners = useRef(
     new Set<(error: ActionErrorPayload) => void>(),
+  );
+  const sendErrorListeners = useRef(
+    new Set<(error: SendErrorPayload) => void>(),
+  );
+  const onSendError = useCallback(
+    (listener: (error: SendErrorPayload) => void) => {
+      sendErrorListeners.current.add(listener);
+      return () => {
+        sendErrorListeners.current.delete(listener);
+      };
+    },
+    [],
   );
   const onActionError = useCallback(
     (listener: (error: ActionErrorPayload) => void) => {
@@ -629,6 +651,13 @@ export const ChatSocketProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
+      if (isServerSendError(frame)) {
+        for (const listener of sendErrorListeners.current) {
+          listener(frame.payload);
+        }
+        return;
+      }
+
       if (isServerReaction(frame)) {
         applyReaction(frame.payload);
       }
@@ -856,6 +885,7 @@ export const ChatSocketProvider = ({ children }: { children: ReactNode }) => {
       ensureConnected,
       isConnected,
       onActionError,
+      onSendError,
       sendDelete: (payload) => rawSend(createDeleteSocketMessage(payload)),
       sendMessage: (payload) => {
         const sent = rawSend(createMessageSocketMessage(payload));
@@ -872,6 +902,7 @@ export const ChatSocketProvider = ({ children }: { children: ReactNode }) => {
       ensureConnected,
       isConnected,
       onActionError,
+      onSendError,
       rawSend,
       trackUsernames,
     ],

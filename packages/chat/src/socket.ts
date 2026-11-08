@@ -118,6 +118,22 @@ export type ServerActionError = {
   payload: ActionErrorPayload;
 };
 
+/**
+ * The backend refused a message the client sent.
+ *
+ * `reason` is the backend's word when it gave one: `blocked` (a direct
+ * conversation with someone blocked either way — BLOCK_BLACKLIST_PLAN.md K3)
+ * or `unavailable` (the other side disabled their account). There is no
+ * message id: a refused message never got one. A send used to fail with a
+ * bare `{ code, message }` nobody read, and the message sat "sending".
+ */
+export interface SendErrorPayload {
+  code: number;
+  conversationId: string;
+  reason?: string;
+}
+export type ServerSendError = { type: "send-error"; payload: SendErrorPayload };
+
 // ─── Guards ──────────────────────────────────────────────────────────────────
 
 const record = (value: unknown): Record<string, unknown> | null =>
@@ -196,6 +212,17 @@ export const isServerActionError = (
     (payload.action === "edit" || payload.action === "delete") &&
     typeof payload.messageId === "string" &&
     typeof payload.conversationId === "string"
+  );
+};
+
+export const isServerSendError = (data: unknown): data is ServerSendError => {
+  const frame = record(data);
+  if (frame?.type !== "send-error") return false;
+  const payload = record(frame.payload);
+  return (
+    payload !== null &&
+    typeof payload.conversationId === "string" &&
+    typeof payload.code === "number"
   );
 };
 

@@ -16,4 +16,9 @@ export enum API_MESSAGE {
   TooManyRequests = "too_many_requests",
   /** The other side of a direct conversation disabled their account (409 `unavailable`). */
   Unavailable = "unavailable",
+  /**
+   * A direct conversation with someone blocked either way (409 `blocked`,
+   * BLOCK_BLACKLIST_PLAN.md K3): nothing can be sent into it.
+   */
+  Blocked = "blocked",
 }

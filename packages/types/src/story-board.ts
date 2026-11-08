@@ -1,3 +1,4 @@
+import type { HiddenReason } from "./block-blacklist";
 import type { Genre, Tag } from "./common";
 import type { ProfileSong } from "./music";
 import type { Fandom, Friend, NWImage } from "./novelist";
@@ -386,6 +387,9 @@ export interface StoryBoardEventThread {
     string,
     { name: string; accent: string | null; sourceType?: CharacterRefType }
   >;
+  /** The reader blacklisted the author, or the two blocked each other: a stub
+   *  with "Show", for both reasons in a shared story (B5, K4). Server-set. */
+  hiddenReason?: HiddenReason | null;
 }
 
 // ── Soundscape ─────────────────────────────────────────────────────────────

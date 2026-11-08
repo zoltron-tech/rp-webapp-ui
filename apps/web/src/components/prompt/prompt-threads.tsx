@@ -249,18 +249,22 @@ export const PromptThreads: FC = () => {
           {comments.length > 0 && (
             <S.PromptThreads.Header>
               <S.PromptThreads.Avatars>
-                {comments.slice(0, 2).map((comment) => {
-                  const source = comment.source;
-                  if (!source) return null;
-                  return (
-                    <AvatarNew
-                      key={comment.id}
-                      src={source.image}
-                      alt={source.name}
-                      style={{ cursor: "default" }}
-                    />
-                  );
-                })}
+                {/* No face in the preview for a stubbed comment (B11). */}
+                {comments
+                  .filter((it) => !it.hiddenReason)
+                  .slice(0, 2)
+                  .map((comment) => {
+                    const source = comment.source;
+                    if (!source) return null;
+                    return (
+                      <AvatarNew
+                        key={comment.id}
+                        src={source.image}
+                        alt={source.name}
+                        style={{ cursor: "default" }}
+                      />
+                    );
+                  })}
               </S.PromptThreads.Avatars>
               <S.PromptThreads.Divider />
               <Collapsible.Trigger asChild>

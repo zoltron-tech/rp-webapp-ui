@@ -1,3 +1,4 @@
+import type { HiddenReason } from "./block-blacklist";
 import type { Book } from "./books";
 import type { ProfileSong } from "./music";
 import type { Friend, NWImage } from "./novelist";
@@ -32,6 +33,8 @@ export interface PromptThreadComment {
   createdOn: number;
   replyCount: number;
   concluded: boolean;
+  /** Viewer blacklisted the author: draw a stub with "Show" (BLOCK_BLACKLIST_PLAN.md B11). */
+  hiddenReason?: HiddenReason | null;
 }
 
 export interface Comment {
@@ -50,6 +53,8 @@ export interface Comment {
   concluded: boolean;
   /** Whether the requesting novelist owns the prompt this comment was made on. */
   isPromptOwner: boolean;
+  /** Viewer blacklisted the author: draw a stub with "Show" (BLOCK_BLACKLIST_PLAN.md B11). */
+  hiddenReason?: HiddenReason | null;
 }
 
 export interface Reply {
@@ -61,6 +66,8 @@ export interface Reply {
   createdOn: string;
   reactions: number;
   reacted: boolean;
+  /** Viewer blacklisted the author: draw a stub with "Show" (BLOCK_BLACKLIST_PLAN.md B11). */
+  hiddenReason?: HiddenReason | null;
 }
 
 export interface PromptSource {

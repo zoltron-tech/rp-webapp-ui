@@ -49,11 +49,14 @@ import { AppAlertDialog } from "../dialog";
 import { AppImageViewer } from "../image-viewer/AppImageViewer";
 import { VideoViewer } from "../image-viewer/VideoViewer";
 import { MarkdownLite } from "../markdown-lite";
+import { MuseEmbed } from "../muse-embed";
+import { NovelistEmbed } from "../novelist-embed";
 import { SharePromptDialog } from "../prompt/share-prompt-dialog";
 import { ReactionLikersDialog } from "../reaction-likers-dialog";
 import { RichTextRenderer } from "../rich-text-editor-input/rich-test-renderer";
 import { ShareMuseDialog } from "../share-muse-dialog";
 import { ShareStoryDialog } from "../share-story-dialog";
+import { SourcePreview } from "../source-preview";
 import * as S from "./styles";
 
 const STORY_BOARD_TYPES = ["STORY_BOARD", "STORY_BOARD_EVENT"];
@@ -395,13 +398,27 @@ export const ActivityBox: FC<Props> = ({
       routeToPage(ROUTES.Profile.View(activity.source.urlProp).Index);
   };
 
-  const onAvatarClick = (activity: Activity) => {
-    // A disabled author's stand-in has nowhere to go.
-    if (activity?.source.isPlaceholder) return;
-    if (activity?.source.sourceType === "MUSE")
-      routeToPage(ROUTES.Muse.View(activity.source.id));
-    else if (activity?.source.sourceType === "NOVELIST")
-      routeToPage(ROUTES.Profile.View(activity.source.urlProp).Index);
+  // The author's avatar and name open a mini preview card, same as a post
+  // header; the card's Visit profile button does the routing. A disabled
+  // author's stand-in has nowhere to go, so it gets no preview.
+  const [showSourcePreview, setShowSourcePreview] = useState(false);
+  const source = activity?.source;
+  let sourcePreview: ReactNode = null;
+  if (source && !source.isPlaceholder) {
+    if (source.sourceType === "MUSE" && source.id) {
+      sourcePreview = (
+        <MuseEmbed museId={source.id} preview fallbackName={source.title} />
+      );
+    } else if (source.sourceType === "NOVELIST" && source.urlProp) {
+      sourcePreview = <NovelistEmbed username={source.urlProp} preview />;
+    }
+  }
+
+  const onSourceNameClick = (e: React.MouseEvent) => {
+    if (!sourcePreview) return;
+    // The header sits in a card with its own click handling.
+    e.stopPropagation();
+    setShowSourcePreview(true);
   };
 
   const [imgError, setImgError] = useState(false);
@@ -503,15 +520,29 @@ export const ActivityBox: FC<Props> = ({
     <S.ParentContainer>
       <S.HeaderContainer>
         <S.AvatarWrap>
-          <S.Avatar
-            src={activity.source?.image || ""}
-            alt={activity.source.title || "Avatar"}
-            nwImage={activity.source?.avatar}
-            onClick={() => onAvatarClick(activity)}
-          />
+          {sourcePreview ? (
+            <SourcePreview
+              label={`Preview ${activity.source.title}`}
+              preview={sourcePreview}
+              open={showSourcePreview}
+              onOpenChange={setShowSourcePreview}
+            >
+              <S.Avatar
+                src={activity.source?.image || ""}
+                alt={activity.source.title || "Avatar"}
+                nwImage={activity.source?.avatar}
+              />
+            </SourcePreview>
+          ) : (
+            <S.Avatar
+              src={activity.source?.image || ""}
+              alt={activity.source.title || "Avatar"}
+              nwImage={activity.source?.avatar}
+            />
+          )}
         </S.AvatarWrap>
         <S.SourceInfo>
-          <S.SourceName onClick={() => onAvatarClick(activity)}>
+          <S.SourceName onClick={onSourceNameClick}>
             {activity.source.title}
           </S.SourceName>
           <S.MetaLine>

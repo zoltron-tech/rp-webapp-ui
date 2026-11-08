@@ -4,6 +4,8 @@ import classNames from "classnames";
 import { type FC, type MouseEventHandler, useCallback } from "react";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { ROUTES } from "@/utils/constants/routes";
+import { NovelistEmbed } from "../novelist-embed";
+import { SourcePreview } from "../source-preview";
 import { AvatarNew } from "./avatar-new";
 
 type NovelistAvatarProps = {
@@ -17,6 +19,9 @@ type NovelistAvatarProps = {
   /** Palette key as a string (e.g. "0", "1"). Resolved via ACCENT_MAP to apply
    *  the correct CSS class so `var(--accent)` resolves to the novelist's color. */
   accent?: string | null;
+  /** Post headers: open a mini preview of the novelist instead of routing.
+   *  Its Visit profile button does the routing. */
+  preview?: boolean;
 };
 
 export const NovelistAvatar: FC<NovelistAvatarProps> = ({
@@ -26,6 +31,7 @@ export const NovelistAvatar: FC<NovelistAvatarProps> = ({
   avatar,
   useAccent,
   accent,
+  preview = false,
 }) => {
   const { routeToPage } = usePageRouter();
 
@@ -41,6 +47,24 @@ export const NovelistAvatar: FC<NovelistAvatarProps> = ({
     useAccent && accent != null
       ? (ACCENT_MAP[Number(accent) as Accent] ?? null)
       : null;
+
+  if (preview && username) {
+    return (
+      <SourcePreview
+        label={`Preview ${name}`}
+        className={classNames(paletteClass)}
+        preview={<NovelistEmbed username={username} preview />}
+      >
+        <AvatarNew
+          src={image}
+          alt={name}
+          username={username}
+          nwImage={avatar}
+          accentColor={paletteClass ? "var(--accent)" : null}
+        />
+      </SourcePreview>
+    );
+  }
 
   return (
     <a

@@ -29,12 +29,17 @@ import * as S from "./styles";
  * See `styles.ts` for the shape of the card. The link's id is the username
  * from `/@username`; the card routes to the profile route built from it so
  * the destination is the app's own, whatever the link's host was.
+ *
+ * `preview` is the same card opened from an OOC post header's avatar: the
+ * card is no longer a link, and Visit profile is the only way through.
  */
 
 type Props = {
   username: string;
   /** The URL as it was written; the fallback destination. */
-  href: string;
+  href?: string;
+  /** Drawn in a popover: only the Visit profile button routes. */
+  preview?: boolean;
 };
 
 type LoadState =
@@ -51,7 +56,11 @@ const museFace = (muse: Muse) => ({
   src: muse.avatar?.src || muse.image || "",
 });
 
-export const NovelistEmbed: FC<Props> = ({ username, href }) => {
+export const NovelistEmbed: FC<Props> = ({
+  username,
+  href = ROUTES.Profile.View(username).Index,
+  preview = false,
+}) => {
   const { routeToPage } = usePageRouter();
   const [state, setState] = useState<LoadState>({ status: "loading" });
   // Nothing is fetched until the card is about to be seen.
@@ -86,9 +95,14 @@ export const NovelistEmbed: FC<Props> = ({ username, href }) => {
     if (event.key === "Enter" || event.key === " ") open(event);
   };
 
+  // In a preview the frame is inert; the footer button carries the route.
+  const frameLink = preview
+    ? ({ as: "div", "data-preview": "" } as const)
+    : { href, onClick: open, onKeyDown };
+
   if (state.status === "loading") {
     return (
-      <S.Frame aria-busy="true" ref={ref} href={href} onClick={open}>
+      <S.Frame aria-busy="true" ref={ref} {...frameLink}>
         <S.Card>
           <P.SkeletonLine $width="100%" $height="92px" />
           <S.Body>
@@ -111,10 +125,9 @@ export const NovelistEmbed: FC<Props> = ({ username, href }) => {
   if (state.status === "unavailable") {
     return (
       <P.Unavailable
-        href={href}
-        onClick={open}
-        onKeyDown={onKeyDown}
-        rel="noreferrer noopener"
+        {...(preview
+          ? ({ as: "div" } as const)
+          : { href, onClick: open, onKeyDown, rel: "noreferrer noopener" })}
       >
         <P.UnavailableIcon>
           <FiLink size={16} />
@@ -157,11 +170,9 @@ export const NovelistEmbed: FC<Props> = ({ username, href }) => {
 
   return (
     <S.Frame
-      aria-label={`Open ${fullName}'s profile`}
+      aria-label={preview ? undefined : `Open ${fullName}'s profile`}
       className={classNames(paletteClass)}
-      href={href}
-      onClick={open}
-      onKeyDown={onKeyDown}
+      {...frameLink}
     >
       <S.Card>
         <S.Banner
@@ -271,10 +282,22 @@ export const NovelistEmbed: FC<Props> = ({ username, href }) => {
               max={MAX_BADGES}
               size={22}
             />
-            <S.Open>
-              Visit profile
-              <FiArrowRight />
-            </S.Open>
+            {preview ? (
+              <S.Open
+                as="a"
+                aria-label={`Visit ${fullName}'s profile`}
+                href={ROUTES.Profile.View(username).Index}
+                onClick={open}
+              >
+                Visit profile
+                <FiArrowRight />
+              </S.Open>
+            ) : (
+              <S.Open>
+                Visit profile
+                <FiArrowRight />
+              </S.Open>
+            )}
           </S.Footer>
         </S.Body>
       </S.Card>

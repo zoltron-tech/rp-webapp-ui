@@ -186,6 +186,7 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
       />
       <ShouldRender if={source.sourceType === "MUSE"}>
         <MuseAvatar
+          preview
           museId={source.sourceId}
           image={source.image}
           name={source.name}
@@ -196,6 +197,7 @@ export const PromptHeader: FC<PromptHeaderProps> = () => {
       </ShouldRender>
       <ShouldRender if={source.sourceType === "NOVELIST"}>
         <NovelistAvatar
+          preview
           username={source.urlProp}
           image={source.image}
           name={source.name}

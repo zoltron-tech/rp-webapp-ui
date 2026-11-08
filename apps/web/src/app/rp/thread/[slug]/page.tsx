@@ -358,6 +358,7 @@ const ReplyItem = ({
         <S.ReplyHeaderContainer>
           <ShouldRender if={reply?.source.sourceType === "MUSE"}>
             <MuseAvatar
+              preview
               museId={reply?.source.sourceId || ""}
               image={reply?.source.image || ""}
               name={reply?.source.name || ""}
@@ -366,6 +367,7 @@ const ReplyItem = ({
           </ShouldRender>
           <ShouldRender if={reply?.source.sourceType === "NOVELIST"}>
             <NovelistAvatar
+              preview
               username={reply?.source.urlProp || ""}
               image={reply?.source.image || ""}
               name={reply?.source.name || ""}
@@ -994,6 +996,7 @@ export default function ThreadPage({}) {
             </S.BackButton>
             <ShouldRender if={comment?.prompt?.source.sourceType === "MUSE"}>
               <MuseAvatar
+                preview
                 museId={comment?.prompt?.source.sourceId || ""}
                 image={comment?.prompt?.source.image || ""}
                 name={comment?.prompt?.source.name || ""}
@@ -1004,6 +1007,7 @@ export default function ThreadPage({}) {
               if={comment?.prompt?.source.sourceType === "NOVELIST"}
             >
               <NovelistAvatar
+                preview
                 username={comment?.prompt?.source.urlProp || ""}
                 image={comment?.prompt?.source.image || ""}
                 name={comment?.prompt?.source.name || ""}
@@ -1058,6 +1062,9 @@ export default function ThreadPage({}) {
                             setShowEditPromptAlert(true);
                           },
                         },
+                        // This page is one thread, so the prompt's menu can
+                        // conclude/reopen it too — same item as the reply's.
+                        concludeItem,
                         {
                           separator: true,
                         },
@@ -1069,6 +1076,10 @@ export default function ThreadPage({}) {
                         },
                       ]
                     : [
+                        // The reply's owner can conclude too, from either menu.
+                        ...(canConcludeComment
+                          ? [concludeItem, { separator: true }]
+                          : []),
                         {
                           icon: <RiFlagFill />,
                           label: `Report this prompt`,
@@ -1165,6 +1176,7 @@ export default function ThreadPage({}) {
           <S.ReplyHeaderContainer>
             <ShouldRender if={comment?.source.sourceType === "MUSE"}>
               <MuseAvatar
+                preview
                 museId={comment?.source.sourceId || ""}
                 image={comment?.source.image || ""}
                 name={comment?.source.name || ""}
@@ -1173,6 +1185,7 @@ export default function ThreadPage({}) {
             </ShouldRender>
             <ShouldRender if={comment?.source.sourceType === "NOVELIST"}>
               <NovelistAvatar
+                preview
                 username={comment?.source.urlProp || ""}
                 image={comment?.source.image || ""}
                 name={comment?.source.name || ""}

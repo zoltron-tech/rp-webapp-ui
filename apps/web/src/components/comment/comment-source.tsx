@@ -157,6 +157,7 @@ export const CommentSource: FC = () => {
       </ShouldRender>
       <ShouldRender if={!placeholder && source.sourceType === "MUSE"}>
         <MuseAvatar
+          preview
           museId={source.sourceId}
           image={source.image}
           name={source.name}
@@ -167,6 +168,7 @@ export const CommentSource: FC = () => {
       </ShouldRender>
       <ShouldRender if={!placeholder && source.sourceType === "NOVELIST"}>
         <NovelistAvatar
+          preview
           username={source.urlProp}
           image={source.image}
           name={source.name}

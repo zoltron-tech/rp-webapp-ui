@@ -73,6 +73,20 @@ export const Frame = styled.a<{ $accent: string | null }>`
   &:active {
     transform: scale(0.99);
   }
+
+  /* Opened from a post header: the card is a preview, not a link. Only the
+     Visit profile button inside it routes, so the frame drops the pointer and
+     the lift. Inside a popover it also has no surrounding prose to clear. */
+  &[data-preview] {
+    margin: 0;
+    cursor: default;
+    user-select: text;
+
+    &:hover,
+    &:active {
+      transform: none;
+    }
+  }
 `;
 
 export const Card = styled.div`
@@ -333,28 +347,75 @@ export const Nickname = styled.span`
   white-space: nowrap;
 `;
 
-export const Arrow = styled.span`
-  flex-shrink: 0;
-  align-self: center;
-  display: inline-flex;
+/* Same footer as the prompt and novelist cards: a hairline, then the action
+   pinned bottom-right. */
+export const Footer = styled.div`
+  display: flex;
   align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  margin-top: 8px;
-  border-radius: 50%;
-  color: var(--embed-accent);
-  background: color-mix(in srgb, var(--embed-accent) 14%, transparent);
-  transition: transform 0.18s ease, background 0.18s ease;
+  gap: 10px;
+  min-width: 0;
+  margin: 0 14px;
+  padding: 8px 0 10px;
+  border-top: 1px solid
+    color-mix(in srgb, var(--embed-accent) 18%, var(--material-edge));
+  font-size: 12px;
+  color: var(--text-secondary, var(--text));
 
   @container muse-embed (max-width: 300px) {
-    display: none;
+    margin: 0 10px;
+  }
+`;
+
+/** A span inside the link card; a real anchor (the only route) in a preview. */
+export const Open = styled.span`
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 0;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: var(--font-weight-semi-bold);
+  white-space: nowrap;
+  color: var(--embed-accent);
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.18s ease;
+  ${FOCUS_RING}
+
+  && {
+    text-decoration: none;
   }
 
-  ${Frame}:hover & {
-    transform: translateX(2px);
-    background: color-mix(in srgb, var(--embed-accent) 24%, transparent);
+  svg {
+    width: 13px;
+    height: 13px;
   }
+
+  ${Frame}:not([data-preview]):hover &,
+  &:is(a):hover {
+    transform: translateX(2px);
+  }
+`;
+
+/* ─── Unavailable, in a preview ───────────────────────────────────────── */
+
+/** Where the quote sits on a loaded card. */
+export const UnavailableMessage = styled.p`
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  line-height: 1.35;
+  color: var(--text-secondary, var(--text));
+  word-break: break-word;
+`;
+
+/** Stands in for Visit profile, which has nowhere to go. */
+export const FooterNote = styled.span`
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: var(--font-weight-semi-bold);
+  white-space: nowrap;
+  color: var(--text-secondary, var(--text));
 `;
 
 /* ─── Loading ─────────────────────────────────────────────────────────── */

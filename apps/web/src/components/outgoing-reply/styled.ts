@@ -66,6 +66,13 @@ export const PrimaryAvatarSlot = styled.div`
   width: 100%;
   height: 100%;
 
+  /* The preview trigger wraps the avatar; it fills the slot so the avatar's
+     100% still resolves against the slot's size. */
+  > button {
+    width: 100%;
+    height: 100%;
+  }
+
   .avatar {
     width: 100%;
     height: 100%;
@@ -82,6 +89,13 @@ export const TargetAvatarSlot = styled.div`
   border-radius: 50%;
   border: 2px solid var(--bg-2);
   background-color: var(--bg-2);
+
+  /* The preview trigger wraps the avatar; it fills the slot so the avatar's
+     100% still resolves against the slot's size. */
+  > button {
+    width: 100%;
+    height: 100%;
+  }
 
   .avatar {
     width: 100%;

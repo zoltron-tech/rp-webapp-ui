@@ -9,7 +9,7 @@ import {
   useEffect,
   useState,
 } from "react";
-import { FiArrowRight, FiLink } from "react-icons/fi";
+import { FiArrowRight, FiLink, FiLock } from "react-icons/fi";
 import { usePageRouter } from "@/hooks/use-page-router";
 import { useNearViewport } from "../nw-link-embed/use-near-viewport";
 import { ROUTES } from "@/utils/constants/routes";
@@ -28,12 +28,22 @@ import * as S from "./styles";
  * Three states, all the same width so the text around the card does not jump
  * when the fetch lands: a shimmering skeleton, the card, or a quiet
  * "unavailable" row that still carries the original link.
+ *
+ * `preview` is the same card opened from a post header's avatar: the card is
+ * no longer a link, and the Visit profile button is the only way through.
  */
 
 type Props = {
   museId: string;
   /** The URL as it was written, kept as the fallback destination. */
-  href: string;
+  href?: string;
+  /** Drawn in a popover: only the Visit profile button routes. */
+  preview?: boolean;
+  /** Preview only: the name and accent the post header already shows, kept
+   *  on the card when the muse itself can't be loaded (private, hidden,
+   *  deleted). Nothing here is more than the header around it already says. */
+  fallbackName?: string;
+  fallbackAccent?: string | null;
 };
 
 type LoadState =
@@ -43,7 +53,13 @@ type LoadState =
 
 const MAX_NICKNAMES = 3;
 
-export const MuseEmbed: FC<Props> = ({ museId, href }) => {
+export const MuseEmbed: FC<Props> = ({
+  museId,
+  href = ROUTES.Muse.View(museId),
+  preview = false,
+  fallbackName,
+  fallbackAccent = null,
+}) => {
   const { routeToPage } = usePageRouter();
   const [state, setState] = useState<LoadState>({ status: "loading" });
   // Nothing is fetched until the card is about to be seen.
@@ -79,15 +95,14 @@ export const MuseEmbed: FC<Props> = ({ museId, href }) => {
     if (event.key === "Enter" || event.key === " ") open(event);
   };
 
+  // In a preview the frame is inert; the footer button carries the route.
+  const frameLink = preview
+    ? ({ as: "div", "data-preview": "" } as const)
+    : { href, onClick: open, onKeyDown };
+
   if (state.status === "loading") {
     return (
-      <S.Frame
-        $accent={null}
-        aria-busy="true"
-        ref={ref}
-        href={href}
-        onClick={open}
-      >
+      <S.Frame $accent={null} aria-busy="true" ref={ref} {...frameLink}>
         <S.Card>
           <S.SkeletonCover />
           <S.Body>
@@ -103,13 +118,43 @@ export const MuseEmbed: FC<Props> = ({ museId, href }) => {
     );
   }
 
+  // In a popover the inline "unavailable" row (a translucent material strip
+  // meant to sit in prose) reads as a ghost of a card over the feed. Draw the
+  // same opaque card as a loaded muse instead, with the message where the
+  // details would be and no way through.
+  if (state.status === "unavailable" && preview) {
+    const name = fallbackName?.trim() || "A muse on Novelist World";
+    return (
+      <S.Frame $accent={fallbackAccent} as="div" data-preview="">
+        <S.Card>
+          <S.Cover $src="">
+            <S.CoverPattern />
+          </S.Cover>
+          <S.Body>
+            <S.Avatar $crop={null} $src="" aria-hidden="true">
+              <FiLock size={22} />
+            </S.Avatar>
+            <S.Text>
+              <S.Name title={name}>{name}</S.Name>
+              <S.UnavailableMessage>
+                This muse is private, hidden or no longer here.
+              </S.UnavailableMessage>
+            </S.Text>
+          </S.Body>
+          <S.Footer>
+            <S.FooterNote>Profile unavailable</S.FooterNote>
+          </S.Footer>
+        </S.Card>
+      </S.Frame>
+    );
+  }
+
   if (state.status === "unavailable") {
     return (
       <S.Unavailable
-        href={href}
-        onClick={open}
-        onKeyDown={onKeyDown}
-        rel="noreferrer noopener"
+        {...(preview
+          ? ({ as: "div" } as const)
+          : { href, onClick: open, onKeyDown, rel: "noreferrer noopener" })}
       >
         <S.UnavailableIcon>
           <FiLink size={16} />
@@ -150,10 +195,8 @@ export const MuseEmbed: FC<Props> = ({ museId, href }) => {
   return (
     <S.Frame
       $accent={accent}
-      aria-label={`Open ${fullName}'s muse page`}
-      href={href}
-      onClick={open}
-      onKeyDown={onKeyDown}
+      aria-label={preview ? undefined : `Open ${fullName}'s muse page`}
+      {...frameLink}
     >
       <S.Card>
         <S.Cover
@@ -192,11 +235,26 @@ export const MuseEmbed: FC<Props> = ({ museId, href }) => {
               </S.Nicknames>
             )}
           </S.Text>
-
-          <S.Arrow aria-hidden="true">
-            <FiArrowRight size={15} />
-          </S.Arrow>
         </S.Body>
+
+        <S.Footer>
+          {preview ? (
+            <S.Open
+              as="a"
+              aria-label={`Visit ${fullName}'s profile`}
+              href={ROUTES.Muse.View(museId)}
+              onClick={open}
+            >
+              Visit profile
+              <FiArrowRight />
+            </S.Open>
+          ) : (
+            <S.Open>
+              Visit profile
+              <FiArrowRight />
+            </S.Open>
+          )}
+        </S.Footer>
       </S.Card>
     </S.Frame>
   );

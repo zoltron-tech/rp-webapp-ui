@@ -63,6 +63,18 @@ export const Frame = styled.a`
   &:active {
     transform: scale(0.99);
   }
+
+  /* Opened from a post header: a preview, not a link (see muse-embed). */
+  &[data-preview] {
+    margin: 0;
+    cursor: default;
+    user-select: text;
+
+    &:hover,
+    &:active {
+      transform: none;
+    }
+  }
 `;
 
 export const Card = styled.div`
@@ -480,22 +492,34 @@ export const Footer = styled.div`
   color: var(--text-secondary, var(--text));
 `;
 
+/** A span inside the link card; a real anchor (the only route) in a preview. */
 export const Open = styled.span`
   margin-left: auto;
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  padding: 2px 0;
+  border-radius: 6px;
+  font-size: 12px;
   font-weight: var(--font-weight-semi-bold);
   white-space: nowrap;
   color: var(--accent);
+  text-decoration: none;
+  cursor: pointer;
   transition: transform 0.18s ease;
+  ${FOCUS_RING}
+
+  && {
+    text-decoration: none;
+  }
 
   svg {
     width: 13px;
     height: 13px;
   }
 
-  ${Frame}:hover & {
+  ${Frame}:not([data-preview]):hover &,
+  &:is(a):hover {
     transform: translateX(2px);
   }
 `;

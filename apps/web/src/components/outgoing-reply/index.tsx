@@ -89,6 +89,7 @@ export const PromptThreadCommentCard: FC<Props> = ({
           <S.AvatarGroup>
             <S.PrimaryAvatarSlot>
               <MuseAvatar
+                preview
                 museId={promptThreadComment.source.sourceId}
                 image={
                   promptThreadComment.source.avatar?.src ||
@@ -101,6 +102,7 @@ export const PromptThreadCommentCard: FC<Props> = ({
             </S.PrimaryAvatarSlot>
             <S.TargetAvatarSlot>
               <MuseAvatar
+                preview
                 museId={promptThreadComment.target.sourceId}
                 image={
                   promptThreadComment.target.avatar?.src ||
